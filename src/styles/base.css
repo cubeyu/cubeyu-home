@@ -1,1 +1,66 @@
-/* 内容见 Task 5 */
+*, *::before, *::after { box-sizing: border-box; }
+html { -webkit-text-size-adjust: 100%; }
+body {
+  margin: 0;
+  background: var(--paper);
+  color: var(--ink);
+  font-family: var(--font-sans);
+  font-size: 16px;
+  line-height: 24px;
+}
+
+/* 窄栏：spec 4.1 --col = 820px */
+.col { max-width: var(--col); margin-inline: auto; padding-inline: 20px; }
+
+/* 排版阶梯（实测 oiloil） */
+h1 { font-size: 58px; font-weight: 700; line-height: 1.04; margin: 0; letter-spacing: -.02em; }
+h2 { font-size: 16px; font-weight: 400; margin: 0; }
+h3 { font-size: 30px; font-weight: 800; margin: 0; letter-spacing: -.01em; }
+
+/* eyebrow：等宽小标，形如 作品 / WORKS */
+.eyebrow {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  font-weight: 650;
+  letter-spacing: .06em;
+  color: var(--ink-2);
+  text-transform: uppercase;
+}
+.num { font-family: var(--font-mono); font-size: 12px; color: var(--ink-3); letter-spacing: .04em; }
+.tag {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  padding: 2px 6px;
+  border: var(--rule-w) solid var(--rule);
+  border-radius: var(--radius-sm);
+  color: var(--ink-2);
+}
+
+/* 发丝线 */
+.rule-t { border-top: var(--rule-w) solid var(--rule); }
+.rule-b { border-bottom: var(--rule-w) solid var(--rule); }
+
+a { color: inherit; text-decoration-color: var(--rule); text-underline-offset: 3px; }
+a:hover { color: var(--link); text-decoration-color: var(--link); }
+
+/* 双语显隐：构建时烘两套节点，纯 CSS 切换，不靠 JS 渲染内容（spec 5.2） */
+.i18n-en { display: none; }
+html[lang="en"] .i18n-zh { display: none; }
+html[lang="en"] .i18n-en { display: inline; }
+
+/* 区块节奏 */
+section { padding-block: 72px; }
+@media (max-width: 640px) {
+  h1 { font-size: 40px; }
+  h3 { font-size: 24px; }
+  section { padding-block: 48px; }
+}
+
+/* reduced-motion：入场时长归零（spec 6.2） */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: .01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: .01ms !important;
+  }
+}
