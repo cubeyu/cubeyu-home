@@ -446,7 +446,7 @@ git commit -m "feat: 构建期转义、双语节点与模板替换工具"
 - Consumes: Task 3 的 `esc` / `i18n` / `renderTemplate` / `cssOrder`
 - Produces:
   - `dist/index.html`、`dist/assets/app.css`、`dist/assets/js/**`
-  - `build()`（`build.js` 的 default export，供 `check.js` 与测试调用）
+  - **无导出**：`build.js` 是顶层直接执行的纯脚本，不被任何模块 import。`check.js`（Task 12）读的是 `dist/` 产物而非调用 `build()`；`npm run check` 靠 `node build.js && node check.js` 串起构建与断言。
 
 - [ ] **Step 1: 写 `src/data/site.js` 最小版**
 
@@ -1009,7 +1009,7 @@ import { i18n } from './src/lib/build-utils.js';
 import { ui, sections } from './src/data/copy.js';
 ```
 
-在 `build()` 内、`renderTemplate` 之前加：
+在 `build.js` 的顶层、`const html = renderTemplate(...)` 之前加（`build.js` 无 `build()` 函数包裹，见 Task 4）：
 
 ```js
   const nav = `<nav class="col nav"><a href="/">${i18n('首页', 'Home')}</a>`
