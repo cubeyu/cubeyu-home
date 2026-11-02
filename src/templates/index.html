@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>{{TITLE}}</title>
 <meta name="description" content="{{DESCRIPTION}}">
-<link rel="canonical" href="https://techisle.top/">
+<link rel="canonical" href="{{CANONICAL}}">
 <script>
 /* 首帧防闪烁：CSS 加载前写入偏好，否则暗色用户每次刷新都白闪一下。spec 6.1 */
 try{var t=localStorage.getItem('cubeyu-theme')||'auto';
@@ -14,8 +14,10 @@ document.documentElement.dataset.theme=(t==='auto')?(matchMedia('(prefers-color-
 <link rel="stylesheet" href="/assets/app.css">
 </head>
 <body>
+{{NAV}}
 <main id="main">
-  <p>{{BUILD_PROBE}}</p>
+{{HERO}}
+{{SECTIONS}}
 </main>
 <script type="module" src="/assets/js/app.js"></script>
 </body>

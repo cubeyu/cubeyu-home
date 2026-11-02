@@ -1,1 +1,48 @@
-/* 由 Task 7 整文件替换 */
+/* hero.css —— 逐词遮罩（spec 6.2）、副行、下滑提示。Task 7 整文件替换。
+   纪律：本文件零字面色值，颜色一律 var(--…)，只有 tokens.css 允许写死（spec 4 节）；
+   缓动曲线只有 var(--ease-expo) 一条（spec 4.1）。 */
+.hero { padding-top: 96px; padding-bottom: 64px; }
+
+/* 逐词遮罩：外层裁切，内层从下方 110% 升起 */
+.lmask { display: block; overflow: hidden; }
+/* display: block 依赖 base.css 的双语显隐「只隐藏、不强制显示」：
+   旧规则 html[lang=en] .i18n-en { display: inline }（0-2-1）会压过本条（0-1-1），
+   而 transform 在非替换的 inline 盒上无效 —— 结果是中文行动、英文行不动的语言分裂 bug。 */
+.lmask > span {
+  display: block;
+  transform: translateY(110%);
+  animation: lmask-up .9s var(--ease-expo) forwards;
+}
+/* stagger：第二、三行各延后 .10s / .20s（延迟值由 base.css 的 reduced-motion 统一归零） */
+.lmask:nth-child(2) > span { animation-delay: .10s; }
+.lmask:nth-child(3) > span { animation-delay: .20s; }
+@keyframes lmask-up { to { transform: translateY(0); } }
+
+/* sub 行同时挂 .zh/.en（本区块的字号与颜色）与 .i18n-*（全局显隐），两套类名各管各的 */
+.hero-sub { margin-top: 20px; display: flex; gap: 16px; align-items: baseline; flex-wrap: wrap; }
+.hero-sub .zh { font-size: 16px; color: var(--ink-2); }
+.hero-sub .en {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  letter-spacing: .08em;
+  color: var(--ink-3);
+}
+.hero-scroll {
+  margin-top: 56px;
+  font-family: var(--font-mono);
+  font-size: 12px;
+  color: var(--ink-3);
+  animation: drift 2.6s var(--ease-expo) infinite alternate;
+}
+@keyframes drift { to { transform: translateY(6px); } }
+
+/* reduced-motion：只补「形状」两件事 —— 解除裁切、取消位移。
+   时长/延迟的归零在 base.css（含 animation-delay: 0s !important），本文件不得重复声明：
+   延迟若留在 .10s/.20s，词在这段时间里仍被 .lmask{overflow:hidden} 挡在视线外，
+   「减弱动效」反而变成「文字缺失」—— 比让它动更糟。
+   animation: none 走 shorthand，animation-name 无人用 !important 抢，因此生效。 */
+@media (prefers-reduced-motion: reduce) {
+  .lmask { overflow: visible; }
+  .lmask > span { transform: none; animation: none; }
+  .hero-scroll { animation: none; }
+}

@@ -67,6 +67,12 @@ section { padding-block: 72px; }
   section { padding-block: 48px; }
 }
 
+/* 导航条：等宽小字，左右两端对齐。语言切换与 GitHub 链接都在右侧一组 */
+.nav { display: flex; justify-content: space-between; align-items: center; padding-block: 20px; font-family: var(--font-mono); font-size: 12px; }
+.nav a { text-decoration: none; color: var(--ink-2); }
+.nav a:hover { color: var(--ink); }
+.nav-right { display: flex; gap: 20px; }
+
 /* reduced-motion：入场时长与延迟一并归零（spec 6.2）。
    只清 duration 是不够的：Task 7 的逐词遮罩给每个词写了 animation-delay: .10s / .20s，
    延迟留着，词就在那段时间里仍被 .lmask{overflow:hidden} 挡在视线外 ——
