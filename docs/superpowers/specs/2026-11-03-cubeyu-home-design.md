@@ -37,10 +37,12 @@
 | 3 | 完整照搬 oiloil 的白底 + 马克笔黄 `#FFE28A` + 无衬线大字 | 「oiloil 骨架 + 水墨基因（宣纸白 + 印章朱红）」被否。注意：这是用户在看到明确对比后主动否决推荐方案的，选择忠于参照站而非已有品牌。 |
 | 4 | 7 张卡全部做可交互微原型 | 「3 张微原型 + 4 张纸面卡」被否。 |
 | 5 | 干净新仓库，MoeHome 仅当参考实现 | 「在 MoeHome 仓库内删死代码」被否：`scripts/build.js` 约 3100 行为 4 页面 + 5 个外部模块服务，删比重写更易引入坏件。 |
-| 6 | 先 Vercel 预览域，验收后再切 `techisle.top`；`portfolio.techisle.top` 保留不动 | 「直接替换线上站」被否：验收前没有退路。 |
+| 6 | 先 Vercel 预览域，验收后再切 `techisle.top`；`portfolio.techisle.top` **退役**（见 8.2） | 「直接替换线上站」被否：验收前没有退路。原方案曾定为「portfolio 保留不动」，用户在复核 spec 时改判为下线，理由是它是古风站、与新风格无关。 |
 | 7 | demo 组织采用注册表模式（方案 A） | 「每卡自包含（方案 B）」被否：文案渗进行为层，`data/projects.js` 不再具备完整卡片视图，双语与暗色的改动点会散开。 |
 | 8 | 双语采用构建时烘进两个文本节点 + `html[lang]` 纯 CSS 切换 | 「JS 运行时重渲染」被否：静态站不应依赖 JS 才能读到内容，且不利 SEO。 |
 | 9 | 7 条作品引文全部改写为口语体 | 「引文保留文言 + 仅提示语口语」被否，用户看过三条对照样例后仍选择全改。 |
+| 10 | **清除全部古风元素**：身份标签去掉「代码诗人」「以墨为笔，以码为诗」，单字印章（墨/流/锚/方/热/键/隐）不作为视觉元素出现，一律用 `N°01`–`N°07` | 用户在复核 spec 时追加要求「全面使用 oiloil 风格」。注：单字印章在 2 号决策被否「水墨基因」时已出局，此处只是把它从内容层也彻底清掉。 |
+| 11 | 站点标题对齐 oiloil 实测格式 `Oil® — 欧呦`，取 `麦希屿® — cubeyu`；description 对齐其句式 | 旧值「cubeyu の水墨小筑」含「水墨」，与新视觉不符，属内容欺骗（见 8 节）。 |
 
 ---
 
@@ -54,6 +56,8 @@
 
 ```
 cubeyu-home/
+  archive/
+    portfolio-2026-11-03.html  # 子站退役前抓的快照，唯一内容副本（见 8.2）
   src/
     data/
       site.js          # 身份、导航、页脚、SEO（不含 analytics：见 8 节，走 Vercel 项目设置）
@@ -253,9 +257,9 @@ CSS：`html[lang="zh"] .i18n-en { display: none }`，反之同理。默认 `lang
 | 区块 | 内容 | 数据源 |
 |---|---|---|
 | NAV | 右上：`中`/`EN` 语言切换 + 字面文本链接 `github.com/cubeyu` | `data/site.js` |
-| HERO | `.hero.roll-band`：三行逐词遮罩 `麦希屿®` / `builds` / `small tools.`；`.sub` 行 `麦 希 屿` + 等宽 `INDEPENDENT DEVELOPER / CODE POET`；`↓ 往下滑` | 用户确认 + portfolio 卷首 |
+| HERO | `.hero.roll-band`：三行逐词遮罩 `麦希屿®` / `builds` / `small tools.`；`.sub` 行 `麦 希 屿` + 等宽 `DEVELOPER / AI TOOLS / OPEN-SOURCE`（照 oiloil 的 `ENGINEER / DESIGNER / OPEN-SOURCE` 三段式，**不含「代码诗人」**）；`↓ 往下滑` | 用户确认；技能项取自 portfolio 快照 |
 | 作品 / WORKS | 7 张 `article`，见 7.1 | `data/projects.js` |
-| 技能 / SKILLS | 13 项排成发丝线网格，等宽字体，**不放图标**（`Simple-Homepage/public/icons/tech/*.svg` 本轮不用） | portfolio 技之所擅长 |
+| 技能 / SKILLS | 13 项排成发丝线网格，等宽字体，**不放图标**（`Simple-Homepage/public/icons/tech/*.svg` 本轮不用） | 清单已在本文件 8 节定稿，源为 portfolio 快照 |
 | 站点 / SITES | 产品化入口 + 社交，见 7.2 | `Simple-Homepage/src/config/linkBtn.json` |
 | FOOTER | `© 2026 麦希屿` + 明暗开关 + 动效开关 + 联系邮箱 | — |
 
@@ -307,20 +311,30 @@ CSS：`html[lang="zh"] .i18n-en { display: none }`，反之同理。默认 `lang
 - 微原型：目录树点开三篇标题，展开显示日期与阅读时长，hover 标题出下划线。
 - hint: 点目录把文章展开。/ Click the tree to open an article.
 
-### 7.2 站点区链接（8 条）
+### 7.2 站点区链接（7 条）
 
 | 显示名 | URL |
 |---|---|
 | ClawBase | `https://clawbase.cc` |
 | 今日热榜 | `https://hot.techisle.top` |
 | 支持一下 | `https://donate.techisle.top` |
-| 作品集（古风） | `https://portfolio.techisle.top` |
 | 站点监控 | `https://check.techisle.top` |
 | GitHub | `https://github.com/cubeyu` |
 | 哔哩哔哩 | `https://space.bilibili.com/88154706` |
 | 邮箱 | `mailto:cubeyu@aliyun.com` |
 
-`portfolio.techisle.top` 保留（用户决定），其内容同时被吸收进首页作品区，属于有意冗余。
+`portfolio.techisle.top` **不列入**（用户决定退役，见 8.2）。其 7 帧作品已全部吸收进本文件 7.1，首页即唯一入口，不再有重复内容。
+
+### 7.3 SEO（决策 11）
+
+照抄 oiloil 的实测 meta 句式：
+
+```html
+<title>麦希屿® — cubeyu</title>
+<meta name="description" content="麦希屿的个人作品、AI 工具实操、产品开发与开源项目记录。">
+```
+
+对照：oiloil 实测 `<title>` 为 `Oil® — 欧呦`，description 为「Oil 的个人作品、AI 工具实操、产品开发与开源项目记录。」。旧值「cubeyu の水墨小筑」及其「水墨风格个人主页」描述不再使用。
 
 ---
 
@@ -328,20 +342,49 @@ CSS：`html[lang="zh"] .i18n-en { display: none }`，反之同理。默认 `lang
 
 | 项 | 现状 | 处理 |
 |---|---|---|
-| 身份 | `麦希屿` / ID `cubeyu` / `独立开发者 · 代码诗人` | 迁移 |
+| 身份 | `麦希屿` / ID `cubeyu` / `独立开发者 · 代码诗人` | **只迁移 `麦希屿` + `cubeyu` + `独立开发者`**。「代码诗人」与「以墨为笔，以码为诗」属古风元素，按决策 10 清除。 |
 | 头像 | `https://cdn.jsdelivr.net/gh/cubeyu/cubeyu.github.io/my-avatar.png` | **本地化进仓库**。外部 CDN 挂了头像就裂，属于线上真实风险。 |
 | `og-image.png` | 在 `Simple-Homepage/index.html` 被引用但**仓库内不存在** | 新站要么补真图要么不引用。不把坏引用带过去。 |
-| 站点标题 | 现为「cubeyu の水墨小筑」，description 写「水墨风格个人主页」 | **必须改**：新站视觉已不是水墨风，标题继续叫「水墨小筑」是内容欺骗。 |
+| 站点标题 | 现为「cubeyu の水墨小筑」，description 写「水墨风格个人主页」 | **必须改**：新站视觉已不是水墨风，标题继续叫「水墨小筑」是内容欺骗。已在 7.3 定为 `麦希屿® — cubeyu`。 |
 | 邮箱 | `portfolio.techisle.top` 显示 `cuebyu@techisle.top`，`Simple-Homepage` 显示 `cubeyu@aliyun.com` | 统一用 `cubeyu@aliyun.com`（用户确认）。`cuebyu` 判定为 `cubeyu` 手误，不带过来。 |
 | 微信赞赏二维码 | 仓库内不存在，收款页在 `donate.techisle.top` 站外 | 不迁移，仅在站点区保留外链。 |
 | 打字机语录 16 句 / 光阴进度 / 待办 4 条 | `Simple-Homepage` 原有区块 | **不迁移**。语录与新风格无关，进度条与待办属临时状态、易过期。 |
 | 访问统计 | `Simple-Homepage` 装了 `@vercel/analytics`（npm 运行时包） | **代码里不加 script**，改由 Vercel 项目设置开启 Web Analytics。否则第 1 节「`dependencies` 必须为空」和 9.1 第 7 项检查自相矛盾。 |
-| 18 项技能（`techStack.json`） | 含 jQuery 等 | 采用 portfolio 的 13 项清单，与线上不一致时以 portfolio 为准（更贴近当前技术栈）。 |
+| 18 项技能（`techStack.json`） | 含 jQuery 等 | 采用 portfolio 的 13 项（更贴近当前技术栈）。因 portfolio 将退役，清单**在此定稿**，不再依赖子站：`JavaScript` `TypeScript` `React` `Vue` `Astro` `Node.js` `Python` `Java` `Git` `Docker` `Cloudflare` `AI / LLM` `数据可视化`（EN 项 `Data Visualization`）。`Simple-Homepage` 多出的 `Vite` `Markdown` 不纳入。 |
 
-### 8.1 待用户确认的内容项（不阻塞实现，但需在 M1 验收时一并定）
+### 8.1 待用户确认的最后一项内容（不阻塞实现，M1 验收时一并定）
 
-1. **SEO**：新站的 `<title>` 与 `description` 文案。旧值含「水墨」已不适用。
-2. **云隐博客链接目标**：三处记载不一致 —— portfolio 写 `techisle.top`，`Simple-Homepage` 历史写 `cubeyu.cnblogs.com`，新站作品卡需要确定点哪儿。M1 前给一个即可。
+**云隐博客那张卡的链接目标**：三处记载不一致 —— portfolio 写 `techisle.top`，`Simple-Homepage` 历史写 `cubeyu.cnblogs.com`，而 portfolio 退役后 `techisle.top` 将由新站本身占用，博客需要一个独立落点。M1 前给一个 URL 即可；在此之前该卡链接先指向 `#`，不做猜测。
+
+（原第 1 项「SEO 文案」已在复核时定案，见 7.3。）
+
+### 8.2 `portfolio.techisle.top` 退役流程
+
+**这是线上动作，本设计与实现阶段均不代为执行**，需你在 Vercel 控制台自行操作。按下列顺序，避免内容不可逆丢失：
+
+1. **先归档，后下线**。下线前抓取整站 HTML 快照存入本仓库 `archive/portfolio-2026-11-03.html`。该页 18KB、服务端渲染、内容完整，一次抓取即保全全部原文。此步不可省略 —— 归档是该站文案与身份的**唯一副本**。
+2. 把 7 句文言原文抄进本文件 7.1 作对照（见下），保证即使快照丢失，文案仍可取回。
+3. 新站经 M1–M5 验收、`techisle.top` 切域完成后，再退役子站。**退役时机不早于新站上线**，否则七帧作品在过渡期无完整承载页。
+
+7 句原文归档（新口语文案见 7.1 各卡，此处为改写前版本）：
+
+| 作品 | 文言原文 |
+|---|---|
+| 墨痕笔记 | 本地优先的 Markdown 编辑器，连接你与大语言模型的桥梁。 |
+| 微流 | 本地微信聊天记录导出与年度报告应用，记录时光的温度。 |
+| 锚点幻灯片 | 本地优先的 HTML 演示文稿编辑器，将 AI 生成的幻灯片化为可编辑的画卷。 |
+| 方块世界智仆 | Minecraft AI 代理插件，让 AI 在方块世界中自主探索、建造与生存。 |
+| 今日热榜 | 今日热榜聚合 API 接口，汇聚全网热点，一站式获取各大平台资讯。 |
+| 关键词 | 为键盘工作者设计的单词记忆与英语肌肉记忆锻炼软件。 |
+| 云隐博客 | 云水深处，自有文章。不写代码时，便在博客里写字。 |
+
+题跋全文归档（决策 10 后不再上首页，此处为**逐字留存**，不依赖快照文件）：
+
+> 余麦希屿，一介独立开发者也。自幼喜笔墨，长而好代码，遂以数码为纸，以键盘为笔，在虚拟世界中挥毫泼墨。前端工程、AI 工具、数据可视化，皆有所涉，不求样样精通，但求件件用心。深信代码如书法，既有筋骨架构，亦有气韵风神。一行行代码，正如一笔笔墨迹，落笔之时，便是心意所至。愿以匠人之心，造雅致之器，在数字长河中留下些许墨痕。
+
+另留存的两处古风文本：卷首标 `独立开发者 · 代码诗人` / `— 以墨为笔，以码为诗 —` / `展 卷`；页脚署 `© 2026 麦希屿 · 以墨为笔，以码为诗`。这三处是本轮明确弃用、且不再出现在新站的表述。
+
+快照文件本身已抓取并校验：`archive/portfolio-2026-11-03.html`，18593 字节，服务端渲染，含 7 帧作品与题跋全文。
 
 ---
 
@@ -350,7 +393,8 @@ CSS：`html[lang="zh"] .i18n-en { display: none }`，反之同理。默认 `lang
 顺序刻意把「口味判定成本最低的切片」放最前面。
 
 **M1 · 骨架与味道**
-`build.js` + `check.js` + `tokens.css` + `base.css` + hero 逐词遮罩 + **1 张卡（N°01 墨痕笔记，含完整微原型）+ 双语 + 暗色全部打通**。
+先执行 8.2 步骤 1（抓 `portfolio.techisle.top` 快照入 `archive/`）—— 它必须发生在任何内容被消费之前。
+然后 `build.js` + `check.js` + `tokens.css` + `base.css` + hero 逐词遮罩 + **1 张卡（N°01 墨痕笔记，含完整微原型）+ 双语 + 暗色全部打通**。
 交付即截图给用户看。**此时是唯一能低成本推翻视觉方向的时机**，往后 M2 起都是这个调子的铺开。
 
 **M2 · 内容铺开**
@@ -398,7 +442,8 @@ CSS：`html[lang="zh"] .i18n-en { display: none }`，反之同理。默认 `lang
 | 「照搬」的期望值管理 | oiloil 是 Next.js + CSS Modules，其卡内 demo（如 `TextWellDemo` 的 9s 多关键帧编排）是逐帧手工调出来的。零依赖手写一轮内不可能逐像素一致。 | M1 只交 1 张卡就是为了把「不像」提前到成本最低时暴露；明确告知需 2 轮打磨。 |
 | 双语 × 暗色 × 7 demo 的组合爆炸 | 每个 demo 有 4 组视觉状态要验，且 demo 内的示例文字、按钮、hint 也都要双语。这是全项目最大工作量来源。 | 9.2 用矩阵验收而非凭感觉；9.1 第 3 条自动查漏翻译。 |
 | 文案改写不可逆 | 7 条文言引文是已发表的成品，口语化后若用户觉得变平，需要回滚。 | 本文件 7.1 已把 14 句新文案写死，用户在复核 spec 时即为批准。 |
-| 引文语气可能反悔 | 用户是在看到 3 条对照样例后仍选「全改口语」，但「云水深处，自有文章」那条已明示是净损失。 | 原始文言文案在本文件 7.1 之外保留于 `portfolio.techisle.top`，随时可取回。 |
+| 引文语气可能反悔 | 用户是在看到 3 条对照样例后仍选「全改口语」，但「云水深处，自有文章」那条已明示是净损失。 | 原文已抄进 8.2 归档表；且 M1 只交 1 张卡，可在最低成本时发现语气不对并回滚。 |
+| portfolio 退役带走唯一副本 | 子站是 7 句文言、题跋全文与 13 项技能清单的**唯一现存载体**。先下线再归档 = 内容永久丢失。 | 8.2 定死顺序：**先抓快照 + 抄原文，后下线**，且退役不得早于新站上线。本设计不代为执行任何 Vercel 线上操作。 |
 | 首帧闪烁 | 暗色用户刷新会白闪。 | 6.1 的内联脚本方案，M4 落实。 |
 | `#FFE28A` 在暗色下不可用 | 已确认取舍：暗色下变半透明底纹，与亮色不同源。 | 4.2 记录，避免实现时当成 bug 修。 |
 

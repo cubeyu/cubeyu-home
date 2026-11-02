@@ -1,0 +1,373 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>麦希屿 · 古风作品集</title>
+    <meta name="description" content="麦希屿的个人作品集——古风水墨，以墨为笔，以码为诗">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Ma+Shan+Zheng&family=ZCOOL+XiaoWei&family=Noto+Serif+SC:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/google-fonts-css@1.0.0/css?family=Ma+Shan+Zheng:400|ZCOOL+XiaoWei:400|Noto+Serif+SC:300,400,500,600,700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body class="page-loading">
+    <!-- 全局背景：宣纸纹理 -->
+    <div class="xuan-paper" aria-hidden="true"></div>
+
+    <!-- 全局装饰：淡墨远山（底部） -->
+    <div class="global-mountains" aria-hidden="true">
+        <svg class="mountain-far" viewBox="0 0 1200 120" preserveAspectRatio="none">
+            <path d="M0,90 Q150,40 300,70 T600,50 T900,80 T1200,60 L1200,120 L0,120 Z" fill="currentColor"/>
+        </svg>
+        <svg class="mountain-mid" viewBox="0 0 1200 100" preserveAspectRatio="none">
+            <path d="M0,70 Q200,30 400,60 T800,40 T1200,70 L1200,100 L0,100 Z" fill="currentColor"/>
+        </svg>
+    </div>
+
+    <!-- ===== 导航栏 ===== -->
+    <nav class="navbar" aria-label="主导航">
+        <div class="nav-inner">
+            <a href="#home" class="nav-brand">
+                <span class="nav-seal">希</span>
+            </a>
+            <ul class="nav-menu">
+                <li><a href="#home" class="nav-link active" data-section="home">卷首</a></li>
+                <li><a href="#works" class="nav-link" data-section="works">作品集</a></li>
+                <li><a href="#about" class="nav-link" data-section="about">题跋</a></li>
+            </ul>
+            <button class="nav-toggle" type="button" aria-label="展开菜单" aria-expanded="false">
+                <span></span><span></span><span></span>
+            </button>
+        </div>
+        <div class="nav-mobile">
+            <ul>
+                <li><a href="#home" class="nav-m-link active" data-section="home">卷首</a></li>
+                <li><a href="#works" class="nav-m-link" data-section="works">作品集</a></li>
+                <li><a href="#about" class="nav-m-link" data-section="about">题跋</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <!-- ===== 首屏 · 卷轴 ===== -->
+    <section class="scroll-hero section" id="home">
+        <!-- 轴头（上） -->
+        <div class="scroll-rod scroll-rod-top">
+            <span class="rod-cap rod-cap-left"></span>
+            <span class="rod-cap rod-cap-right"></span>
+            <span class="rod-bar"></span>
+        </div>
+
+        <!-- 卷轴内容 -->
+        <div class="scroll-body">
+            <!-- 墨点装饰 -->
+            <span class="ink-splash splash-1" aria-hidden="true"></span>
+            <span class="ink-splash splash-2" aria-hidden="true"></span>
+            <span class="ink-splash splash-3" aria-hidden="true"></span>
+
+            <!-- 远山（卷轴内） -->
+            <div class="hero-mountains" aria-hidden="true">
+                <svg viewBox="0 0 800 80" preserveAspectRatio="none">
+                    <path d="M0,60 Q100,30 200,50 T400,35 T600,55 T800,40 L800,80 L0,80 Z" fill="currentColor"/>
+                </svg>
+                <svg viewBox="0 0 800 60" preserveAspectRatio="none">
+                    <path d="M0,45 Q150,20 300,40 T600,25 T800,50 L800,60 L0,60 Z" fill="currentColor"/>
+                </svg>
+            </div>
+
+            <!-- 主内容 -->
+            <div class="hero-content">
+                <h1 class="hero-name">麦 希 屿</h1>
+                <div class="hero-divider">
+                    <span class="line"></span>
+                    <span class="en-name">C U E B Y U</span>
+                    <span class="line"></span>
+                </div>
+                <div class="hero-seal" aria-hidden="true">
+                    <span>屿</span>
+                </div>
+                <p class="hero-title">独 立 开 发 者 · 代 码 诗 人</p>
+                <p class="hero-quote">— 以 墨 为 笔， 以 码 为 诗 —</p>
+            </div>
+
+            <!-- 向下提示 -->
+            <div class="scroll-hint">
+                <span>展 卷</span>
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M12 5v14M5 12l7 7 7-7"/>
+                </svg>
+            </div>
+        </div>
+
+        <!-- 轴头（下） -->
+        <div class="scroll-rod scroll-rod-bottom">
+            <span class="rod-cap rod-cap-left"></span>
+            <span class="rod-cap rod-cap-right"></span>
+            <span class="rod-bar"></span>
+        </div>
+    </section>
+
+    <!-- ===== 作品集 · 册页 ===== -->
+    <section class="works-section section" id="works">
+        <div class="container">
+            <!-- 板块标题 -->
+            <div class="section-head">
+                <span class="seal-corner seal-top-left">作</span>
+                <h2 class="section-title">作 品 集</h2>
+                <p class="section-sub">— 册 页 七 帧 —</p>
+            </div>
+
+            <!-- 册页卡片网格 -->
+            <div class="album-grid">
+                <!-- 作品1 -->
+                <article class="album-card">
+                    <a href="https://github.com/cubeyu/cubeyu" target="_blank" rel="noopener noreferrer">
+                        <span class="card-binding" aria-hidden="true"></span>
+                        <span class="card-seal" aria-hidden="true">墨</span>
+                        <div class="card-body">
+                            <h3 class="card-title">墨痕笔记</h3>
+                            <p class="card-en">INKMARK</p>
+                            <span class="card-line"></span>
+                            <p class="card-desc">本地优先的 Markdown 编辑器，连接你与大语言模型的桥梁。</p>
+                            <div class="card-tags">
+                                <span>TypeScript</span>
+                                <span>LLM</span>
+                                <span>Markdown</span>
+                            </div>
+                        </div>
+                        <span class="card-bottom-decor" aria-hidden="true"></span>
+                    </a>
+                </article>
+
+                <!-- 作品2 -->
+                <article class="album-card">
+                    <a href="https://github.com/cubeyu/" target="_blank" rel="noopener noreferrer">
+                        <span class="card-binding" aria-hidden="true"></span>
+                        <span class="card-seal" aria-hidden="true">流</span>
+                        <div class="card-body">
+                            <h3 class="card-title">微 流</h3>
+                            <p class="card-en">WEFLOW</p>
+                            <span class="card-line"></span>
+                            <p class="card-desc">本地微信聊天记录导出与年度报告应用，记录时光的温度。</p>
+                            <div class="card-tags">
+                                <span>Electron</span>
+                                <span>JavaScript</span>
+                                <span>可视化</span>
+                            </div>
+                        </div>
+                        <span class="card-bottom-decor" aria-hidden="true"></span>
+                    </a>
+                </article>
+
+                <!-- 作品3 -->
+                <article class="album-card">
+                    <a href="https://github.com/cubeyu/anchor-deck" target="_blank" rel="noopener noreferrer">
+                        <span class="card-binding" aria-hidden="true"></span>
+                        <span class="card-seal" aria-hidden="true">锚</span>
+                        <div class="card-body">
+                            <h3 class="card-title">锚点幻灯片</h3>
+                            <p class="card-en">ANCHOR DECK</p>
+                            <span class="card-line"></span>
+                            <p class="card-desc">本地优先的 HTML 演示文稿编辑器，将 AI 生成的幻灯片化为可编辑的画卷。</p>
+                            <div class="card-tags">
+                                <span>JavaScript</span>
+                                <span>HTML</span>
+                                <span>Local-first</span>
+                            </div>
+                        </div>
+                        <span class="card-bottom-decor" aria-hidden="true"></span>
+                    </a>
+                </article>
+
+                <!-- 作品4 -->
+                <article class="album-card">
+                    <a href="https://github.com/cubeyu/" target="_blank" rel="noopener noreferrer">
+                        <span class="card-binding" aria-hidden="true"></span>
+                        <span class="card-seal" aria-hidden="true">方</span>
+                        <div class="card-body">
+                            <h3 class="card-title">方块世界智仆</h3>
+                            <p class="card-en">MC AI AGENT</p>
+                            <span class="card-line"></span>
+                            <p class="card-desc">Minecraft AI 代理插件，让 AI 在方块世界中自主探索、建造与生存。</p>
+                            <div class="card-tags">
+                                <span>Java</span>
+                                <span>Minecraft</span>
+                                <span>AI Agent</span>
+                            </div>
+                        </div>
+                        <span class="card-bottom-decor" aria-hidden="true"></span>
+                    </a>
+                </article>
+
+                <!-- 作品5 -->
+                <article class="album-card">
+                    <a href="https://github.com/cubeyu/DailyHotApi" target="_blank" rel="noopener noreferrer">
+                        <span class="card-binding" aria-hidden="true"></span>
+                        <span class="card-seal" aria-hidden="true">热</span>
+                        <div class="card-body">
+                            <h3 class="card-title">今日热榜</h3>
+                            <p class="card-en">DAILYHOT API</p>
+                            <span class="card-line"></span>
+                            <p class="card-desc">今日热榜聚合 API 接口，汇聚全网热点，一站式获取各大平台资讯。</p>
+                            <div class="card-tags">
+                                <span>TypeScript</span>
+                                <span>API</span>
+                                <span>爬虫</span>
+                            </div>
+                        </div>
+                        <span class="card-bottom-decor" aria-hidden="true"></span>
+                    </a>
+                </article>
+
+                <!-- 作品6 -->
+                <article class="album-card">
+                    <a href="https://github.com/cubeyu/" target="_blank" rel="noopener noreferrer">
+                        <span class="card-binding" aria-hidden="true"></span>
+                        <span class="card-seal" aria-hidden="true">键</span>
+                        <div class="card-body">
+                            <h3 class="card-title">键 词</h3>
+                            <p class="card-en">KEYBOARD WORD</p>
+                            <span class="card-line"></span>
+                            <p class="card-desc">为键盘工作者设计的单词记忆与英语肌肉记忆锻炼软件。</p>
+                            <div class="card-tags">
+                                <span>TypeScript</span>
+                                <span>键盘练习</span>
+                                <span>单词记忆</span>
+                            </div>
+                        </div>
+                        <span class="card-bottom-decor" aria-hidden="true"></span>
+                    </a>
+                </article>
+
+                <!-- 作品7 -->
+                <article class="album-card">
+                    <a href="https://github.com/cubeyu/" target="_blank" rel="noopener noreferrer">
+                        <span class="card-binding" aria-hidden="true"></span>
+                        <span class="card-seal" aria-hidden="true">隐</span>
+                        <div class="card-body">
+                            <h3 class="card-title">云隐博客</h3>
+                            <p class="card-en">CLOUD HIDDEN</p>
+                            <span class="card-line"></span>
+                            <p class="card-desc">云水深处，自有文章。不写代码时，便在博客里写字。</p>
+                            <div class="card-tags">
+                                <span>TypeScript</span>
+                                <span>Astro</span>
+                                <span>博客系统</span>
+                            </div>
+                        </div>
+                        <span class="card-bottom-decor" aria-hidden="true"></span>
+                    </a>
+                </article>
+            </div>
+        </div>
+    </section>
+
+    <!-- ===== 关于我 · 题跋 ===== -->
+    <section class="about-section section" id="about">
+        <div class="container">
+            <div class="section-head">
+                <span class="seal-corner seal-top-left">跋</span>
+                <h2 class="section-title">题 跋</h2>
+                <p class="section-sub">— 关 于 我 —</p>
+            </div>
+
+            <div class="about-content">
+                <div class="about-text">
+                    <p class="about-paragraph">
+                        <span class="first-char">余</span>
+                        麦希屿，一介独立开发者也。自幼喜笔墨，长而好代码，
+                        遂以数码为纸，以键盘为笔，在虚拟世界中挥毫泼墨。
+                        前端工程、AI 工具、数据可视化，皆有所涉，
+                        不求样样精通，但求件件用心。
+                    </p>
+                    <p class="about-paragraph">
+                        深信代码如书法，既有筋骨架构，亦有气韵风神。
+                        一行行代码，正如一笔笔墨迹，
+                        落笔之时，便是心意所至。
+                        愿以匠人之心，造雅致之器，
+                        在数字长河中留下些许墨痕。
+                    </p>
+                </div>
+
+                <div class="about-side">
+                    <div class="skill-box">
+                        <h4 class="skill-title">
+                            <span class="skill-seal">技</span>
+                            技 之 所 长
+                        </h4>
+                        <div class="skill-tags">
+                            <span>JavaScript</span>
+                            <span>TypeScript</span>
+                            <span>React</span>
+                            <span>Vue</span>
+                            <span>Astro</span>
+                            <span>Node.js</span>
+                            <span>Python</span>
+                            <span>Java</span>
+                            <span>Git</span>
+                            <span>Docker</span>
+                            <span>Cloudflare</span>
+                            <span>AI / LLM</span>
+                            <span>数据可视化</span>
+                        </div>
+                    </div>
+
+                    <div class="contact-box">
+                        <h4 class="skill-title">
+                            <span class="skill-seal">联</span>
+                            鸿 爪 留 痕
+                        </h4>
+                        <div class="contact-list">
+                            <a href="https://github.com/cubeyu/" target="_blank" rel="noopener noreferrer" class="contact-item">
+                                <span class="contact-dot"></span>
+                                <span class="contact-label">GitHub</span>
+                                <span class="contact-val">@cubeyu</span>
+                            </a>
+                            <a href="https://techisle.top/" target="_blank" rel="noopener noreferrer" class="contact-item">
+                                <span class="contact-dot"></span>
+                                <span class="contact-label">博客</span>
+                                <span class="contact-val">techisle.top</span>
+                            </a>
+                            <a href="mailto:cuebyu@techisle.top" class="contact-item">
+                                <span class="contact-dot"></span>
+                                <span class="contact-label">邮箱</span>
+                                <span class="contact-val">cuebyu@techisle.top</span>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ===== 页脚 · 落款 ===== -->
+    <footer class="footer-section">
+        <div class="footer-mountain" aria-hidden="true">
+            <svg viewBox="0 0 1200 150" preserveAspectRatio="none">
+                <path d="M0,110 Q200,60 400,90 T800,70 T1200,100 L1200,150 L0,150 Z" fill="currentColor"/>
+            </svg>
+            <svg viewBox="0 0 1200 120" preserveAspectRatio="none">
+                <path d="M0,80 Q150,40 350,70 T700,50 T1200,80 L1200,120 L0,120 Z" fill="currentColor"/>
+            </svg>
+        </div>
+        <div class="footer-body">
+            <div class="footer-seal" aria-hidden="true">
+                <span>麦<br>希<br>屿</span>
+            </div>
+            <p class="footer-text">
+                © 2026 麦希屿 · 以墨为笔，以码为诗
+            </p>
+            <p class="footer-sub">
+                C U E B Y U
+            </p>
+        </div>
+    </footer>
+
+    <!-- 回到顶部 -->
+    <button class="back-top" type="button" aria-label="回到卷首">
+        <span>上</span>
+    </button>
+
+    <script src="js/main.js"></script>
+</body>
+</html>
