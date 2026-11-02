@@ -1,0 +1,49 @@
+/* 全站唯一允许出现字面色值的文件。见 spec 4 节。 */
+:root {
+  /* 颜色 —— 亮色（oiloil 实测） */
+  --paper: #FFFFFF;
+  --surface: #FAFAFA;
+  --surface-invert: #0C0C0E;
+  --ink: #1A1A1A;
+  --ink-2: #555555;
+  --ink-3: #999999;
+  --rule: rgba(26, 26, 26, .18);
+  --rule-strong: #1A1A1A;
+  --rule-dashed: rgba(26, 26, 26, .25);
+  --mark-bg: #FFE28A;
+  --mark-fg: #1A1A1A;
+  --link: #1E40D8;
+
+  /* 排版与布局 —— 主题中性 */
+  --font-sans: "Helvetica Neue", -apple-system, "PingFang SC", "Noto Sans SC", sans-serif;
+  --font-mono: ui-monospace, "SF Mono", SFMono-Regular, Menlo, Consolas, monospace;
+  --col: 820px;
+  --rule-w: 1px;
+  --radius-sm: 4px;
+  --radius-pill: 999px;
+
+  /* 动效 —— 全站唯一缓动曲线 */
+  --ease-expo: cubic-bezier(.19, 1, .22, 1);
+  --dur-enter: 1.4s;
+}
+
+[data-theme="dark"] {
+  --paper: #0C0C0E;
+  --surface: #141416;
+  --surface-invert: #FAFAFA;
+  --ink: #EDEDED;
+  --ink-2: #A8A8AD;
+  --ink-3: #72727A;
+  /* 不重定义则发丝线在暗底完全隐形 —— spec 4.2 头号陷阱 */
+  --rule: rgba(255, 255, 255, .14);
+  --rule-strong: #EDEDED;
+  --rule-dashed: rgba(255, 255, 255, .22);
+  /* 纯 #FFE28A 在暗底过曝，降级为半透明底纹 —— 与亮色观感不同源，是 spec 记录的有意取舍 */
+  --mark-bg: rgba(255, 226, 138, .24);
+  --mark-fg: #FFE9A6;
+  --link: #6E9BFF;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :root { --dur-enter: .01ms; }
+}
