@@ -332,7 +332,7 @@ git commit -m "feat: 设计 tokens 与暗色覆盖完整性测试"
 - Produces:
   - `esc(value: string): string` —— HTML 转义
   - `i18n(zh: string, en: string): string` —— 成对双语节点
-  - `renderTemplate(tpl: string, tokens: Record<string,string>): string` —— 替换后若仍残留 `{{` 则 throw
+  - `renderTemplate(tpl: string, tokens: Record<string,string>): string` —— 替换那一刻遇到模板里的未知 token 则 throw（**不是**替换后全文扫描残留 —— 后者会把用户文案里合法的 `{{` 误判成 bug）
   - `cssOrder: string[]` —— CSS 合并顺序（含全部后续文件名）
 
 - [ ] **Step 1: 写失败的测试**
