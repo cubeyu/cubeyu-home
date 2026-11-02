@@ -1,0 +1,22 @@
+<!doctype html>
+<html lang="zh">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>{{TITLE}}</title>
+<meta name="description" content="{{DESCRIPTION}}">
+<link rel="canonical" href="https://techisle.top/">
+<script>
+/* 首帧防闪烁：CSS 加载前写入偏好，否则暗色用户每次刷新都白闪一下。spec 6.1 */
+try{var t=localStorage.getItem('cubeyu-theme')||'auto';
+document.documentElement.dataset.theme=(t==='auto')?(matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light'):t;}catch(e){}
+</script>
+<link rel="stylesheet" href="/assets/app.css">
+</head>
+<body>
+<main id="main">
+  <p>{{BUILD_PROBE}}</p>
+</main>
+<script type="module" src="/assets/js/app.js"></script>
+</body>
+</html>
