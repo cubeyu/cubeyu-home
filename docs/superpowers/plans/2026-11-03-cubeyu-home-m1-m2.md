@@ -928,8 +928,7 @@ export const site = {
       { zh: 'builds', en: 'builds' },
       { zh: 'small tools.', en: 'small tools.' },
     ],
-    subZh: '麦 希 屿',
-    subEn: 'DEVELOPER / AI TOOLS / OPEN-SOURCE',
+    sub: { zh: '麦 希 屿', en: 'DEVELOPER / AI TOOLS / OPEN-SOURCE' },
     scroll: { zh: '↓ 往下滑', en: '↓ scroll' },
   },
   nav: { githubText: 'github.com/cubeyu', githubUrl: 'https://github.com/cubeyu' },
@@ -1022,11 +1021,16 @@ import { ui, sections } from './src/data/copy.js';
 
   const hero = `<header class="hero col">`
     + `<h1>` + site.hero.lines.map((l) => `<span class="lmask"><span>${esc(l.zh)}</span></span>`).join('') + `</h1>`
-    + `<div class="hero-sub"><span class="zh">${esc(site.hero.subZh)}</span>`
-    + `<span class="en">${esc(site.hero.subEn)}</span></div>`
+    // sub 同时挂 .zh/.en（供本区块样式）与 .i18n-*（供全局显隐规则），两套类名各管各的
+    + `<div class="hero-sub"><span class="zh i18n i18n-zh">${esc(site.hero.sub.zh)}</span>`
+    + `<span class="en i18n i18n-en">${esc(site.hero.sub.en)}</span></div>`
     + `<div class="hero-scroll">${i18n(site.hero.scroll.zh, site.hero.scroll.en)}</div>`
     + `</header>`;
 ```
+
+**`lines` 只渲染 `l.zh` 是故意的，但必须被断言钉住。** 三行遮罩内容（`Cubeyu®` / `builds` / `small tools.`）是品牌字头加拉丁动词，两种语言同值，所以单份渲染正确。若日后有人把某行改成中英不同值，英文模式下会静默显示中文 —— 因此 Task 6 的测试须加一条 `lines.every(l => l.zh === l.en)`，断言消息里写明「遮罩行按语言同值设计，需要双语差异时得改渲染结构」。
+
+**依赖关系**：`hero.css` 的 `.lmask > span { display: block }` 能生效，前提是 `base.css` 的双语显隐规则「只隐藏、不强制显示」（Task 5-6 修复轮已改）。若那条规则回退成 `html[lang=en] .i18n-en { display: inline }`，英文行的 `translateY` 会因非替换行内盒而失效、中文行却正常 —— 一个按语言分裂的视觉 bug，别回退。
 
 并把 `renderTemplate` 的 tokens 换成：
 
