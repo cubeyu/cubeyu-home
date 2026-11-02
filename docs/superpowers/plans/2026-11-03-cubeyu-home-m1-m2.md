@@ -721,10 +721,12 @@ test('tags are latin strings', () => {
 });
 
 test('every url is absolute http(s) or an explicit placeholder', () => {
-  for (const c of projects) {
-    assert.match(c.url, /^(https?:\/\/|#)$/, `${c.slug}.url = ${c.url} is not absolute`);
-  }
-  for (const s of sections) assert.match(s.url || '#', /^(https?:\/\/|#)$/);
+  // 必须带主机名：早期版本写成 /^(https?:\/\/|#)$/，$ 锚点使其只匹配空主机名的
+  // "https://"，与同任务里 https://hot.techisle.top 这条真实链接直接矛盾。
+  // 收紧而非放宽：裸 scheme 仍被拒绝。
+  const ABS = /^(https?:\/\/\S+|#)$/;
+  for (const c of projects) assert.match(c.url, ABS, `${c.slug}.url = ${c.url} is not absolute`);
+  for (const s of sections) assert.match(s.url || '#', ABS);
 });
 
 test('skills list is the 13 finalized from spec section 8', () => {
