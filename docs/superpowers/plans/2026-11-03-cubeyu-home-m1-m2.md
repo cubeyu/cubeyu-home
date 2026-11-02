@@ -45,6 +45,7 @@ spec 9.1 第 4 项要正则扫 `#[0-9a-fA-F]{3,8}` 与 `rgba?\(`。但 `base.css
 - **暗色同步**：`:root` 里新增任何非主题中性的变量，必须在 `[data-theme="dark"]` 同时定义，否则发丝线在暗底隐形。Task 2 的测试机器执行这条。
 - **reduced-motion**：`prefers-reduced-motion: reduce` 命中时，逐词遮罩、入场动画、微原型的自动循环全部停止，内容保持静态可读。这是硬要求，不是加分项。
 - **双语完整**：每个 `.i18n` 位置必须成对输出 `i18n-zh` 与 `i18n-en`，不允许只写一边。
+- **转义边界（两类 token，规则不同，不得混用）**：`renderTemplate` 是字面字符串拼接，没有转义边界。因此 **叶子 token 必须过 `esc()`** —— `TITLE`、`DESCRIPTION` 这类直接落在文本节点或 `content="…"` 属性里的值，`"` 会截断属性、`<` 会往 `<head>` 注入标记；而 **片段 token 必须保持裸值** —— `NAV`、`HERO`、`SECTIONS`、`FOOTER` 是已在组装处逐字段 `esc()` / `i18n()` 过的 HTML 片段，再套一层 `esc()` 就是双重转义。同一个 tokens 字面量里两套规则并存是故意的，每个写 build.js 的人都必须在注释里看到这条，否则会「顺手全 esc」。
 - **卡片数量不硬编码**：任何断言、循环、样式都不得假设「7」。`demo: null` 是合法取值，表示纯纸面卡。
 - **文案语言**：界面与注释中文；API 名、变量名、文件路径、CSS 类名保持英文。
 - **不得改动**：`D:\code\other\MoeHome\**`、`D:\code\other\Simple-Homepage\**`、`techisle.top` 与 `portfolio.techisle.top` 的线上部署。本计划所有文件写入均在 `D:\code\other\cubeyu-home\**`。
@@ -452,7 +453,6 @@ git commit -m "feat: 构建期转义、双语节点与模板替换工具"
 
 ```js
 export const site = {
-  lang: 'zh',
   title: 'Cubeyu® — 麦希屿',
   description: 'Cubeyu 的个人作品、AI 工具实操、产品开发与开源项目记录。',
 };
@@ -497,7 +497,7 @@ document.documentElement.dataset.theme=(t==='auto')?(matchMedia('(prefers-color-
 import { readFileSync, writeFileSync, mkdirSync, rmSync, cpSync } from 'node:fs';
 import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { renderTemplate, cssOrder } from './src/lib/build-utils.js';
+import { renderTemplate, cssOrder, esc } from './src/lib/build-utils.js';
 import { site } from './src/data/site.js';
 
 const root = dirname(fileURLToPath(import.meta.url));
@@ -505,9 +505,10 @@ const out = join(root, 'dist');
 
 const tpl = readFileSync(join(root, 'src/templates/index.html'), 'utf8');
 
+// 叶子 token 过 esc()；Task 7/8 的 NAV/HERO/SECTIONS 是片段，必须保持裸值（见 Global Constraints）
 const html = renderTemplate(tpl, {
-  TITLE: site.title,
-  DESCRIPTION: site.description,
+  TITLE: esc(site.title),
+  DESCRIPTION: esc(site.description),
   BUILD_PROBE: 'build ok',
 });
 
@@ -536,10 +537,10 @@ Run:
 
 ```bash
 cd D:/code/other/cubeyu-home
-printf '/* 内容见 Task 5 */\n' > src/styles/base.css
-printf '/* 内容见 Task 8 */\n' > src/styles/hero.css
-printf '/* 内容见 Task 9 */\n' > src/styles/cards.css
-mkdir -p src/styles/demos && printf '/* 内容见 Task 12 */\n' > src/styles/demos/inkmark.css
+printf '/* 由 Task 5 整文件替换 */\n' > src/styles/base.css
+printf '/* 由 Task 7 整文件替换 */\n' > src/styles/hero.css
+printf '/* 由 Task 8 整文件替换 */\n' > src/styles/cards.css
+mkdir -p src/styles/demos && printf '/* 由 Task 11 整文件替换 */\n' > src/styles/demos/inkmark.css
 mkdir -p src/js/demos && printf 'export default {}\n' > src/js/demos/index.js
 printf 'console.log("app");\n' > src/js/app.js
 ```
@@ -915,7 +916,6 @@ export const links = [
 
 ```js
 export const site = {
-  lang: 'zh',
   title: 'Cubeyu® — 麦希屿',
   description: 'Cubeyu 的个人作品、AI 工具实操、产品开发与开源项目记录。',
   url: 'https://techisle.top/',
