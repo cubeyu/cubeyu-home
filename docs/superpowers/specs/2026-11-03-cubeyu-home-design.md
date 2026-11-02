@@ -276,6 +276,18 @@ CSS：`html[lang="zh"] .i18n-en { display: none }`，反之同理。默认 `lang
 
 换一张卡只需动三处：`data/projects.js` 条目、（如保留微原型）`demos/` 内对应一对文件、`demos/index.js` 注册行。不需要动 `base.css` / `cards.css` / 模板。
 
+**标签字段更正（2026-11-03，计划执行期裁定）**：参照站卡片实测是**两个**并列字段——双语交互名（`悬停` / `Hover`）与分类（`鼠标`），本节原先的单个「标签」把它们压成了一个。计划改为 `label`（双语交互名，即下面第一列）+ `cat`（分类，第二列）两列，更贴近参照结构，故以本表为准；其中两处取值与上文各行不符，是有意的修正而非笔误：N°01 分类取 `编辑器 / Editor`（比 `笔记 / Notes` 更准确地描述 InkMark 这个产品），N°02 中文取 `归档`（`记录` 与英文 `Archive` 原本对不上）。
+
+| 卡 | `label` 双语交互名 | `cat` 分类 |
+|---|---|---|
+| N°01 | 实时渲染 / Live render | 编辑器 / Editor |
+| N°02 | 年度数字 / Count up | 归档 / Archive |
+| N°03 | 翻页 / Deck | 演示 / Slides |
+| N°04 | 自主决策 / Autoplay | 代理 / Agent |
+| N°05 | 换源 / Switch | 接口 / API |
+| N°06 | 逐字母判定 / Keystroke | 练习 / Drill |
+| N°07 | 展开 / Expand | 写作 / Writing |
+
 **N°01 墨痕笔记 / INKMARK** ｜ `TypeScript` `LLM` `Markdown` ｜ 标签 `笔记 / Notes`
 - 引文：笔记存在自己电脑上，选中一段就能丢给模型改写。
 - EN: Your notes stay on your own machine. Select a line, hand it to the model, get it back rewritten.
