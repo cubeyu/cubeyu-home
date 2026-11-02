@@ -8,6 +8,10 @@ body {
   font-size: 16px;
   line-height: 24px;
 }
+/* 表单控件默认继承正文字体：不写这条的话 Task 9 的主题切换、Task 11 的 inkmark
+   textarea 会落到 UA 自带的表单字体，跟正文不是同一张字面。
+   组件确有理由的显式 font-family（.pref-toggle 的等宽）照样能覆盖，本条 0-0-3。 */
+button, input, textarea { font: inherit; }
 
 /* 窄栏：spec 4.1 --col = 820px */
 .col { max-width: var(--col); margin-inline: auto; padding-inline: 20px; }
@@ -43,10 +47,17 @@ h3 { font-size: 30px; font-weight: 800; margin: 0; letter-spacing: -.01em; }
 a { color: inherit; text-decoration-color: var(--rule); text-underline-offset: 3px; }
 a:hover { color: var(--link); text-decoration-color: var(--link); }
 
-/* 双语显隐：构建时烘两套节点，纯 CSS 切换，不靠 JS 渲染内容（spec 5.2） */
-.i18n-en { display: none; }
-html[lang="en"] .i18n-zh { display: none; }
-html[lang="en"] .i18n-en { display: inline; }
+/* 双语显隐：构建时烘两套节点，纯 CSS 切换，不靠 JS 渲染内容（spec 5.2）。
+   只负责「隐藏」，从不负责「显示」—— 英文态下 base.css 对 .i18n-en 的 display
+   一字不提，组件写在该节点上的 display: block / flex 才留得住。旧写法
+   `html[lang="en"] .i18n-en { display: inline }`（0-2-1）会压过组件的
+   `.lmask > span { display: block }`（0-1-1），而 inline 盒上的 transform 被忽略，
+   于是 Task 7 的逐词遮罩（spec 6.2）在中文态动、英文态不动 —— 语言相关的视觉差异。
+   隐藏规则反过来必须赢过组件的 display，所以带 html: 前缀凑到 0-2-1；
+   朴素的 `.i18n-en { display: none }` 只有 0-1-0，会输给 0-1-1 的 `.lmask > span`。
+   :lang(en) 兼容 en-US / en-GB；<html lang="zh">（模板硬编码的默认态）走 not 分支。 */
+html:not(:lang(en)) .i18n-en { display: none; }
+html:lang(en) .i18n-zh { display: none; }
 
 /* 区块节奏 */
 section { padding-block: 72px; }
@@ -56,11 +67,20 @@ section { padding-block: 72px; }
   section { padding-block: 48px; }
 }
 
-/* reduced-motion：入场时长归零（spec 6.2） */
+/* reduced-motion：入场时长与延迟一并归零（spec 6.2）。
+   只清 duration 是不够的：Task 7 的逐词遮罩给每个词写了 animation-delay: .10s / .20s，
+   延迟留着，词就在那段时间里仍被 .lmask{overflow:hidden} 挡在视线外 ——
+   「减弱动效」模式下文字反而缺失，比让它动更糟。
+   两条 delay 必须写 0s 不能写 0：<time> 值的单位是必需的，MDN 的 animation-delay
+   页对 <time> 分量明写「The unit is required.」，0 也要带单位；
+   headless Chrome 实测 animation-delay: 0 !important 被解析器整条丢掉（规则序列化成
+   空块），等于没写。别再改回无单位零。 */
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after {
     animation-duration: .01ms !important;
+    animation-delay: 0s !important;
     animation-iteration-count: 1 !important;
     transition-duration: .01ms !important;
+    transition-delay: 0s !important;
   }
 }

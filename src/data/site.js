@@ -1,3 +1,5 @@
+// 站点身份层（Task 6 由 Task 4 的三字段最小版扩成完整版）。
+// title / description 定稿值来自 spec 7.3，不得改写。
 export const site = {
   title: 'Cubeyu® — 麦希屿',
   description: 'Cubeyu 的个人作品、AI 工具实操、产品开发与开源项目记录。',
@@ -9,8 +11,9 @@ export const site = {
       { zh: 'builds', en: 'builds' },
       { zh: 'small tools.', en: 'small tools.' },
     ],
-    subZh: '麦 希 屿',
-    subEn: 'DEVELOPER / AI TOOLS / OPEN-SOURCE',
+    // 副行也走 { zh, en } 形状，和其余双语字段一致，可直接进通用 i18n 节点发射器。
+    // 旧的 subZh / subEn 扁平字符串是单语泄漏最可能发生的地方（Task 7 消费）。
+    sub: { zh: '麦 希 屿', en: 'DEVELOPER / AI TOOLS / OPEN-SOURCE' },
     scroll: { zh: '↓ 往下滑', en: '↓ scroll' },
   },
   nav: { githubText: 'github.com/cubeyu', githubUrl: 'https://github.com/cubeyu' },
