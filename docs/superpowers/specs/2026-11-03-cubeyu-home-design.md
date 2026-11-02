@@ -327,14 +327,16 @@ CSS：`html[lang="zh"] .i18n-en { display: none }`，反之同理。默认 `lang
 
 ### 7.3 SEO（决策 11）
 
-照抄 oiloil 的实测 meta 句式：
+照抄 oiloil 的实测 meta 句式，品牌名用拉丁字头、中文名落在破折号后 —— 与参照站 `Oil® — 欧呦` 严格同构：
 
 ```html
-<title>麦希屿® — cubeyu</title>
-<meta name="description" content="麦希屿的个人作品、AI 工具实操、产品开发与开源项目记录。">
+<title>Cubeyu® — 麦希屿</title>
+<meta name="description" content="Cubeyu 的个人作品、AI 工具实操、产品开发与开源项目记录。">
 ```
 
 对照：oiloil 实测 `<title>` 为 `Oil® — 欧呦`，description 为「Oil 的个人作品、AI 工具实操、产品开发与开源项目记录。」。旧值「cubeyu の水墨小筑」及其「水墨风格个人主页」描述不再使用。
+
+**待决（见 8.1）**：参照站的标题品牌与 hero `h1` 用的是**同一个字头**（title `Oil® — 欧呦`，h1 `Oil® / makes / things.`，中文名 `欧呦` 退到 `.sub` 行）。本文件 7 节当前记的 hero 是 `麦希屿® / builds / small tools.`，与刚定的 `Cubeyu®` 字头不一致，需二选一。
 
 ---
 
@@ -352,9 +354,10 @@ CSS：`html[lang="zh"] .i18n-en { display: none }`，反之同理。默认 `lang
 | 访问统计 | `Simple-Homepage` 装了 `@vercel/analytics`（npm 运行时包） | **代码里不加 script**，改由 Vercel 项目设置开启 Web Analytics。否则第 1 节「`dependencies` 必须为空」和 9.1 第 7 项检查自相矛盾。 |
 | 18 项技能（`techStack.json`） | 含 jQuery 等 | 采用 portfolio 的 13 项（更贴近当前技术栈）。因 portfolio 将退役，清单**在此定稿**，不再依赖子站：`JavaScript` `TypeScript` `React` `Vue` `Astro` `Node.js` `Python` `Java` `Git` `Docker` `Cloudflare` `AI / LLM` `数据可视化`（EN 项 `Data Visualization`）。`Simple-Homepage` 多出的 `Vite` `Markdown` 不纳入。 |
 
-### 8.1 待用户确认的最后一项内容（不阻塞实现，M1 验收时一并定）
+### 8.1 待用户确认的内容项（不阻塞实现，M1 验收时一并定）
 
-**云隐博客那张卡的链接目标**：三处记载不一致 —— portfolio 写 `techisle.top`，`Simple-Homepage` 历史写 `cubeyu.cnblogs.com`，而 portfolio 退役后 `techisle.top` 将由新站本身占用，博客需要一个独立落点。M1 前给一个 URL 即可；在此之前该卡链接先指向 `#`，不做猜测。
+1. **hero `h1` 的字头用 `Cubeyu®` 还是 `麦希屿®`**。标题已定为 `Cubeyu® — 麦希屿`（7.3），而参照站的标题字头与 hero 字头是同一个符号；若 hero 保留 `麦希屿®`，则 `麦希屿` 会同时出现在 title 破折号后、hero 大字、`.sub` 行三处，`Cubeyu®` 反而只活在 `<title>` 里。二选一后 7 节 HERO 行随之更新。
+2. **云隐博客那张卡的链接目标**：三处记载不一致 —— portfolio 写 `techisle.top`，`Simple-Homepage` 历史写 `cubeyu.cnblogs.com`，而 portfolio 退役后 `techisle.top` 将由新站本身占用，博客需要一个独立落点。M1 前给一个 URL 即可；在此之前该卡链接先指向 `#`，不做猜测。
 
 （原第 1 项「SEO 文案」已在复核时定案，见 7.3。）
 
