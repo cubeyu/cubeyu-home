@@ -675,7 +675,7 @@ git commit -m "feat: 排版阶梯、发丝线与双语显隐基础样式"
   - `projects: Card[]`，`Card = { no: string, slug: string, label: {zh,en}, cat: {zh,en}, title: {zh,en}, quote: {zh,en}, tags: string[], demo: string|null, demoHint: {zh,en}|null, url: string }`
   - `skills: {zh,en}[]`（13 项）
   - `sections: {id, eyebrow, title: {zh,en}}[]`
-  - `site.hero = { lines: {zh,en}[], subZh: string, subEn: string, scroll: {zh,en} }`
+  - `site.hero = { lines: {zh,en}[], sub: {zh,en}, scroll: {zh,en} }`（`lines` 两语同值，由测试钉住；`sub` 早先写作 `subZh`/`subEn`，已规范成与其余双语字段同形）
 
 以下 14 句文案是 spec 7.1 已批准内容，**逐字照抄，不得顺手润色**。
 
