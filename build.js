@@ -6,7 +6,7 @@
 import { readFileSync, writeFileSync, mkdirSync, rmSync, cpSync } from 'node:fs';
 import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { renderTemplate, cssOrder } from './src/lib/build-utils.js';
+import { renderTemplate, cssOrder, esc } from './src/lib/build-utils.js';
 import { site } from './src/data/site.js';
 
 const root = dirname(fileURLToPath(import.meta.url));
@@ -15,9 +15,10 @@ const out = join(root, 'dist');
 const tpl = readFileSync(join(root, 'src/templates/index.html'), 'utf8');
 
 // 本任务只烘三个 token；nav / hero / 卡片区随 Task 7、8 增量加入。
+// 叶子 token（TITLE / DESCRIPTION）必须过 esc()；Task 7/8 的 NAV / HERO / SECTIONS / FOOTER 是片段 token，组装处已逐字段转义，必须保持裸值，否则双重转义（见 Global Constraints）
 const html = renderTemplate(tpl, {
-  TITLE: site.title,
-  DESCRIPTION: site.description,
+  TITLE: esc(site.title),
+  DESCRIPTION: esc(site.description),
   BUILD_PROBE: 'build ok',
 });
 
