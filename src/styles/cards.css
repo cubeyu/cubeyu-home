@@ -1,1 +1,48 @@
-/* 由 Task 8 整文件替换 */
+/* cards.css —— 作品卡 + 技能网格 + 站点区 + 页脚（Task 8）。
+   纪律同 hero.css：零字面色值，颜色一律 var(--…)；边框只有 1px 发丝线；
+   圆角只取 --radius-sm（4px），不用大圆角与玻璃拟态（Global Constraints / spec 4.3）。 */
+
+/* 卡片：发丝线 + 小圆角。禁止玻璃拟态与大圆角（Global Constraints） */
+.card {
+  border-top: var(--rule-w) solid var(--rule);
+  padding-block: 32px;
+  display: grid;
+  grid-template-columns: 64px 1fr;
+  gap: 24px;
+}
+/* 最后一张卡补下边线，整组卡片自成一段发丝线区间 */
+.card:last-of-type { border-bottom: var(--rule-w) solid var(--rule); }
+/* 窄屏：编号与内容两列塌成一列（64px 那一列在 390px 下挤得没地方放标题） */
+@media (max-width: 640px) { .card { grid-template-columns: 1fr; gap: 8px; } }
+
+/* 编号 N°01 —— 等宽，属「数字用等宽」的纪律，不是正文 */
+.card-no { font-family: var(--font-mono); font-size: 12px; color: var(--ink-3); letter-spacing: .04em; }
+.card-meta { display: flex; gap: 12px; align-items: baseline; flex-wrap: wrap; }
+.card-label { font-family: var(--font-mono); font-size: 12px; font-weight: 650; color: var(--ink-2); }
+.card-cat { font-family: var(--font-mono); font-size: 12px; color: var(--ink-3); }
+
+/* 标题链接：下划线换成 hover 才落下的 1px 实线，静态时保持透明占位以免跳动 */
+.card-title a { text-decoration: none; color: var(--ink); border-bottom: var(--rule-w) solid transparent; }
+.card-title a:hover { border-bottom-color: var(--ink); }
+
+.card-quote { margin: 10px 0 0; max-width: 62ch; color: var(--ink-2); }
+.card-tags { margin-top: 14px; display: flex; gap: 6px; flex-wrap: wrap; }
+.card-demo { margin-top: 20px; border: var(--rule-w) solid var(--rule); border-radius: var(--radius-sm); background: var(--surface); padding: 16px; }
+.card-hint { margin-top: 10px; font-family: var(--font-mono); font-size: 11px; color: var(--ink-3); }
+
+/* 强调要克制：hover 只把编号从三级墨提到正文墨，
+   马克笔黄（--mark-bg）留给 demo 里那一处唯一的强调点（spec 4.1 / 7.1 的 N°01「问 AI」） */
+.card:hover .card-no { color: var(--ink); }
+
+/* 技能：发丝线网格，等宽，不放图标（spec 7 节） */
+.skills-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 0; margin-top: 20px; border-top: var(--rule-w) solid var(--rule); border-left: var(--rule-w) solid var(--rule); }
+.skill { font-family: var(--font-mono); font-size: 12px; padding: 12px; border-right: var(--rule-w) solid var(--rule); border-bottom: var(--rule-w) solid var(--rule); color: var(--ink-2); }
+
+/* 站点：一行一条，名字 + 说明 */
+.sites { list-style: none; margin: 20px 0 0; padding: 0; border-top: var(--rule-w) solid var(--rule); }
+.site { display: flex; justify-content: space-between; gap: 16px; padding-block: 14px; border-bottom: var(--rule-w) solid var(--rule); }
+.site a { font-family: var(--font-mono); font-size: 13px; text-decoration: none; }
+.site-note { font-size: 12px; color: var(--ink-3); }
+
+/* 页脚 */
+.foot { padding-block: 40px; border-top: var(--rule-w) solid var(--rule); display: flex; justify-content: space-between; gap: 16px; flex-wrap: wrap; font-family: var(--font-mono); font-size: 12px; color: var(--ink-3); }

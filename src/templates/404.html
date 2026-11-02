@@ -1,0 +1,32 @@
+<!doctype html>
+<!-- 404.html —— spec 3 节列出的第二个模板，M2 交付物。刻意最小：无 hero 遮罩、无卡片、
+     除一个回首页链接外没有任何开关。样式复用同一份 /assets/app.css，不另开入口。
+     双语文案直接写成 i18n-zh / i18n-en 成对节点（本任务 scope 不含 src/data/*，
+     故不新增 copy 字段），显隐交给 base.css 的全局规则。 -->
+<html lang="zh">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>{{TITLE}}</title>
+<script>
+/* 首帧防闪烁：与 index.html 同一段 3 行脚本（spec 6.1）。
+   两处副本是已知重复 —— 偏好键名或写法变更时要同时改，M4 若把它抽进 build.js 常量更稳。 */
+try{var t=localStorage.getItem('cubeyu-theme')||'auto';
+document.documentElement.dataset.theme=(t==='auto')?(matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light'):t;}catch(e){}
+</script>
+<link rel="stylesheet" href="/assets/app.css">
+</head>
+<body>
+<main id="main">
+<!-- 借 base.css 已有的 .col（820px 窄栏）与 section 的 padding-block 做留白，不新增规则 -->
+<section class="col">
+<h1>404</h1>
+<p>
+<span class="i18n i18n-zh">这个地址下没有页面。</span>
+<span class="i18n i18n-en">There is no page at this address.</span>
+<a href="/"><span class="i18n i18n-zh">回首页</span><span class="i18n i18n-en">Back to home</span></a>
+</p>
+</section>
+</main>
+</body>
+</html>
