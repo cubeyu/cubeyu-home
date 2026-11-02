@@ -890,7 +890,7 @@ export const skills = [
 
 ```js
 export const sections = [
-  { id: 'works',   eyebrow: '作品 / WORKS',  title: { zh: '七个能上手玩的东西', en: 'Seven things you can actually poke' } },
+  { id: 'works',   eyebrow: '作品 / WORKS',  title: { zh: '能上手玩的东西', en: 'Things you can actually poke' } },
   { id: 'skills',  eyebrow: '技能 / SKILLS', title: { zh: '日常在用', en: 'In daily use' } },
   { id: 'sites',   eyebrow: '站点 / SITES',  title: { zh: '我维护的其它东西', en: 'Other things I run' } },
 ];
@@ -1021,12 +1021,13 @@ import { ui, sections } from './src/data/copy.js';
 
   const hero = `<header class="hero col">`
     + `<h1>` + site.hero.lines.map((l) => `<span class="lmask"><span>${esc(l.zh)}</span></span>`).join('') + `</h1>`
-    // sub 同时挂 .zh/.en（供本区块样式）与 .i18n-*（供全局显隐规则），两套类名各管各的
-    + `<div class="hero-sub"><span class="zh i18n i18n-zh">${esc(site.hero.sub.zh)}</span>`
-    + `<span class="en i18n i18n-en">${esc(site.hero.sub.en)}</span></div>`
+  + `<div class="hero-sub"><span class="zh">${esc(site.hero.sub.zh)}</span>`
+  + `<span class="en">${esc(site.hero.sub.en)}</span></div>`
     + `<div class="hero-scroll">${i18n(site.hero.scroll.zh, site.hero.scroll.en)}</div>`
     + `</header>`;
 ```
+
+**`.hero-sub` 两个 span 都是常驻可见的，绝不挂 `.i18n-*`。** 参照站实测 DOM 是 `div.sub` 下 `span.zh "欧 呦"` + `span.en "ENGINEER / DESIGNER / OPEN-SOURCE"` —— 中文名与拉丁身份标签是**两个不同内容的品牌元素**，不是同一字符串的两种译文。挂上双语显隐类会让中文模式只剩名字、英文模式只剩身份行，`hero.css` 的 `display:flex; gap:16px; align-items:baseline` 变成永远只有一个可见子元素（Task 7-8 审查抓到，已由控制器更正）。`data/site.js` 里保留 `sub: {zh, en}` 的形状只是因为两个值分别来自中英两块内容，不代表它们互为翻译。
 
 **`lines` 只渲染 `l.zh` 是故意的，但必须被断言钉住。** 三行遮罩内容（`Cubeyu®` / `builds` / `small tools.`）是品牌字头加拉丁动词，两种语言同值，所以单份渲染正确。若日后有人把某行改成中英不同值，英文模式下会静默显示中文 —— 因此 Task 6 的测试须加一条 `lines.every(l => l.zh === l.en)`，断言消息里写明「遮罩行按语言同值设计，需要双语差异时得改渲染结构」。
 
@@ -1126,7 +1127,7 @@ git commit -m "feat: hero 逐词遮罩与导航"
 .card-quote { margin: 10px 0 0; max-width: 62ch; color: var(--ink-2); }
 .card-tags { margin-top: 14px; display: flex; gap: 6px; flex-wrap: wrap; }
 .card-demo { margin-top: 20px; border: var(--rule-w) solid var(--rule); border-radius: var(--radius-sm); background: var(--surface); padding: 16px; }
-.card-hint { margin-top: 10px; font-family: var(--font-mono); font-size: 11px; color: var(--ink-3); }
+.card-hint { margin-top: 10px; font-family: var(--font-mono); font-size: 12px; color: var(--ink-3); }
 
 /* 马克笔黄只用于强调，一处即可 */
 .card:hover .card-no { color: var(--ink); }
@@ -1213,7 +1214,7 @@ const html = renderTemplate(tpl, {
 /* 站点：一行一条，名字 + 说明 */
 .sites { list-style: none; margin: 20px 0 0; padding: 0; border-top: var(--rule-w) solid var(--rule); }
 .site { display: flex; justify-content: space-between; gap: 16px; padding-block: 14px; border-bottom: var(--rule-w) solid var(--rule); }
-.site a { font-family: var(--font-mono); font-size: 13px; text-decoration: none; }
+.site a { font-family: var(--font-mono); font-size: 12px; text-decoration: none; }
 .site-note { font-size: 12px; color: var(--ink-3); }
 
 /* 页脚 */
