@@ -198,16 +198,12 @@ CSS：`html[lang="zh"] .i18n-en { display: none }`，反之同理。默认 `lang
 
 1. 读 `src/data/*` → 渲染 `templates/index.html`，替换 `{{TOKEN}}` 与循环区块（照 MoeHome 的 token 替换思路，但只支持我们需要的 `{{TITLE}}` 形式与一个卡片段的循环拼装）。
 2. 按固定顺序合并 `src/styles/**` → 单个 `dist/assets/app.css`。
-3. **`src/js/**` → 单个 `dist/assets/app.js`，以 `type="module"` 引入。**
-   这里有个约束要讲清楚：没有打包器，`terser` 不解析 `import`，所以「合并成单文件」和「保留 ES module 语义」天然冲突。采用极简拼接而非引入 bundler：
-   - 按相对 `import` 关系做拓扑排序（我们的代码全在自己手里，依赖图是静态可读的）；
-   - 每个源文件的模块体被包进一层 IIFE，**再**把该文件导出的符号显式挂进共享的 `window.__DEMO__` / `window.__MOD__` 命名空间。用 IIFE 是必需的，因为 7 个 demo 拼进同一作用域后 `mount`、`el`、`cleanup` 这类局部名必然冲突；
-   - 剥离源文件里的 `import` / `export` 语句行。
-   
-   代价与边界：拼接依赖「所有 `src/js/**` 都写成上述形状」这一纪律，`check.js` 第 5 项负责兜底。**不引入 bundler** —— 为一个单页站加 Rollup/esbuild 与第 1 节的零依赖取向不符，而 20 次模块请求换成 1 次请求对首屏确实值得省。
+3. **原样拷贝 `src/js/**` 目录树到 `dist/assets/js/`，入口以 `<script type="module">` 引入。不做打包拼接。**
+   这一条在计划阶段被推翻，用户已确认。原方案是「按 `import` 拓扑排序 → 模块体包 IIFE → 剥离 `import`/`export` 行 → 输出单文件」，它的问题不在结果而在手段：那 4 步全靠正则改写 JS 源码，等于自研一个不可靠的解析器，会把难查的坏件引入本应只用来证明视觉方向的 M1。而「合并成单文件」与「保留 ES module 语义」在没有打包器时本就冲突 —— `terser` 不解析 `import`，IIFE 包裹又是必需的（7 个 demo 拼进同一作用域后 `mount`、`el`、`cleanup` 必然撞名），这些复杂度全是为省请求数买单。
+   代价：多约 12 个模块请求。Vercel 以 HTTP/2 多路复用在同一连接并行取，且 `dist/` 全程不可变、可长期强缓存，实测影响可忽略。仍然**不引入 bundler** —— 为单页站加 Rollup/esbuild 与第 1 节的零依赖取向不符。
 4. 调 `lightningcss` / `terser` 压缩（`devDependencies`）。
 
-必须检查：模板渲染后若仍有 `{{` 残留，构建直接失败退出非零。这条由 `check.js` 兜底。
+必须检查：`renderTemplate` 在**替换的那一刻**遇到模板里的未知 token 就直接抛错、构建退出非零（而不是替换完再全文扫描残留 —— 那样会把用户文案里合法的 `{{` 误判成未解析 token）。`check.js` 另有一条只匹配大写约定 `\{\{[A-Z][A-Z_]*\}\}` 的兜底扫描，防「模板被手改坏后绕过构建」。
 
 ---
 

@@ -24,7 +24,7 @@ spec 5.3 原写「按 `import` 拓扑排序 → 每个模块体包 IIFE → 剥�
 
 理由：那 4 步里，「剥离 `export function mount` 却保留符号名」「IIFE 内再挂全局命名空间」两处都必须用正则改写 JS 源码，是在自研一个不可靠的解析器。它会在 M1 引入难查的坏件，而 M1 的任务是证明视觉方向对不对。代价是多约 12 个模块请求 —— Vercel 用 HTTP/2 多路复用，同一连接并行取，实测影响可忽略。
 
-**这一条需要用户确认后再开工**（见 Task 1 Step 0）。若用户坚持 spec 原文，Task 4 需替换为拼接实现，其余任务不受影响。
+**这一条已由用户确认采纳（2026-11-03），spec 5.3 已同步改写为原生 ES module 方案。**
 
 ### 偏离 2：`check.js` 的色值扫描改为源文件 + 白名单
 
@@ -110,9 +110,9 @@ cubeyu-home/
 - Consumes: 无
 - Produces: `npm run build` / `npm run check` / `npm test` / `npm run serve` 四个入口；`node --test test/` 可用；`http://localhost:4173` 静态服务。
 
-- [ ] **Step 0: 先向用户确认偏离 1**
+- [ ] **Step 0: 偏离 1 已获批（无需再问，仅留痕）**
 
-开工前必须取得对「不做 JS 拼接、改原生 ES module」的确认。未确认前不得继续。若用户要 spec 原文，本计划的 Task 4 需整段替换。
+「不做 JS 拼接、改原生 ES module」已由用户于 2026-11-03 批准，spec 5.3 已同步改写。执行到此直接勾选下一步。
 
 - [ ] **Step 1: 写 `package.json`**
 
