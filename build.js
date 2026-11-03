@@ -7,6 +7,10 @@ import { readFileSync, writeFileSync, mkdirSync, rmSync, cpSync } from 'node:fs'
 import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { renderTemplate, cssOrder, esc, i18n } from './src/lib/build-utils.js';
+// prefs.js 是零 DOM 的纯模块（模块求值期不碰任何浏览器对象），所以在 Node 里 import 它安全，
+// 拿到的是同一份 DARK_QUERY 字面量 —— 内联防闪烁脚本是唯一 import 不到它的一侧（它在模块下载前
+// 就执行），所以那里只能把键名再写一遍；查询串则从这里插进模板，两侧共用一个真源（审查 M2）。
+import { DARK_QUERY } from './src/js/prefs.js';
 import { site } from './src/data/site.js';
 import { sections, links, ui } from './src/data/copy.js';
 import { projects } from './src/data/projects.js';
@@ -25,17 +29,27 @@ const out = join(root, 'dist');
 const tpl = readFileSync(join(root, 'src/templates/index.html'), 'utf8');
 const tpl404 = readFileSync(join(root, 'src/templates/404.html'), 'utf8');
 
-// Task 7：导航条 + hero。nav 的语言切换 <a> 只带 data-lang-toggle 属性，
+// Task 7：导航条 + hero。nav 的语言切换控件只带 data-lang-toggle 属性，
 // 行为由 Task 10 的 i18n.js 挂上；此处先把 DOM 与双语节点烘出来。
 // ui.langZh / langEn 也过 esc()：这两个值今天是「中」「EN」，安全得没什么好挡的，
 // 但整行别的字段都转义了，唯独这一处裸插 —— 下一段复制这行代码的人不会注意到差别。
-// Task 10 补 data-labels：i18n.js 切换后要把当前语言写回按钮文字，而它不读 src/data/*
+// Task 10 补 data-labels：i18n.js 切换后要把可见文字写回按钮，而它不读 src/data/*
 // （浏览器侧拿不到数据层），标签只能从 DOM 属性进来。值同样过 esc()，不照 brief 裸插。
-// 静态文字保持「中 / EN」成对：这是无 JS 态与首帧的可见 affordance，
-// i18n.js 的 paint() 之后会把它收成当前语言一项（brief 定的形状）。
+//
+// Task 9-10 审查 I3 + I4 改了这个控件的两件事，两处都指向同一条原则「无 JS 态与 JS 态
+// 必须对同一个控件给出同一种承诺」：
+// · I4：`<a href="#">` + preventDefault 换成 `<button type="button">`。关 JS 时那个「链接」
+//   只会滚到页顶、什么都不切，Ctrl/中键还会多开一个同页标签；按钮没有默认跳转，点了不动，
+//   与页脚主题开关（本来就是按钮）一致。外观由 base.css 的 `.nav button` 复位成字面文本。
+// · I3：可见文字不再被收成当前语言一个词。`中 / EN` 两个选项同时在场才是「二态开关」的自证，
+//   所以 langPair 一次组成、同时用作属性值与元素文字 —— 首帧写回的就是同一串，零替换
+//   （主题开关烘「自动」已经是这个形状）。无障碍名改成含住可见文字的前缀式（`切换语言：中 / EN`），
+//   原先「可见文字说当前语种、aria-label 说目标语种」没有任何共同子串，踩 WCAG 2.5.3 Label in Name。
+// 分隔符约定：pref-ui.js 按逗号 split(',')，所以可见文字里不能出现逗号 —— test/prefs.test.js 钉住。
+const langPair = `${ui.langZh} / ${ui.langEn}`;
 const nav = `<nav class="col nav"><a href="/">${i18n('首页', 'Home')}</a>`
   + `<span class="nav-right">`
-  + `<a href="#" data-lang-toggle data-labels="${esc(ui.langZh)},${esc(ui.langEn)}">${esc(ui.langZh)} / ${esc(ui.langEn)}</a>`
+  + `<button type="button" data-lang-toggle data-labels="${esc(langPair)}">${esc(langPair)}</button>`
   + `<a href="${esc(site.nav.githubUrl)}">${esc(site.nav.githubText)}</a>`
   + `</span></nav>`;
 
@@ -73,7 +87,7 @@ const cardTitle = (p) => {
 };
 
 // demo 区（data-demo + .card-demo 容器）与 data-demo 属性都只在【该 demo 名已在注册表里实现】时输出，
-// 判据不再是 projects.js 里声明了 p.demo。理由（Task 7-8 审查项 5）：七张卡全都声明了 demo，
+// 判据不再是 projects.js 里声明了 p.demo。理由（Task 7-8 审查项 5）：每一张卡都声明了 demo，
 // 而 demo 要 Task 11 起才逐个实现 —— 按声明输出会让空心边框盒进 M1 截图，看着像半成品。
 // 按注册态输出：今天注册表是空的 `export default {}`，所以是零个；
 // Task 11 注册 inkmark 之后自动变成恰好一个，之后每注册一个就多一个，build.js 不再需要改。
@@ -125,25 +139,36 @@ const footerHtml = `<footer class="col foot rule-t"><span>${i18n(ui.copyright.zh
   + themeToggle
   + `<span><a href="mailto:cubeyu@aliyun.com">cubeyu@aliyun.com</a></span></footer>`;
 
-// spec 6.1 首帧防闪烁：CSS 加载前把偏好写进 data-theme，否则暗色用户每次刷新白闪一下。
+// spec 6.1 首帧防闪烁：CSS 加载前把偏好写进 <html>，否则暗色用户每次刷新白闪一下、
+// 英文用户每次刷新先看到一整帧中文。
 // spec 6.2 明确禁止「一份偏好各写一遍」，而这段脚本此前在 index.html 与 404.html 里逐字抄了两份，
 // Task 9 的 theme.js 会成为第三份副本、'cubeyu-theme' 这个键名也会在三个地方各漂一次。
 // 现在只有这一处定义，两个模板拿同一个 {{ANTI_FLASH}} 片段 token（裸值，不过 esc：
 // 转义它等于把 <script> 变成页面上的一行文本）。
-// 键名 cubeyu-theme 是 prefs.js（Task 9）与这里唯一的共享约定，test/prefs.test.js 两侧都钉了。
+// 键名 cubeyu-theme / cubeyu-lang 是 prefs.js（读写走 readPref/writePref 的 PREFIX）与这里
+// 唯一的共享约定，test/prefs.test.js 两侧都钉了；系统深浅的查询串不重复 —— 它从 DARK_QUERY 插进来。
 //
 // Task 9 实测改掉一处：写入原本在 try 里面，于是「读偏好失败」连带「写入也失败」。
 // 隐私模式下 localStorage 一访问就抛（复现方法见报告：给同源 iframe 的 window 装一个
 // 抛异常的 localStorage getter，让同一份 head 在它里面重跑一遍），首帧因此拿不到 data-theme，
 // 暗色系统 + 存储被禁的用户照样白闪 —— 正是这段脚本存在的理由。
-// 现在 try 只包住读，写入无条件执行，读不到就按 'auto' 走系统色。
+// 现在 try 只包住读，写入无条件执行，读不到就按默认走。
 // 判据也从 `t==='auto'` 换成 `light|dark` 白名单，与 prefs.js 的 normalizeTheme 同一语义：
 // 存储里是坏值（手改出来的 'blue'）时首帧就按系统色画，而不是写进 data-theme="blue"、
 // 等 theme.js 再纠正回系统色 —— 中间那一帧就是白闪。
+//
+// Task 10 之后语言偏好也能持久化了，于是同一条缺陷换了个主体复发（审查 I1）：
+// <html lang> 是模板硬编码的 `zh`，English 用户 reload 后先看到中文、等 app.js 跑完才翻成英文，
+// 而这段脚本正是 spec 6.1 为「比首帧更早」准备的唯一位置。两条同一副形状：
+// 受保护的读 + 不受 try 连带的写 + 白名单判据。语言这一侧的白名单只认 'en'，
+// 其余值（含坏值）让模板的 `zh` 留着 —— 与 i18n.js 的 `ORDER.includes(...) ? : ORDER[0]`
+// 回落同义，那侧的第 0 项就是模板默认语言。两侧一致性由 test/prefs.test.js 直接执行
+// dist/index.html 里这段脚本、把结果与 normalizeTheme / i18n 的回落表对比（审查 M6）。
 const antiFlash = `<script>
-/* 首帧防闪烁：CSS 加载前写入偏好，否则暗色用户每次刷新都白闪一下。spec 6.1 */
+/* 首帧防闪烁：CSS 加载前写入偏好，否则暗色用户白闪、英文用户先看到中文。spec 6.1 */
 var t='auto';try{t=localStorage.getItem('cubeyu-theme')||'auto'}catch(e){}
-document.documentElement.dataset.theme=(t==='light'||t==='dark')?t:(matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light');
+document.documentElement.dataset.theme=(t==='light'||t==='dark')?t:(matchMedia('${DARK_QUERY}').matches?'dark':'light');
+var l='zh';try{l=localStorage.getItem('cubeyu-lang')||'zh'}catch(e){} if(l==='en')document.documentElement.lang='en';
 </script>`;
 
 // 区块内容按 id 取。这里原来是 `[s.id] ?? ''`，它兜的「新增了一个 section 但还没实现内容」

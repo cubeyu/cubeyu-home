@@ -30,9 +30,15 @@ h3 { font-size: 30px; font-weight: 800; margin: 0; letter-spacing: -.01em; }
   color: var(--ink-2);
   text-transform: uppercase;
 }
-/* 数字 / 编号的等宽小字。cards.css 的 .card-no 走这个类（build.js 挂 class="card-no num"），
-   组件侧不再抄一遍同样的四条声明 */
-.num { font-family: var(--font-mono); font-size: 12px; color: var(--ink-3); letter-spacing: .04em; }
+/* 数字 / 编号的等宽小字。cards.css 的 .card-no 走这个类（build.js 挂 class="card-no num"）。
+   「等宽 + 12px」这一对全站只在这里出现一次：页脚的偏好开关 `.pref-toggle` 从同一条拿，
+   M4 的动效开关共用 `.pref-toggle` 这个类，因此也不必抄第三份。审查 M3 掉的就是原先
+   `.pref-toggle` 把这两条重抄一遍 —— 那正违背本文件给 `.num` 写的「组件侧不再抄一遍」的纪律。
+   `font: inherit` 同理不写：文件开头 `button, input, textarea` 那条已经给到。
+   开关的颜色由后面 `.pref-toggle` 自己给（--ink-2），与 .num 的 --ink-3 不同，
+   同特异性、靠后置取胜，所以那条规则必须排在下面。 */
+.num, .pref-toggle { font-family: var(--font-mono); font-size: 12px; }
+.num { color: var(--ink-3); letter-spacing: .04em; }
 .tag {
   font-family: var(--font-mono);
   font-size: 12px;
@@ -71,8 +77,15 @@ section { padding-block: 72px; }
 
 /* 导航条：等宽小字，左右两端对齐。语言切换与 GitHub 链接都在右侧一组 */
 .nav { display: flex; justify-content: space-between; align-items: center; padding-block: 20px; font-family: var(--font-mono); font-size: 12px; }
-.nav a { text-decoration: none; color: var(--ink-2); }
-.nav a:hover { color: var(--ink); }
+/* 审查 I4：语言开关原先是 `<a href="#">` + preventDefault —— 关掉 JS 后它是个会滚到页顶、
+   什么都切不了的假链接，Ctrl/中键还会多开一个同页标签。现在它是真 `<button type="button">`，
+   无 JS 时点了不动，与页脚主题开关一样诚实（主题开关本来就是按钮，本来也不会骗人去跳转）。
+   形状必须仍是导航条的「字面文本」，所以显式清掉 UA 的按钮外观；字体不重复声明 ——
+   `.nav` 给的等宽 12px 靠文件开头 `button { font: inherit }` 那条落到按钮上（审查 M3 的纪律）。
+   hover 与 .nav a 同进同出：同一个 `.nav-right` 里并排的两种控件不该一个变色一个不变。 */
+.nav button { background: none; border: 0; padding: 0; cursor: pointer; }
+.nav a, .nav button { text-decoration: none; color: var(--ink-2); }
+.nav a:hover, .nav button:hover { color: var(--ink); }
 .nav-right { display: flex; gap: 20px; }
 
 /* reduced-motion：入场时长与延迟一并归零（spec 6.2）。
@@ -98,21 +111,21 @@ section { padding-block: 72px; }
    焦点环），而 cards.css 的边界是「作品卡 + 技能 + 站点 + 页脚」这套内容区。
    圆角取 --radius-pill —— spec 4.3 的圆角纪律是「卡片与区块 2px–8px，只有 pill 与圆点用 999px」，
    一个胶囊形的小开关正是 pill，不是被禁的那种大圆角玻璃卡片。
-   font: inherit 由本文件第 14 行的 button 规则已经给到，这里再写一次是照 brief 的组件自洽：
-   单独读这条规则时不必回头确认控件继承了什么。 */
-.pref-toggle { font: inherit; font-family: var(--font-mono); font-size: 12px; background: none; border: var(--rule-w) solid var(--rule); border-radius: var(--radius-pill); padding: 3px 10px; color: var(--ink-2); cursor: pointer; }
+   等宽与字号在上面 `.num, .pref-toggle` 那条拿，这里不再抄（审查 M3）。 */
+.pref-toggle { background: none; border: var(--rule-w) solid var(--rule); border-radius: var(--radius-pill); padding: 3px 10px; color: var(--ink-2); cursor: pointer; }
 /* hover 只在真有鼠标的设备上给：触屏下 :hover 会在点击后一直粘着，
    开关看起来停在「已强调」态，而下一次点别的又会残留到页脚另一头。 */
 @media (hover: hover) { .pref-toggle:hover { color: var(--ink); border-color: var(--rule-strong); } }
-/* 焦点环：spec 9.2 要求「焦点环不被 cursor: none 或发丝线吞掉」，而 --rule 只有 .18 不透明度，
-   1px 的发丝线描边在键盘焦点上根本认不出来。2px 实墨 + 2px 外偏移，明暗两态都靠 --ink 自动翻转。
-   :focus-visible（不是 :focus）保证鼠标点击不留环、键盘 Tab 必有环。 */
-.pref-toggle:focus-visible { outline: 2px solid var(--ink); outline-offset: 2px; }
-/* 语言切换在 Task 10 之后是一个真控件（改 <html lang>），不能再靠 UA 默认焦点环：
-   Chrome 的 `outline: auto` 取的是 -webkit-focus-ring-color，跟的是【操作系统】的深浅，
-   不是我们的 data-theme。实测页面暗 + 系统亮时它是 rgb(16,16,16)，压在 --paper 的
-   rgb(12,12,14) 上对比度 1.02:1 —— 键盘用户 Tab 到它等于没有焦点指示（spec 9.2 明确要避免）。
-   本批新增的两个控件到此罩全（.pref-toggle 上一条、语言切换这一条）。
-   站点其余链接在暗色下同样是那个 1.02:1 的 UA 环，但那是 Task 7-8 已验收过的外观，
-   改成全局 a:focus-visible 属于跨批次视觉决定，已记进报告留给控制器。 */
-[data-lang-toggle]:focus-visible { outline: 2px solid var(--ink); outline-offset: 2px; }
+/* 焦点环：spec 9.2 要求「焦点环不被 cursor: none 或发丝线吞掉」，而 Task 9-10 审查 I2 找到
+   真正的根因不在这里 —— Chrome 的 `outline: auto` 取 -webkit-focus-ring-color，
+   跟的是 CSS `color-scheme`（详见 tokens.css 那条），不是我们的 data-theme；
+   没设 color-scheme 时暗色页面上那个 UA 环实测只有约 1.04:1，键盘用户等于没有焦点指示。
+   tokens.css 补上 color-scheme 是治根，这条是治本之后仍要的那一半：作者环不依赖 UA 调色板，
+   2px 实墨 + 2px 外偏移，明暗两态都靠 --ink 自动翻转，且整站一种环（原先只有
+   `.pref-toggle:focus-visible` 与 `[data-lang-toggle]:focus-visible` 那两个一次性补丁罩到的控件有，
+   卡标题、站点区链接、页脚邮箱都是 UA 环）。
+   合成一条同时消掉审查里那对逐字重复的声明块。
+   :focus-visible（不是 :focus）保证鼠标点击不留环、键盘 Tab 必有环。
+   :where() 让特异性停在 0-1-0（只有伪类参与）：组件日后要改自己那一环仍然盖得住；
+   `button` 在这里而不是只写 `a`，因为页脚的主题开关与导航条的语言开关都是真控件。 */
+:where(a, button, [tabindex]):focus-visible { outline: 2px solid var(--ink); outline-offset: 2px; }

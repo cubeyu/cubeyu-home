@@ -1,5 +1,15 @@
 /* 全站唯一允许出现字面色值的文件。见 spec 4 节。 */
 :root {
+  /* 浏览器自己的 UI 按哪套调色板画 —— spec 4.1，Task 9-10 审查 I2 找到的根因。
+     Chrome 的 `outline: auto` 焦点环、原生滚动条、选区高亮、表单控件底色跟的是这个声明，
+     不是我们的 data-theme：不设的话暗色页面上焦点环约 1.04:1（近黑压近黑）、
+     滚动条与选区仍是亮色调色板，与 --paper 的暗底对不上。
+     「只有 tokens.css 写值」在这里开的口子是授权例外（spec 4.1 已改）：
+     light / dark 不是色值，是调色板选择，它跟着下面的调色板走，正该同处一地。
+     两条都必须落在这里：data-theme 在 <html> 上，与 :root 是同一个元素，
+     特异性同为 0-1-0，靠下面的暗色块排在后面取胜 —— 别把它挪进组件文件。 */
+  color-scheme: light;
+
   /* 颜色 —— 亮色（oiloil 实测） */
   --paper: #FFFFFF;
   --surface: #FAFAFA;
@@ -29,6 +39,8 @@
 }
 
 [data-theme="dark"] {
+  /* 焦点环 / 滚动条 / 选区 / 表单控件底色一并转暗，见 :root 那条注释（spec 4.1） */
+  color-scheme: dark;
   --paper: #0C0C0E;
   --surface: #141416;
   --surface-invert: #FAFAFA;
