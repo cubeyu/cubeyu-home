@@ -23,6 +23,9 @@
   --mark-bg: #FFE28A;
   --mark-fg: #1A1A1A;
   --link: #1E40D8;
+  /* hero 吉祥物的投影色。放在这里是因为它是全站唯一允许字面色值的文件 ——
+     hero.css 的 drop-shadow 需要它，直接写 rgba() 会被 check.js 的 COLOR_LEAK 判失败。 */
+  --shadow-illo: rgba(0, 0, 0, .08);
 
   /* 排版与布局 —— 主题中性 */
   --font-sans: "Helvetica Neue", -apple-system, "PingFang SC", "Noto Sans SC", sans-serif;
@@ -55,6 +58,8 @@
   --mark-bg: rgba(255, 226, 138, .24);
   --mark-fg: #FFE9A6;
   --link: #6E9BFF;
+  /* 近黑影在 #0C0C0E 上几乎不显形，暗色下加深才托得住吉祥物 */
+  --shadow-illo: rgba(0, 0, 0, .5);
 }
 
 @media (prefers-reduced-motion: reduce) {

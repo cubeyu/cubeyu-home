@@ -55,8 +55,90 @@
    延迟若留在 .10s/.20s，词在这段时间里仍被 .lmask{overflow:hidden} 挡在视线外，
    「减弱动效」反而变成「文字缺失」—— 比让它动更糟。
    animation: none 走 shorthand，animation-name 无人用 !important 抢，因此生效。 */
+/* ---------- hero 吉祥物 ----------
+   人物与狗都做 background-image 而不是 <img>，三个理由：
+   ① 纯装饰，aria-hidden 才诚实，<img> 反而要为一个装饰元素编 alt；
+   ② 暗色切换只是改一条声明（见下方 [data-theme="dark"]），不必在 DOM 里堆两层图；
+   ③ 浏览器只取当前主题真正引用的那张 —— 暗色用户不会白下载亮色的 90KB，反之同理。
+   位移/朝向由 src/js/mascot.js 写 background-position，帧序说明在该文件顶部。 */
+.hero { position: relative; }
+
+/* 尺寸按【高度】定，不按宽度：人物是 521x1471（长宽比 0.35，腿长得离谱），
+   若照参照站那样用 width: min(36vw,330px) 会撑出 932px 高、把整个吉祥物顶到
+   视口上方 371px 处（实测）。参照站那张是 1086x1448（0.75），同宽只有 440 高 ——
+   它的定尺寸方式不能照抄。 */
+.hero-illo {
+  position: absolute;
+  right: 0;
+  bottom: -20px;
+  height: clamp(300px, 56vh, 500px);
+  width: auto;
+  pointer-events: none;
+  z-index: 1;
+  opacity: 0;
+  clip-path: inset(100% 0 0);
+  animation: hero-illo-enter 1.2s var(--ease-expo) .3s forwards;
+}
+@keyframes hero-illo-enter {
+  to { opacity: 1; clip-path: inset(0); transform: translateY(0); }
+}
+
+.hero-mascot { position: relative; height: 100%; width: auto; aspect-ratio: 521 / 1471; display: block; }
+
+.hero-person {
+  position: absolute;
+  inset: 0;
+  display: block;
+  background-image: url("/assets/images/hero-person.webp");
+  background-repeat: no-repeat;
+  background-size: contain;
+  background-position: 50% 100%;
+  transform-origin: 31% 82%;
+  /* 呼吸是无循环动效，按 spec 4.1 的「除循环 pulse 外」例外走 ease-in-out：
+     expo 曲线用在无限往复上会让回程变成硬弹，反而不像呼吸。 */
+  animation: person-breathe 5.4s ease-in-out infinite;
+}
+@keyframes person-breathe {
+  0%, to { transform: rotate(0deg) translateY(0); }
+  50% { transform: rotate(-1.1deg) translateY(-4px); }
+}
+
+.hero-dog {
+  /* 狗坐在【脚边】，不是坐在腿上。人物的腿大约从 58% 延伸到 100%，
+     原先 top:56% / left:34% / width:62% 让狗正好盖住整条腿（实测截图里像狗长了火柴腿）。
+     挪到右下、只与腿轻微相邻，两只才读得出是「一个人和一只狗」。 */
+  position: absolute;
+  top: 64%;
+  left: 46%;
+  width: 58%;
+  aspect-ratio: 207 / 300;
+  display: block;
+  background-image: url("/assets/images/hero-dog.webp");
+  background-repeat: no-repeat;
+  /* 8 列 1 行 → 横向铺 800%；帧索引 i 对应 background-position-x = i/7*100% */
+  background-size: 800% 100%;
+  background-position: 0% 50%;
+}
+.hero-person, .hero-dog { filter: drop-shadow(0 10px 18px var(--shadow-illo)); }
+
+/* 暗色换 -dark 变体：这两张是生成时按「只重映射贴边 7px 内的轮廓像素」做的，
+   内部五官（眼镜、瞳孔、嘴）保持深色 —— 第一版把近黑全改近白，脸被洗空了。
+   注释里不写字面色值：COLOR_LEAK 虽已剥注释，但这里没必要留个可被误读的字面值。 */
+[data-theme="dark"] .hero-person { background-image: url("/assets/images/hero-person-dark.webp"); }
+[data-theme="dark"] .hero-dog { background-image: url("/assets/images/hero-dog-dark.webp"); }
+
+@media (max-width: 640px) {
+  .hero-illo { width: min(44vw, 172px); bottom: -12px; }
+}
+
+/* reduced-motion：吉祥物必须【仍然在场】，只是不动。
+   解除入场裁切（否则 opacity:0 + clip-path:inset(100%) 会让整只吉祥物消失 ——
+   那是「减弱动效」变成「内容缺失」，比让它动更糟），停掉呼吸，
+   狗由 mascot.js 直接不绑指针监听、停在正面帧。 */
 @media (prefers-reduced-motion: reduce) {
   .lmask { overflow: visible; }
   .lmask > span { transform: none; animation: none; }
   .hero-scroll { animation: none; }
+  .hero-illo { opacity: 1; clip-path: none; animation: none; }
+  .hero-person { animation: none; }
 }

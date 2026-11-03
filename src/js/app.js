@@ -6,6 +6,7 @@
 import { initTheme } from './theme.js';
 import { initLang } from './i18n.js';
 import { prefersEnglish } from './pref-ui.js';
+import { initMascot } from './mascot.js';
 import demos from './demos/index.js';
 
 // 两个开关互不依赖，谁先谁后都不影响对方的首帧（Task 9-10 审查 M5 把这条依赖拆掉了：
@@ -39,3 +40,8 @@ for (const root of document.querySelectorAll('[data-demo-root]')) {
   // 所以这里今天不消费它 —— 契约由 test/demos.test.js 的假 DOM 钉住，不会被静改掉。
   mount(root, ctx);
 }
+
+// hero 吉祥物：狗跟随光标转头。与上面的 demo 注册表无关（它不是作品卡微原型，
+// 是常驻装饰），所以不走 demos/index.js，也不受卡片数量与注册态影响。
+// 触屏与 reduced-motion 下它自己会直接 return，不绑任何监听 —— 见 mascot.js。
+initMascot();

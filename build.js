@@ -3,7 +3,7 @@
 // 理由（spec 5.3 裁定）：M1 内没有任何模块 import 本文件（check.js 只读 dist/ 产物），
 // 而那个守卫在 Windows 上不可靠 —— process.argv[1] 是反斜杠形式，
 // fileURLToPath(import.meta.url) 是正斜杠形式，比较结果取决于从哪里调用 node。
-import { readFileSync, writeFileSync, mkdirSync, rmSync, cpSync, readdirSync } from 'node:fs';
+import { readFileSync, writeFileSync, mkdirSync, rmSync, cpSync, readdirSync, existsSync } from 'node:fs';
 import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 // Task 13：构建期压缩。两者都只在 devDependencies —— 产物本身零运行时依赖的纪律不变，
@@ -69,8 +69,17 @@ const nav = `<nav class="col nav"><a href="/">${i18n('首页', 'Home')}</a>`
 // roll-band：spec 7 的 HERO 行点名 `.hero.roll-band`，它是对照参照站 DOM 的类名对应关系。
 // 今天没有任何 CSS 消费它（参照站那条 band 的滚动行为属 M4 reveal/动效那一层的范畴），
 // 类名先落地，省得 M4 再回来改一次产物结构。
+// 吉祥物放在 h1 内部、三行遮罩之后：它是对标题盒的装饰定位，跟着 h1 走才不会在
+// 换行时错位。第 4 个子元素不影响 .lmask:nth-child(2|3) 的 stagger 选择器 —— 那两个
+// 只数到 3。aria-hidden 是因为它是纯装饰（人物与狗都做 background-image，见 hero.css）。
+const illo = `<span class="hero-illo" aria-hidden="true">`
+  + `<span class="hero-mascot">`
+  + `<span class="hero-person"></span>`
+  + `<span class="hero-dog" data-mascot-dog></span>`
+  + `</span></span>`;
+
 const hero = `<header class="hero roll-band col">`
-  + `<h1>` + site.hero.lines.map((l) => `<span class="lmask"><span>${esc(l.zh)}</span></span>`).join('') + `</h1>`
+  + `<h1>` + site.hero.lines.map((l) => `<span class="lmask"><span>${esc(l.zh)}</span></span>`).join('') + illo + `</h1>`
   // sub 的两个 span 是【两个不同内容的品牌元素】，不是同一串的两种译文，所以都不挂 i18n-*：
   // 中文名 麦 希 屿 与拉丁身份行 DEVELOPER / AI TOOLS / OPEN-SOURCE 在两种语言下同时常驻。
   // 参照站实测 DOM 同构：div.sub 下 span.zh「欧 呦」+ span.en「ENGINEER / DESIGNER / OPEN-SOURCE」。
@@ -282,6 +291,11 @@ writeFileSync(join(out, '404.html'), notFoundHtml, 'utf8');
 writeFileSync(join(out, 'assets/app.css'), css, 'utf8');
 // 偏离 1：原样拷贝 ES module 树，不做拼接打包
 cpSync(join(root, 'src/js'), join(out, 'assets/js'), { recursive: true });
+// hero 吉祥物的四个 webp（明暗各两套）。src/images 此前不在构建产物里，
+// 导致 /assets/images/* 全部 404 —— 见 hero.css 的 background-image 引用。
+if (existsSync(join(root, 'src/images'))) {
+  cpSync(join(root, 'src/images'), join(out, 'assets/images'), { recursive: true });
+}
 // Task 13：压缩 dist 里的 JS 副本。src/js/** 一个字节都不动 —— build.js 顶部
 // import 的是 './src/js/demos/index.js'（注册表门禁，Task 7-8 裁定），terser 只改写
 // dist/assets/js/ 下的文件，两条路径互不影响；浏览器加载的与构建期读的是各自的文件。
