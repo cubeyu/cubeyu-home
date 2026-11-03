@@ -114,28 +114,17 @@
   /* 延迟 = 幕布上滑本身的时长（同一个 --loader-exit），于是下坠在幕布开始退场时才起飞。
      fill: both 让这段延迟里狗就停在 0% 关键帧 = 加载标志原位，看起来仍是"标志还挂在幕布上"。 */
   animation: loader-drop var(--loader-drop) var(--ease-expo) var(--loader-exit) both;
-  /* 横移段比落点再低多少。标志在屏幕中心、真狗在右侧，直线插值会斜穿标题最后一行
-     （1774×1000 实测压在 "ols." 上，用户截图抓到过）。先把狗放到【基线以下】再横移，
-     最后往上落进位置 —— 40px 是按实测余量定的：文字墨底 683、落点盒顶 640，
-     低 40px 后盒顶 680，横移途中只剩 3px 擦边，肉眼是"从字底下钻过去"。 */
-  --drop-dip: 40px;
 }
 @keyframes loader-drop {
-  /* 三段：直线下落到基线以下（--ease-drop 加速，本站第二条也是最后一条缓动例外）
-     → 贴着地面横移进来（expo）→ 往上落进位置，落地那一下压扁回弹（纯 expo 会读成"飘过去"）。 */
+  /* 前 72% 是加速下坠（--ease-drop 是本站第二条、也是最后一条缓动例外，理由见 tokens.css），
+     后 28% 用全站那条 expo 收回来 —— 落地有个极小的压扁回弹，纯 expo 会读成"飘过去"。 */
   0% { transform: translate(0, 0) scale(1, 1); animation-timing-function: var(--ease-drop); }
-  42% {
-    transform: translate(0, calc(var(--drop-y) + var(--drop-dip)))
-      scale(var(--drop-sx), var(--drop-sy));
+  72% {
+    transform: translate(var(--drop-x), var(--drop-y)) scale(var(--drop-sx), var(--drop-sy));
     animation-timing-function: var(--ease-expo);
   }
-  74% {
-    transform: translate(var(--drop-x), calc(var(--drop-y) + var(--drop-dip)))
-      scale(var(--drop-sx), var(--drop-sy));
-    animation-timing-function: var(--ease-expo);
-  }
-  86% {
-    transform: translate(var(--drop-x), var(--drop-y))
+  84% {
+    transform: translate(var(--drop-x), calc(var(--drop-y) + 4px))
       scale(calc(var(--drop-sx) * 1.06), calc(var(--drop-sy) * .9));
   }
   to { transform: translate(var(--drop-x), var(--drop-y)) scale(var(--drop-sx), var(--drop-sy)); }
