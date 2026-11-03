@@ -101,7 +101,24 @@ const sitesHtml = `<ul class="sites rule-t">${links.map((l) => `<li class="site 
 // 页脚邮箱按 brief 写字面量。注意 links 里也有同一条 mailto:cubeyu@aliyun.com，
 // 属 ledger 已记的「同一 URL 两处真源」一类问题（github / hot 同样各写两份），
 // 换邮箱要改两处 —— 留给控制器决定是否从 links 取。
+//
+// Task 9 的明暗开关落在页脚，不照 task-9-brief Step 6 说的塞进 nav（控制器裁定，偏离已在报告里记）：
+// spec 7 的 IA 表把「明暗开关」写在 FOOTER 行（`© 2026 麦希屿` + 明暗开关 + 动效开关 + 联系邮箱），
+// 而参照站实测导航条只有语言切换与 github.com/cubeyu 字面文本链接两项。
+// 照 brief 做会让我们的 nav 与参照站平白多出一个元素，换来的只是同一个按钮换个位置。
+// 三态标签按 spec 7 的顺序排在邮箱之前，M4 的动效开关再插在它后面。
+// data-labels-zh / data-labels-en 两套都烘上：theme.js 的按钮文案是 textContent 写的，
+// CSS 的 .i18n-* 显隐规则罩不到 JS 运行期写入的文本，所以按钮自己按 <html lang> 取一套
+// （只烘 zh 的话，英文态会留下一个中文的「暗」）。
+// 两个 join 的结果都过 esc()：与 nav 的语言标签同纪律 —— 属性值一律转义，哪怕现值安全。
+// 无 JS 时这个按钮是死的（主题只能靠 data-theme，纯 CSS 无法持久化偏好）：
+// 文案写 auto 的中文标签「自动」，即默认态，不谎报成别的态。
+const themeToggle = `<button type="button" class="pref-toggle" data-theme-toggle`
+  + ` data-labels-zh="${esc(ui.themeLabels.zh.join(','))}"`
+  + ` data-labels-en="${esc(ui.themeLabels.en.join(','))}">${esc(ui.themeLabels.zh[0])}</button>`;
+
 const footerHtml = `<footer class="col foot rule-t"><span>${i18n(ui.copyright.zh, ui.copyright.en)}</span>`
+  + themeToggle
   + `<span><a href="mailto:cubeyu@aliyun.com">cubeyu@aliyun.com</a></span></footer>`;
 
 // spec 6.1 首帧防闪烁：CSS 加载前把偏好写进 data-theme，否则暗色用户每次刷新白闪一下。

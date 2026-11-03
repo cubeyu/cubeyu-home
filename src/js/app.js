@@ -1,1 +1,2 @@
-console.log("app");
+import { initTheme } from './theme.js';
+initTheme();

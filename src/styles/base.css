@@ -92,3 +92,19 @@ section { padding-block: 72px; }
     transition-delay: 0s !important;
   }
 }
+
+/* 偏好开关的外观（Task 9 明暗三态；M4 的动效开关复用同一副类）。
+   放在 base.css 而不是 cards.css：这是跨区块的控件（页脚用它，导航区的语言切换也借它的
+   焦点环），而 cards.css 的边界是「作品卡 + 技能 + 站点 + 页脚」这套内容区。
+   圆角取 --radius-pill —— spec 4.3 的圆角纪律是「卡片与区块 2px–8px，只有 pill 与圆点用 999px」，
+   一个胶囊形的小开关正是 pill，不是被禁的那种大圆角玻璃卡片。
+   font: inherit 由本文件第 14 行的 button 规则已经给到，这里再写一次是照 brief 的组件自洽：
+   单独读这条规则时不必回头确认控件继承了什么。 */
+.pref-toggle { font: inherit; font-family: var(--font-mono); font-size: 12px; background: none; border: var(--rule-w) solid var(--rule); border-radius: var(--radius-pill); padding: 3px 10px; color: var(--ink-2); cursor: pointer; }
+/* hover 只在真有鼠标的设备上给：触屏下 :hover 会在点击后一直粘着，
+   开关看起来停在「已强调」态，而下一次点别的又会残留到页脚另一头。 */
+@media (hover: hover) { .pref-toggle:hover { color: var(--ink); border-color: var(--rule-strong); } }
+/* 焦点环：spec 9.2 要求「焦点环不被 cursor: none 或发丝线吞掉」，而 --rule 只有 .18 不透明度，
+   1px 的发丝线描边在键盘焦点上根本认不出来。2px 实墨 + 2px 外偏移，明暗两态都靠 --ink 自动翻转。
+   :focus-visible（不是 :focus）保证鼠标点击不留环、键盘 Tab 必有环。 */
+.pref-toggle:focus-visible { outline: 2px solid var(--ink); outline-offset: 2px; }
