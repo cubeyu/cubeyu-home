@@ -131,6 +131,11 @@ test('content does not depend on JS to appear', async () => {
 //    下面的期望值跟着产物一起改，条数仍必须是 1 —— 换名不换「全站一种环」这条约束。
 // 扫的是 dist/assets/app.css —— 合并后的产物才是浏览器加载的那份字节。
 // 先剥注释再扫：与 check.js 的 COLOR_LEAK 同一条口径，注释里引用字面量是允许的。
+// Task 13 起 dist/assets/app.css 是 lightningcss minify:true 的产物：属性选择器的引号、
+// 选择器列表逗号后的空格、伪元素的 `::`（压缩后写成 `:before`）都不再保证逐字存在。
+// 下面三处判据随之放宽的是【字节形状】不是【语义】：选择器集合、声明值、!important、
+// 条数（恰好一条环、恰好两处 color-scheme、暗块必须在亮块之后）一个都没放松，
+// 每条的坏样本仍被抓（before/after 证据见 task-13-report.md）。
 test('the shipped CSS sets color-scheme and carries one global focus ring', async () => {
   const { readFileSync } = await import('node:fs');
   const css = readFileSync('dist/assets/app.css', 'utf8').replace(/\/\*[\s\S]*?\*\//g, '');
@@ -138,10 +143,13 @@ test('the shipped CSS sets color-scheme and carries one global focus ring', asyn
   assert.deepEqual(scheme, ['light', 'dark'],
     'color-scheme 必须恰好两处、且亮在前暗在后（同为 0-1-0 特异性，靠暗色块排在后面取胜）');
   assert.match(css, /:root\s*\{[^}]*color-scheme\s*:\s*light/, ':root 里要有 color-scheme: light');
-  assert.match(css, /\[data-theme="dark"\]\s*\{[^}]*color-scheme\s*:\s*dark/,
+  assert.match(css, /\[data-theme=["']?dark["']?\]\s*\{[^}]*color-scheme\s*:\s*dark/,
     'data-theme="dark" 块里要有 color-scheme: dark，否则暗色页仍是亮调色板的滚动条与选区');
-  const rings = [...css.matchAll(/([^{}]+):focus-visible\s*\{[^}]*outline[^}]*\}/g)].map((m) => m[1].trim());
-  assert.deepEqual(rings, [':where(a, button, input, textarea, [tabindex])'],
+  // 归一化 = 删掉全部空白后再比对：`:where(a, button, …)` 与 `:where(a,button,…)` 同形，
+  // 但选择器名单少一项、多一项、或出现第二条 :focus-visible 描边规则，照样被抓。
+  const rings = [...css.matchAll(/([^{}]+):focus-visible\s*\{[^}]*outline[^}]*\}/g)]
+    .map((m) => m[1].replace(/\s+/g, ''));
+  assert.deepEqual(rings, [':where(a,button,input,textarea,[tabindex])'],
     `全站只该有一条 :focus-visible 描边规则，实际有：${rings.join(' | ')}`);
 });
 
@@ -153,16 +161,21 @@ test('the shipped CSS sets color-scheme and carries one global focus ring', asyn
 test('the global reduced-motion zeroing ships intact', async () => {
   const { readFileSync } = await import('node:fs');
   const css = readFileSync('dist/assets/app.css', 'utf8').replace(/\/\*[\s\S]*?\*\//g, '');
-  const block = /@media \(prefers-reduced-motion: reduce\)\s*\{\s*\*, \*::before, \*::after\s*\{([^}]*)\}/.exec(css);
+  // Task 13 压缩态适配（同上一条的口径）：媒体查询冒号后、选择器逗号后的空格没了，
+  // 且 `*::before` / `*::after` 被序列化成 `:before` / `:after`（无前缀即 `*:before`，同一选择器）。
+  // 放宽的只有这三种字节形状：列表仍必须【恰好三项、顺序不变】—— `*` 打头、随后两个
+  // 可选带 `*` 前缀的伪元素；块没了、选择器退化（比如只剩 `*`）、五条归零声明少任何一条
+  // 或丢任何一处 !important，仍旧全部抓得住（坏样本见 task-13-report.md 的 before/after 证据）。
+  const block = /@media\s*\(prefers-reduced-motion:\s*reduce\)\s*\{\s*\*\s*,\s*\*?\s*::?before\s*,\s*\*?\s*::?after\s*\{([^}]*)\}/.exec(css);
   assert.ok(block, 'base.css 的全局 reduced-motion 归零块在产物里找不到了');
   const body = block[1];
   for (const decl of ['animation-duration', 'transition-duration']) {
-    assert.match(body, new RegExp(`${decl}: \\.01ms !important`), `${decl} 应归到 .01ms`);
+    assert.match(body, new RegExp(`${decl}:\\s*\\.01ms\\s*!important`), `${decl} 应归到 .01ms`);
   }
   for (const decl of ['animation-delay', 'transition-delay']) {
-    assert.match(body, new RegExp(`${decl}: 0s !important`), `${decl} 必须写 0s —— 无单位的 0 会被整条丢掉`);
+    assert.match(body, new RegExp(`${decl}:\\s*0s\\s*!important`), `${decl} 必须写 0s —— 无单位的 0 会被整条丢掉`);
   }
-  assert.match(body, /animation-iteration-count: 1 !important/, '循环动画要停在第一帧');
+  assert.match(body, /animation-iteration-count:\s*1\s*!important/, '循环动画要停在第一帧');
   // 产物里 !important 的总预算（多一条就是某个组件自己开了口子）是【全局预算】断言，
   // 不是数据断言 —— Task 9-10 裁定迁到 test/budgets.test.js，这里不再重复。
 });
@@ -192,8 +205,11 @@ function contrast(a, b) {
 }
 
 // 从产物的 CSS 里按块取声明：剥注释 → 定位选择器 → 取配对花括号内的体（同 tokens.test.js 的口径）
+// Task 13：selector 允许传 RegExp —— 压缩产物的属性选择器不带引号（[data-theme=dark]），
+// 而字符串 indexOf 只能逐字匹配一种写法。传 /…["']?dark…/ 让亮暗两种序列化都认，
+// 「找不到这个块」的判据本身没变。
 function declarations(css, selector) {
-  const at = css.indexOf(selector);
+  const at = selector instanceof RegExp ? css.search(selector) : css.indexOf(selector);
   assert.notEqual(at, -1, `${selector} not in the shipped css`);
   const open = css.indexOf('{', at);
   let depth = 0;
@@ -214,7 +230,7 @@ test('the focus ring clears WCAG 1.4.11 contrast on the page background, both th
   const { readFileSync } = await import('node:fs');
   const css = readFileSync('dist/assets/app.css', 'utf8').replace(/\/\*[\s\S]*?\*\//g, '');
   const light = declarations(css, ':root');
-  const dark = declarations(css, '[data-theme="dark"]');
+  const dark = declarations(css, /\[data-theme=["']?dark["']?\]/);
   const rings = {
     light: contrast(tokenOf(light, 'ink'), tokenOf(light, 'paper')),
     dark: contrast(tokenOf(dark, 'ink'), tokenOf(dark, 'paper')),

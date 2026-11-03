@@ -1,11 +1,18 @@
-// build.js —— 模板渲染 + CSS 合并 + ES module 树拷贝，产出 dist/。
+// build.js —— 模板渲染 + CSS 合并与压缩 + ES module 树拷贝与压缩，产出 dist/。
 // 纯顶层脚本：不 export build()，也不加「我是不是被 import」的守卫。
 // 理由（spec 5.3 裁定）：M1 内没有任何模块 import 本文件（check.js 只读 dist/ 产物），
 // 而那个守卫在 Windows 上不可靠 —— process.argv[1] 是反斜杠形式，
 // fileURLToPath(import.meta.url) 是正斜杠形式，比较结果取决于从哪里调用 node。
-import { readFileSync, writeFileSync, mkdirSync, rmSync, cpSync } from 'node:fs';
+import { readFileSync, writeFileSync, mkdirSync, rmSync, cpSync, readdirSync } from 'node:fs';
 import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
+// Task 13：构建期压缩。两者都只在 devDependencies —— 产物本身零运行时依赖的纪律不变，
+// 压缩发生在构建期，浏览器拿到的是纯字节。
+// 偏离 brief 一处：brief 写的是 `codeBuffer:`，lightningcss 1.33.0 没有这个选项
+// （实测报 `Error: missing field 'code'`，node/index.d.ts 里该字段就叫 `code: Uint8Array`），
+// 语义相同的 `code: Buffer.from(...)` 替代，minify: true 等其余参数逐字照 brief。
+import { transform } from 'lightningcss';
+import { minify } from 'terser';
 import { renderTemplate, cssOrder, esc, i18n } from './src/lib/build-utils.js';
 // prefs.js 是零 DOM 的纯模块（模块求值期不碰任何浏览器对象），所以在 Node 里 import 它安全，
 // 拿到的是同一份 DARK_QUERY 字面量 —— 内联防闪烁脚本是唯一 import 不到它的一侧（它在模块下载前
@@ -225,8 +232,20 @@ const html = render('src/templates/index.html', tpl);
 const notFoundHtml = render('src/templates/404.html', tpl404);
 
 // 合并顺序 = 层叠顺序，分隔注释形如 /* --- demos/x.css --- */，check.js 按它比对。
+//
+// Task 13 偏离 brief 的压缩位置（必要偏离，不是风格选择）：brief 是对【合并后的整份 css】
+// 调一次 transform({minify:true})。实测 minify:true 会剥掉全部注释 —— 包括上面那条
+// `/* --- f --- */` 合并标记，而标记是 check.js CSS_JS_SHIPPED / STYLESHEETS_MERGED 两条
+// 断言在产物上比对的契约（判据是 `css.includes('--- <rel> ---')`）。改产物去迁就压缩
+// 等于削弱断言，被禁止；所以压缩按【单文件】做，标记在压缩之后逐文件补回：
+// 层叠顺序仍由 cssOrder 决定，标记仍在它标注的那段压缩内容之前，两条断言的判据字节不变。
+// 压缩强度不损失：lightningcss 不做跨规则的合并重排（实测合并压与分文件压的字节差异
+// 只有标记行本身），var() 回退、!important、媒体查询都逐条保留 —— 回归见报告。
+const minifyCss = (filename, source) =>
+  transform({ filename, code: Buffer.from(source, 'utf8'), minify: true }).code.toString('utf8');
+
 const css = cssOrder
-  .map((f) => `/* --- ${f} --- */\n` + readFileSync(join(root, 'src/styles', f), 'utf8'))
+  .map((f) => `/* --- ${f} --- */\n` + minifyCss(f, readFileSync(join(root, 'src/styles', f), 'utf8')))
   .join('\n');
 
 rmSync(out, { recursive: true, force: true });
@@ -237,4 +256,28 @@ writeFileSync(join(out, '404.html'), notFoundHtml, 'utf8');
 writeFileSync(join(out, 'assets/app.css'), css, 'utf8');
 // 偏离 1：原样拷贝 ES module 树，不做拼接打包
 cpSync(join(root, 'src/js'), join(out, 'assets/js'), { recursive: true });
+// Task 13：压缩 dist 里的 JS 副本。src/js/** 一个字节都不动 —— build.js 顶部
+// import 的是 './src/js/demos/index.js'（注册表门禁，Task 7-8 裁定），terser 只改写
+// dist/assets/js/ 下的文件，两条路径互不影响；浏览器加载的与构建期读的是各自的文件。
+// module: true 保留 ES module 语义（import/export 参与 tree-shaking 判定、按严格模式解析）；
+// terser 不 mangle 导出名与 import 绑定名，所以跨模块的具名导出（DARK_QUERY 等）契约不变。
+// 顶层 await 合法：本文件是 ESM 顶层脚本（spec 5.3 裁定不加 build() 包裹），无需函数签名改动。
+for (const f of walkJs(join(out, 'assets/js'))) {
+  const src = readFileSync(f, 'utf8');
+  const r = await minify(src, { module: true, compress: true, mangle: true });
+  writeFileSync(f, r.code, 'utf8');
+}
 console.log('built dist/');
+
+// 递归收集目录下的 .js（正斜杠或反斜杠路径都直接交给 fs，不做归一 —— 归一是
+// check.js 里 walk 的职责，它要把路径打进失败消息；这里只喂 writeFileSync）。
+// 不复用 check.js 的 walk：跨文件耦合一份私有辅助，Task 12 动 check.js 会静默打断构建。
+function walkJs(dir) {
+  const outArr = [];
+  for (const e of readdirSync(dir, { withFileTypes: true })) {
+    const full = join(dir, e.name);
+    if (e.isDirectory()) outArr.push(...walkJs(full));
+    else if (e.name.endsWith('.js')) outArr.push(full);
+  }
+  return outArr;
+}

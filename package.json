@@ -3,7 +3,9 @@
   "version": "0.0.0",
   "private": true,
   "type": "module",
-  "engines": { "node": ">=20" },
+  "engines": {
+    "node": ">=20"
+  },
   "scripts": {
     "build": "node build.js",
     "check": "node build.js && node check.js",
@@ -11,5 +13,8 @@
     "serve": "node build.js && node serve.js"
   },
   "dependencies": {},
-  "devDependencies": {}
+  "devDependencies": {
+    "lightningcss": "^1.33.0",
+    "terser": "^5.51.2"
+  }
 }
