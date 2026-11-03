@@ -238,8 +238,22 @@ CSS：`html[lang="zh"] .i18n-en { display: none }`，反之同理。默认 `lang
 
 ### 6.2 动效
 
-- **全站只用 `--ease-expo` 一条缓动曲线**。这是 oiloil 质感来源之一。
+- **缓动只有三条，且每条都有名分**：全站默认 `--ease-expo`（oiloil 质感来源之一）；
+  无限往复的呼吸/挥狗用 `ease-in-out`（expo 用在往复上会把回程变成硬弹）；
+  开屏那只狗的下坠用 `--ease-drop`（加速曲线——expo 是纯减速，用它狗会读成"飘过去"而不是"掉下来"）。
+  除这三类之外不许再引入第四条。
 - hero 逐词遮罩：`.lmask { overflow: hidden }` + 内层 `span { transform: translateY(110%) → 0 }`，按词 stagger。
+- **开屏幕布**（`loader.css`）：纯 CSS 定时自退场，`forwards` + 终态 `visibility:hidden` + `translateY(-100%)`，
+  `prefers-reduced-motion` 下整块 `display:none`。它**不归 JS 管**——静态页没有"就绪"时机可等，
+  交给 JS 就等于允许一块 fixed 层永久盖住首屏（`test/loader.test.js` 三条断言钉着）。
+- **狗从幕布落到 hero**（`loader.js`）：幕布开始上滑的那一刻（听它自己的 `animationstart`，
+  不在 JS 里重抄 `--loader-hold`）把 mark 提出来做成一个 `z-index:10000` 的 fixed 克隆体，
+  用 `--drop-x/y/sx/sy` 四个自定义属性把"起点矩形→hero 狗终点矩形"交给关键帧插值，
+  落定后**留着**盖住那只还在升起的真狗，等 `.hero-illo` 的 `animationend` 再摘（另有 4s 硬兜底）。
+  这个装饰失败的唯一后果是"狗跟着幕布一起走掉"，页面其余部分不受影响。
+  两个细节：目标矩形要从 computed transform 的矩阵里减掉入场位移 `ty`（量到的矩形比终点低 12% 盒高）；
+  `.loader-drop` 必须 `transform-origin: 0 0`，因为 `--drop-x/y` 是左上角之差，而 `scale()` 默认绕中心，
+  实测会偏 3.5px / 4.2px —— 正好是半个缩放量。
 - `reveal.js`：单个 IntersectionObserver，元素进视口加 `.in` 触发 `fadeup`。**不做 scroll 驱动的滚动动画**（实测 oiloil 也没有，它只有入场 + 卡内 CSS 自循环）。
 
 `prefers-reduced-motion: reduce` 命中时：

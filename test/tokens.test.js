@@ -52,10 +52,10 @@ function rootVars() {
 
 // 主题中性变量：字体、缓动、时长、布局尺寸。这些明暗共用，允许不在 dark 里出现。
 const THEME_NEUTRAL = new Set([
-  '--font-sans', '--font-mono', '--ease-expo', '--dur-enter',
+  '--font-sans', '--font-mono', '--ease-expo', '--ease-drop', '--dur-enter',
   '--col', '--rule-w', '--radius-sm', '--radius-pill',
   // 开屏时序：时长不随配色变，属同一类中性变量
-  '--loader-hold', '--hero-start',
+  '--loader-hold', '--hero-start', '--loader-drop',
 ]);
 
 test('every non-neutral token is redefined for dark', () => {

@@ -44,6 +44,9 @@
      掀开时正好看见第一行升起。 */
   --loader-hold: .9s;
   --hero-start: .95s;
+  /* 狗从幕布落到 hero 的时长。与上面两条同属"开屏时序的单一真源"：
+     起跳时刻由 JS 听幕布自己的 animationstart，不在这里再抄一遍 .9s。 */
+  --loader-drop: .52s;
 
   /* 排版与布局 —— 主题中性 */
   --font-sans: "Helvetica Neue", -apple-system, "PingFang SC", "Noto Sans SC", sans-serif;
@@ -55,6 +58,10 @@
 
   /* 动效 —— 全站唯一缓动曲线 */
   --ease-expo: cubic-bezier(.19, 1, .22, 1);
+  /* 第二条、也是最后一条例外，只给 loader.css 的狗下落用（spec 4.1 的例外清单）：
+     下坠是加速运动，而 expo 是一条纯减速曲线 —— 用它，狗会读成"飘过去"而不是"掉下来"。
+     无限往复的呼吸/挥手另用 ease-in-out，那是 spec 4.1 已记的循环例外，不在这里重复。 */
+  --ease-drop: cubic-bezier(.36, .04, .72, .3);
   /* 预留给 M4 的区块入场 reveal（hero 遮罩实测 .9s 一档，不是这个值）；今天零消费者是有意保留，别当未用变量删掉 */
   --dur-enter: 1.4s;
 }

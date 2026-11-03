@@ -58,3 +58,69 @@ test('hero entrance waits for the curtain instead of playing underneath it', () 
   const illo = /\.hero-illo\s*\{([^}]*)\}/s.exec(heroCss())?.[1] ?? '';
   assert.match(illo, /calc\(var\(--hero-start\)/, '吉祥物入场同样要跟着 --hero-start');
 });
+
+// ---------- 狗从幕布落到 hero（loader.js + .loader-drop） ----------
+// 这块最容易犯的错不是"动画不好看"，而是装饰反过来管住了主内容。
+// 参照站那版是 JS 摘幕布 + 8s 上限兜底；我们让幕布继续只归 CSS 管，
+// 于是下面第一条是这一节唯一真正承重的断言。
+const loaderJs = () => readFileSync('src/js/loader.js', 'utf8');
+
+test('the drop never owns the curtain: it cannot dismiss, hide, or delay it', () => {
+  const js = loaderJs();
+  assert.doesNotMatch(js, /curtain\.remove\(\)/, 'loader.js 不许摘幕布 —— 它一报错首屏就永久被盖住');
+  assert.doesNotMatch(js, /curtain\.style\.(display|visibility|animation)/, '也不许改幕布的可见性或动画');
+  assert.doesNotMatch(js, /classList\.(add|toggle)\([^)]*(is-exiting|hidden|done)/,
+    '不许用类去驱动幕布的退场，那是把 CSS 契约交出去');
+  assert.match(js, /matchMedia\('\(prefers-reduced-motion: reduce\)'\)[\s\S]{0,80}return/,
+    '减弱动效下幕布整块不存在，这条装饰也必须完全不跑');
+});
+
+test('the drop timing is not a second copy of --loader-hold', () => {
+  const js = loaderJs();
+  // 起跳时刻听幕布自己的 animationstart：两处各写一个 .9s 迟早漂
+  assert.match(js, /addEventListener\('animationstart', promote, \{ once: true \}\)/,
+    '必须听 animationstart，而不是 setTimeout(900)');
+  assert.doesNotMatch(js, /setTimeout\([^)]*,\s*(900|\.9)\)/, '不许把幕布时长抄进 JS');
+  assert.match(tokenCss(), /--loader-drop:/, '下落时长要有 token，与 --loader-hold/--hero-start 同一组');
+});
+
+test('the clone always leaves: animationend plus a hard timeout', () => {
+  const js = loaderJs();
+  assert.match(js, /addEventListener\('animationend', land, \{ once: true \}\)/,
+    'illo 入场结束时摘掉克隆体，那一刻真狗已经到位');
+  assert.match(js, /setTimeout\(land, \d+\)/,
+    'animationend 没来也必须摘 —— 否则一只 fixed 狗永久停在首屏上');
+  assert.match(js, /if \(!clone\) return;/, 'land 要能被重复调用（两个来源都会触发）');
+});
+
+test('the clone lands on the dog\'s FINAL rect, not the animated one', () => {
+  const js = loaderJs();
+  // hero 的 illo 入场时带 translateY，量到的矩形比终点低 12%；
+  // 从 computed transform 的矩阵里把当前位移减掉，才不依赖"此刻动画跑到哪了"。
+  assert.match(js, /new DOMMatrixReadOnly\(getComputedStyle\(illo\)\.transform\)\.f/,
+    '必须用 transform 矩阵反推动画终态的位置');
+  assert.match(js, /r\.top - ty/, '终态 = 当前矩形减去入场位移');
+});
+
+test('the drop keyframes interpolate from JS-supplied geometry only', () => {
+  const c = loaderCss();
+  // 行首锚定：共享声明 `.site-loader-mark, .loader-drop {` 里也有 `.loader-drop {` 这个子串，
+  // 不锚行首就会抓到那条没有 z-index 的规则（判据咬到自己写的复用）。
+  const drop = /^\.loader-drop\s*\{([^}]*)\}/m.exec(c)?.[1] ?? '';
+  assert.match(drop, /z-index:\s*10000/, '克隆体必须高于幕布的 9999，否则它跟着幕布一起被抬走');
+  assert.match(drop, /pointer-events:\s*none/, '不许吃点击：它盖在首屏上');
+  // 落点误差的成因不是随机数：--drop-x/y 是【左上角之差】，而 scale() 默认绕中心，
+  // 于是终态偏 (原宽−目标宽)/2 —— 实测 3.5px / 4.2px。锚到左上角后误差 0.0px。
+  assert.match(drop, /transform-origin:\s*0 0/, '必须绕左上角缩放，否则狗落在目标右下各几像素处');
+  assert.match(drop, /animation:\s*loader-drop var\(--loader-drop\)/, '时长走 token');
+  const kf = /@keyframes loader-drop\s*\{([\s\S]*?)\n\}/.exec(c)?.[1] ?? '';
+  for (const v of ['--drop-x', '--drop-y', '--drop-sx', '--drop-sy']) {
+    assert.ok(kf.includes(`var(${v})`), `关键帧缺 ${v}：几何必须来自 JS 写的自定义属性，不能写死`);
+  }
+  assert.match(kf, /animation-timing-function:\s*var\(--ease-drop\)/, '下坠段用加速曲线');
+  assert.match(kf, /animation-timing-function:\s*var\(--ease-expo\)/, '收回段用全站那条 expo');
+  // 幕布上的原件与克隆体共用图集与暗色切换，分两处写迟早出现亮暗错配
+  assert.match(c, /\.site-loader-mark,\s*\.loader-drop\s*\{/, '两者必须共用同一份背景声明');
+  assert.equal((c.match(/hero-dog\.webp/g) || []).length, 1, '亮色图集只该出现一次');
+  assert.equal((c.match(/hero-dog-dark\.webp/g) || []).length, 1, '暗色图集只该出现一次');
+});

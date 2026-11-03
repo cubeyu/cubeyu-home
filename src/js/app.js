@@ -8,6 +8,7 @@ import { initLang } from './i18n.js';
 import { prefersEnglish } from './pref-ui.js';
 import { initMascot } from './mascot.js';
 import { initPointer } from './pointer.js';
+import { initLoaderDrop } from './loader.js';
 import demos from './demos/index.js';
 
 // 两个开关互不依赖，谁先谁后都不影响对方的首帧（Task 9-10 审查 M5 把这条依赖拆掉了：
@@ -51,3 +52,9 @@ initMascot();
 // 触屏与 reduced-motion 下它自己 return（并返回一个空 destroy），理由与 mascot.js 同一条：
 // 没有可跟的指针时，绑监听等于让页面永久空转一条循环。
 initPointer();
+
+// 幕布上的狗落到 hero 里主人脚边那只狗的位置。
+// 它【不摘幕布】—— 幕布仍由 loader.css 的动画自己滑走，这个装饰失败或没跑，
+// 结果都只是"狗跟着幕布一起走掉"。顺序有讲究：必须在幕布的 animationstart(.9s) 之前挂上监听，
+// 而模块是 deferred、最早也在首帧之后才执行，所以放在这里而不是文件末尾随便一处。
+initLoaderDrop();

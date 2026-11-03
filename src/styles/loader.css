@@ -40,17 +40,24 @@
 }
 
 /* mark 用狗的第 0 帧（正面看向读者）。复用已有图集而不是新做一张 logo：
-   狗比人更适合当小方块图标，且暗色下自动跟着换 -dark 变体。 */
-.site-loader-mark {
-  width: 69px;
-  height: 96px;
+   狗比人更适合当小方块图标，且暗色下自动跟着换 -dark 变体。
+   幕布上的原件与下落的克隆体（loader.js 建的 .loader-drop）共用这一份图集与同一条
+   暗色切换 —— 分两处写迟早出现"幕布是亮色狗、落下来是暗色狗"这种半帧错配。 */
+.site-loader-mark, .loader-drop {
   background-image: url("/assets/images/hero-dog.webp");
   background-repeat: no-repeat;
   background-size: 800% 100%;
   background-position: 0% 50%;
+  filter: drop-shadow(5px 6px var(--mark-bg));
+}
+[data-theme="dark"] .site-loader-mark,
+[data-theme="dark"] .loader-drop { background-image: url("/assets/images/hero-dog-dark.webp"); }
+
+.site-loader-mark {
+  width: 69px;
+  height: 96px;
   /* loader-greet 是无限往复，按 spec 4.1 的循环例外走 ease-in-out */
   animation: loader-greet 1.55s ease-in-out infinite;
-  filter: drop-shadow(5px 6px var(--mark-bg));
 }
 @keyframes loader-greet {
   0%, to { transform: translate(0) rotate(-2deg); }
@@ -79,10 +86,38 @@
   to { transform: translate(100%) scaleX(.35); }
 }
 
-[data-theme="dark"] .site-loader-mark { background-image: url("/assets/images/hero-dog-dark.webp"); }
-
 @media (max-width: 640px) {
   .site-loader-mark { width: 58px; height: 84px; }
+}
+
+/* ---------- 狗从幕布里跳下来，落到 hero 里主人脚边那只狗的位置 ----------
+   几何全部由 loader.js 写成 --drop-* 自定义属性（起点是 mark 的视口矩形，终点是
+   hero 狗的【动画终态】矩形），关键帧只负责插值 —— JS 一帧都不写，
+   于是 base.css 那个全局时长/延迟归零块天然罩得住这条动画，reduced-motion 不必再特判。
+   z-index 高于幕布的 9999：幕布正在上滑，狗要在它前面落下去。 */
+.loader-drop {
+  position: fixed;
+  z-index: 10000;
+  pointer-events: none;
+  will-change: transform;
+  /* 必须绕左上角缩放：--drop-x/y 是【左上角之差】算出来的，而 scale() 默认绕中心，
+     于是落点会偏 (原宽−目标宽)/2 —— 实测差 3.5px / 4.2px，正好是这半个缩放量。 */
+  transform-origin: 0 0;
+  animation: loader-drop var(--loader-drop) var(--ease-expo) both;
+}
+@keyframes loader-drop {
+  /* 前 72% 是加速下坠（--ease-drop 是本站第二条、也是最后一条缓动例外，理由见 tokens.css），
+     后 28% 用全站那条 expo 收回来 —— 落地有个极小的压扁回弹，纯 expo 会读成"飘过去"。 */
+  0% { transform: translate(0, 0) scale(1, 1); animation-timing-function: var(--ease-drop); }
+  72% {
+    transform: translate(var(--drop-x), var(--drop-y)) scale(var(--drop-sx), var(--drop-sy));
+    animation-timing-function: var(--ease-expo);
+  }
+  84% {
+    transform: translate(var(--drop-x), calc(var(--drop-y) + 4px))
+      scale(calc(var(--drop-sx) * 1.06), calc(var(--drop-sy) * .9));
+  }
+  to { transform: translate(var(--drop-x), var(--drop-y)) scale(var(--drop-sx), var(--drop-sy)); }
 }
 
 /* reduced-motion：整块幕布直接不存在，而不是「停在原地不动」。
