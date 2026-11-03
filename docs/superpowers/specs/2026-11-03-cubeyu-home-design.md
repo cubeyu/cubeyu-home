@@ -106,6 +106,7 @@ cubeyu-home/
 
 | 变量 | 值 | 用途 |
 |---|---|---|
+| `color-scheme` | `light`（`[data-theme="dark"]` 下为 `dark`） | **必须设**。Chrome 的 `outline: auto` 焦点环、原生滚动条、选区高亮、表单控件底色跟的是 CSS `color-scheme`，不是我们的 `data-theme`。不设则暗色下焦点环只有约 1.04:1、滚动条与选区仍按亮色调色板绘制 —— Task 9-10 审查实测到的根因。 |
 | `--paper` | `#FFFFFF` | 页面底 |
 | `--surface` | `#FAFAFA` | 次级底 |
 | `--surface-invert` | `#0C0C0E` | 反白区块（如终端日志 demo） |
