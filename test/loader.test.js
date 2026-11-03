@@ -117,6 +117,32 @@ test('the drop waits for the curtain to start leaving, via one shared token', ()
   assert.match(drop, /\bboth\b/, '延迟段里要靠 fill 取 0% 关键帧，狗才停在标志原位而不是闪一下');
 });
 
+// 标志在屏幕中心、真狗在右侧三分之二处，直线插值会让狗【斜穿标题最后一行】
+// （1774×1000 实测压在 "ols." 上，用户截图抓到过这一帧）。
+// 解法是把路径拆成"先落到基线以下 → 贴地横移 → 往上落进位置"，幕布构图保持居中。
+// （先前试过把幕布上的标志横移到落点 x、做成纯垂直下坠 —— 用户否掉：加载块歪在三分之二宽处更丑。）
+test('the drop arcs under the headline instead of cutting across it', () => {
+  const c = loaderCss();
+  const kf = /@keyframes loader-drop\s*\{([\s\S]*?)\n\}/.exec(c)?.[1] ?? '';
+  assert.ok(kf, '找不到 loader-drop 关键帧');
+  assert.match(c, /--drop-dip:\s*\d+px/, '横移段的下探量要成一个变量，别散在 calc 里');
+  // 0% 只有 Y、没有 X：起飞那一段必须是纯垂直的，一出发就带横向分量就是斜穿
+  const firstLeg = /0%\s*\{([^}]*)\}\s*42%/.exec(kf);
+  assert.ok(firstLeg, '找不到 0% → 42% 这一段');
+  assert.match(firstLeg[1], /translate\(0,\s*0\)/, '0% 必须原地');
+  assert.match(/42%\s*\{([\s\S]*?)\}/.exec(kf)?.[1] ?? '',
+    /translate\(0,\s*calc\(var\(--drop-y\)\s*\+\s*var\(--drop-dip\)\)\)/,
+    '42% 要还在标志那条竖线上（X 仍是 0），但已经低到基线以下 —— 这一段不许有横向分量');
+  // 横移发生在低处：X 到终点的这一帧，Y 必须仍然是 drop-y + dip
+  const slide = /74%\s*\{([\s\S]*?)\}/.exec(kf)?.[1] ?? '';
+  assert.match(slide, /var\(--drop-x\)[\s\S]*calc\(var\(--drop-y\)\s*\+\s*var\(--drop-dip\)\)/,
+    '74% 才是横移到位，且仍在下探高度上');
+  assert.match(/to\s*\{([^}]*)\}/.exec(kf)?.[1] ?? '', /var\(--drop-y\)(?!\s*\+)/,
+    '终态必须回到 --drop-y 本身（往上落进位置），不能停在下探高度');
+  // 幕布构图不许被这条装饰挪走
+  assert.doesNotMatch(c, /--mark-shift/, '加载块必须保持居中，别再用横移去迁就落点');
+});
+
 test('the clone always leaves: animationend plus a hard timeout', () => {
   const js = loaderJs();
   assert.match(js, /addEventListener\('animationend', land, \{ once: true \}\)/,
