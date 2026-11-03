@@ -42,7 +42,7 @@
 /* mark 用狗的第 0 帧（正面看向读者）。复用已有图集而不是新做一张 logo：
    狗比人更适合当小方块图标，且暗色下自动跟着换 -dark 变体。 */
 .site-loader-mark {
-  width: 66px;
+  width: 69px;
   height: 96px;
   background-image: url("/assets/images/hero-dog.webp");
   background-repeat: no-repeat;

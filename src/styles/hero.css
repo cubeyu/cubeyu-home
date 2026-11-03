@@ -89,7 +89,7 @@
   to { opacity: 1; clip-path: inset(0); transform: translateY(0); }
 }
 
-.hero-mascot { position: relative; height: 100%; width: auto; aspect-ratio: 521 / 1471; display: block; }
+.hero-mascot { position: relative; height: 100%; width: auto; aspect-ratio: 531 / 1430; display: block; }
 
 .hero-person {
   position: absolute;
@@ -120,7 +120,7 @@
   top: 66%;
   left: 54%;
   width: 54%;
-  aspect-ratio: 207 / 300;
+  aspect-ratio: 216 / 300;
   display: block;
   background-image: url("/assets/images/hero-dog.webp");
   background-repeat: no-repeat;

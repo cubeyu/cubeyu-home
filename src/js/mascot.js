@@ -8,13 +8,14 @@
    火柴人，眼珠必须另外画、另外驱动；本站的人物脸上已经画好眼睛和眼镜，
    再叠两层就是两双眼睛。要上瞳孔跟随得先生成一张空脸版本。 */
 
-// 图集帧序（生成时按 4x2 网格的阅读顺序切片，见 .superpowers/build_mascot.py）：
-//   0 正面看向读者 | 1 略向左 | 2 三分之四向左 | 3 完全左侧脸
-//   4 略向右       | 5 三分之四向右 | 6 完全右侧脸 | 7 低头看左下
-// 7 号不参与跟随：它是「低头」而不是某个水平角，映射到水平位置会显得抽风。
-const FRONT = 0;
-const MAX_LEFT = 3;
-const RIGHT_SEQ = [0, 4, 5, 6];   // 正面 → 最右，必须走这条序，直接线性插值会跳过 4/5 的角度关系
+// 图集帧序（新Atlas：狗的基础姿态是【抬头深情看着主人】，不是正面）：
+//   0 抬头看主人（右上） 1 抬头看主人（左上） 2 抬头角度较缓 3 正面看向读者
+//   4 完全左侧脸         5 右侧四分之三      6 完全右侧脸     7 低头看地
+// 静止态用 0：那是这张图最暖的一帧，也是参照站那个姿势的意思。
+// 光标横扫只用 4→2→3→5→6 这五帧，1 和 7 不参与跟随：
+// 1 与 0 几乎同形（横移时看不出变化），7 是「低头」不是某个水平角，映射到水平位置会显得抽风。
+const IDLE = 0;
+const SWEEP = [4, 2, 3, 5, 6];
 const FRAMES = 8;
 
 export function initMascot() {
@@ -29,7 +30,7 @@ export function initMascot() {
   // reduced-motion 下不追踪，狗停在静止帧，页面依然完整可读。
   if (matchMedia('(prefers-reduced-motion: reduce)').matches) return;
 
-  let frame = FRONT;
+  let frame = IDLE;
   let raf = 0;
 
   const paint = () => {
@@ -53,14 +54,9 @@ export function initMascot() {
     set(frameFor(Math.min(1, Math.max(0, (e.clientX - r.left) / r.width))));
   });
 
-  hero.addEventListener('pointerleave', () => set(FRONT));
+  hero.addEventListener('pointerleave', () => set(IDLE));
 }
 
 export function frameFor(t) {
-  if (t < 0.5) {
-    // 0 → MAX_LEFT 线性，t=0 时最左、t=.5 时回到正面
-    return Math.round((0.5 - t) / 0.5 * MAX_LEFT);
-  }
-  const i = Math.round((t - 0.5) / 0.5 * (RIGHT_SEQ.length - 1));
-  return RIGHT_SEQ[Math.min(RIGHT_SEQ.length - 1, i)];
+  return SWEEP[Math.round(t * (SWEEP.length - 1))];
 }
