@@ -241,8 +241,34 @@ const notFoundHtml = render('src/templates/404.html', tpl404);
 // 层叠顺序仍由 cssOrder 决定，标记仍在它标注的那段压缩内容之前，两条断言的判据字节不变。
 // 压缩强度不损失：lightningcss 不做跨规则的合并重排（实测合并压与分文件压的字节差异
 // 只有标记行本身），var() 回退、!important、媒体查询都逐条保留 —— 回归见报告。
+// Task 13 控制器裁定（审查 Important）：显式给 targets，否则移动端断点在新浏览器之外不存在。
+// 不传 targets 时 lightningcss 用它内置的 browserslist 默认值（本装版本 package.json 里是
+// "last 2 versions, not dead"），实测产物把 @media (max-width: 640px) 压成区间语法
+// @media (width<=640px) —— 该语法要 Chrome 104+ / Safari 16.4+ / Firefox 102+，更旧的浏览器
+// 整条媒体查询【解析失败被丢弃】：不报错、不进 console，手机在旧内核上直接渲染桌面布局。
+// M1 验收跑在现代 Chrome，截图看不见这个洞，所以只能由产物字节层的判据兜住（见报告）。
+// targets 的 API 形状按【装好的 1.33.0】核对（node/index.d.ts: targets?: Targets；
+// node/targets.d.ts: { chrome?, safari?, firefox?, ... }，值是打包后的数字而非版本号字符串；
+// 打包公式取 node/browserslistToTargets.js 的 parseVersion：(major<<16)|(minor<<8)|patch。
+// 同文件没有直接吃 browserslist 字符串的重载 —— browserslistToTargets(browserslist: string[])
+// 要求传入已展开的数组，且 browserslist 包不在 devDependencies，故用打包数字，不猜语法。
+// 地板取 2021-07 ~ 2022-03 的主流版本（Chrome/Edge/Android 92、Firefox 90、Safari/iOS 15.4）：
+// 比个人主页在 2026 年还要照顾的旧内核留出 4-5 年余量，且全部低于 MediaRangeSyntax 支持线。
+// 它同时高于本项目 CSS 用到的其余特性线（逻辑属性 margin-inline/padding-block ≈ Chrome 87 /
+// Safari 14.1，:where / :is ≈ Chrome 88 / Firefox 82 / Safari 14，:focus-visible ≈ Safari 15.4），
+// 所以除媒体查询语法外不触发任何降级改写 —— 压缩行为不变，产物只回退 media 的写法（体积差见报告）。
+const packTarget = (major, minor = 0, patch = 0) => (major << 16) | (minor << 8) | patch;
+const cssTargets = {
+  chrome: packTarget(92),
+  edge: packTarget(92),
+  firefox: packTarget(90),
+  safari: packTarget(15, 4),
+  ios_saf: packTarget(15, 4),
+  android: packTarget(92),
+};
+
 const minifyCss = (filename, source) =>
-  transform({ filename, code: Buffer.from(source, 'utf8'), minify: true }).code.toString('utf8');
+  transform({ filename, code: Buffer.from(source, 'utf8'), minify: true, targets: cssTargets }).code.toString('utf8');
 
 const css = cssOrder
   .map((f) => `/* --- ${f} --- */\n` + minifyCss(f, readFileSync(join(root, 'src/styles', f), 'utf8')))
