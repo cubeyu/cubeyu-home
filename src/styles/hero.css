@@ -148,21 +148,26 @@
 }
 
 .hero-dog {
-  /* 腿缩短后画布变矮，狗能待的空白只剩胳膊底下那一块（x 5%–60%、y 55%–100%），
-     人物的两条腿在 x .56 以右。尺寸是被【句点】定死的：狗的头顶必须低于基线 567，
-     否则它会坐在 "small tools." 的点上。底边按脚落地算（墨底 .986）→
-     宽 38% 盒宽 = 64px，帧格 216/300 → 高 89px = 盒高的 29% → top 70%、头顶 574。 */
+  /* 狗坐在【脚边】，不是坐在腿上。人物的腿在新图里靠右，胳膊底下到脚边那一块是空的，
+     狗坐进去正好与腿并排 —— 上一版狗压在腿正中，截图里像狗长了火柴腿。
+     底边按人物墨底 .986 对齐，所以 top 是算出来的而不是试出来的：
+     格子墨底实测 1.000，盒高 = 盒宽 × 180/156，于是 top = (.986 − 盒高÷308px) × 100%。
+     桌面 46% 盒宽 → 狗 89.6px → top 69.5%。
+     46% 这个宽度是为了保住狗【渲染高度】89px：图集格子从 216×300 换成 156×180 之后，
+     同样的 38% 盒宽只画得出 74px 的狗（宽高比变了），会掉成图注。 */
   position: absolute;
-  top: 70%;
+  top: 69.5%;
   left: 22%;
-  width: 38%;
-  aspect-ratio: 216 / 300;
+  width: 46%;
+  aspect-ratio: 156 / 180;
   display: block;
   background-image: url("/assets/images/hero-dog.webp");
   background-repeat: no-repeat;
-  /* 8 列 1 行 → 横向铺 800%；帧索引 i 对应 background-position-x = i/7*100% */
-  background-size: 800% 100%;
-  background-position: 0% 50%;
+  /* 视线图集是 5 列 × 3 行（列=水平朝向，行=垂直朝向），所以两个轴都要铺满：
+     帧 (col,row) 对应 background-position = col/4*100% , row/2*100%（见 mascot.js 的 positionFor）。
+     静止态取正中间那格 = 正脸平视，与 mascot.js 的 IDLE 同一格（test/mascot.test.js 钉住）。 */
+  background-size: 500% 300%;
+  background-position: 50% 50%;
 }
 .hero-person, .hero-dog { filter: drop-shadow(0 10px 18px var(--shadow-illo)); }
 
@@ -179,10 +184,11 @@
    桌面 2.2em → -.59em；此处 1.55em → -.23em。 */
 @media (max-width: 480px) {
   .hero-illo { height: 1.55em; bottom: -.23em; }
-  /* 狗的尺寸在窄屏另外收一档：盒底离基线只剩 22px（桌面 99px），
-     照桌面的 38% 盒宽画下来，狗头会顶到基线以上 8px、压住句点。
-     30% 盒宽 → 高 22.7% 盒高，top 76% 让底边仍与人物墨底 .986 同一条地平线。 */
-  .hero-dog { width: 30%; top: 76%; }
+  /* 狗的尺寸在窄屏另外收一档：吉祥物盒底只超出 h1 盒底 14.7px（桌面 .59em=82.6px），
+     照桌面的 46% 盒宽画下来，狗头会顶到基线以上、压住句点。
+     36% 盒宽 → 高 22.6px（与换图集前的 22.7px 同一只狗，只是宽高比变了所以要重算宽度），
+     top 76% 让底边仍与人物墨底 .986 同一条地平线。 */
+  .hero-dog { width: 36%; top: 76%; }
 }
 
 /* reduced-motion：吉祥物必须【仍然在场】，只是不动。

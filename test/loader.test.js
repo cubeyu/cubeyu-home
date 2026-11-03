@@ -139,3 +139,23 @@ test('the drop keyframes interpolate from JS-supplied geometry only', () => {
   assert.equal((c.match(/hero-dog\.webp/g) || []).length, 1, '亮色图集只该出现一次');
   assert.equal((c.match(/hero-dog-dark\.webp/g) || []).length, 1, '暗色图集只该出现一次');
 });
+
+// 下落的狗落定后不能"啪"地换脸或换个比例。
+// 幕布那侧的声明在 loader.css，首屏那只狗在 hero.css，两个文件、两条规则，
+// 但必须是同一格帧 + 同一个格子宽高比 —— 换图集时只改一边，浏览器不会报错，
+// 只会让落点那一瞬间狗头跳一格（或整只狗被拉扁）。
+test('the dropped clone and the hero dog are the same cell at the same aspect', () => {
+  const decls = (text, rule) => {
+    const body = rule.exec(text)?.[1] ?? '';
+    const pick = (re) => (re.exec(body)?.[1] ?? '').replace(/\s+/g, '');
+    return {
+      size: pick(/background-size:\s*([^;]+);/),
+      pos: pick(/background-position:\s*([^;]+);/),
+      ar: pick(/aspect-ratio:\s*([^;]+);/),
+    };
+  };
+  const mark = decls(loaderCss(), /^\.site-loader-mark,\s*\.loader-drop\s*\{([^}]*)\}/m);
+  const hero = decls(heroCss(), /^\.hero-dog\s*\{([^}]*)\}/m);
+  assert.deepEqual(hero, mark, '幕布上的狗与首屏的狗必须是同一格帧、同一格子比例');
+  assert.ok(mark.size, '共用规则缺 background-size（图集是双轴的，两轴都要铺满）');
+});

@@ -39,23 +39,28 @@
   transform: translateY(-1.5vh);
 }
 
-/* mark 用狗的第 0 帧（正面看向读者）。复用已有图集而不是新做一张 logo：
+/* mark 用图集正中间那格（正脸平视）—— 与 hero 狗的静止态、mascot.js 的 IDLE 同一格，
+   所以下落的狗落定后不会"啪"地换脸。复用已有图集而不是新做一张 logo：
    狗比人更适合当小方块图标，且暗色下自动跟着换 -dark 变体。
    幕布上的原件与下落的克隆体（loader.js 建的 .loader-drop）共用这一份图集与同一条
    暗色切换 —— 分两处写迟早出现"幕布是亮色狗、落下来是暗色狗"这种半帧错配。 */
 .site-loader-mark, .loader-drop {
   background-image: url("/assets/images/hero-dog.webp");
   background-repeat: no-repeat;
-  background-size: 800% 100%;
-  background-position: 0% 50%;
+  /* 视线图集 5×3；静止取正中间那格（正脸平视），见 mascot.js / hero.css 的同一条数学 */
+  background-size: 500% 300%;
+  background-position: 50% 50%;
+  aspect-ratio: 156 / 180;
   filter: drop-shadow(5px 6px var(--mark-bg));
 }
 [data-theme="dark"] .site-loader-mark,
 [data-theme="dark"] .loader-drop { background-image: url("/assets/images/hero-dog-dark.webp"); }
 
 .site-loader-mark {
-  width: 69px;
-  height: 96px;
+  /* 高度交给共享规则里的 aspect-ratio（帧格 156/180）：
+     两个轴都写死就会把sprite压扁或裁掉耳朵。83px 宽 → 95.8px 高，与旧的 69×96 同高；
+     新格子比旧的 216×300 方，所以同样的下坠足迹要更宽一点。 */
+  width: 83px;
   /* loader-greet 是无限往复，按 spec 4.1 的循环例外走 ease-in-out */
   animation: loader-greet 1.55s ease-in-out infinite;
 }
@@ -87,7 +92,7 @@
 }
 
 @media (max-width: 640px) {
-  .site-loader-mark { width: 58px; height: 84px; }
+  .site-loader-mark { width: 73px; }
 }
 
 /* ---------- 狗从幕布里跳下来，落到 hero 里主人脚边那只狗的位置 ----------
