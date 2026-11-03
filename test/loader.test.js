@@ -99,7 +99,22 @@ test('the clone lands on the dog\'s FINAL rect, not the animated one', () => {
   // 从 computed transform 的矩阵里把当前位移减掉，才不依赖"此刻动画跑到哪了"。
   assert.match(js, /new DOMMatrixReadOnly\(getComputedStyle\(illo\)\.transform\)\.f/,
     '必须用 transform 矩阵反推动画终态的位置');
-  assert.match(js, /r\.top - ty/, '终态 = 当前矩形减去入场位移');
+  assert.match(js, /rectInDocument\(target, ty\)/, '终态 = 当前矩形减去入场位移 ty');
+  assert.match(js, /r\.top \+ window\.scrollY - \(dy \|\| 0\)/, '减位移与换算文档坐标必须在同一处算完，别两套坐标混用');
+});
+
+test('the clone lands in document coordinates, so scrolling cannot strand it', () => {
+  const js = loaderJs();
+  // 行首锚定：`.site-loader-mark, .loader-drop {` 里也有 `.loader-drop {` 这个子串
+  const drop = /^\.loader-drop\s*\{([^}]*)\}/m.exec(readFileSync('src/styles/loader.css', 'utf8'))?.[1] ?? '';
+  // 视口坐标 + fixed 的失效方式很隐蔽：狗会钉在屏幕上，用户滚一下页，
+  // 它就"落在下面的 tab 条上"（用户实测抓到一次）。
+  assert.match(js, /r\.left \+ window\.scrollX/, '起点矩形必须换算成文档坐标');
+  assert.match(js, /r\.top \+ window\.scrollY/, '同上');
+  assert.match(drop, /position:\s*absolute/,
+    '克隆体必须 absolute：配合文档坐标，它才跟着页面走、始终落在真狗身上');
+  assert.doesNotMatch(drop, /position:\s*fixed/,
+    'fixed + 文档坐标会让狗出现在页面下方很远处（两套坐标系混用）');
 });
 
 test('the drop keyframes interpolate from JS-supplied geometry only', () => {

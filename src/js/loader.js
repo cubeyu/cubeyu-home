@@ -23,10 +23,24 @@ export function initLoaderDrop() {
   // 目标此刻被入场动画的 translateY 压在下边，而我们要的是它【动画结束后】的位置。
   // 那条动画只平移，所以从 computed transform 的矩阵里把当前的 ty 减掉就是终态 ——
   // 不用等、不用猜 12% 这个数，也不用管量测发生在动画的哪一刻。
+  //
+  // 两个矩形都要换算成【文档坐标】（加 scrollX/scrollY），因为克隆体是 absolute 定位：
+  // 用视口坐标的话，用户在飞行的那半秒里滚一下页，狗就会钉在原来的屏幕位置上，
+  // 看起来像"落到下面的 tab 条上去了"（实测被用户抓到）。换成文档坐标后它跟着页面走，
+  // 滚到哪都落在真狗身上。
+  function rectInDocument(el, dy) {
+    const r = el.getBoundingClientRect();
+    return {
+      left: r.left + window.scrollX,
+      top: r.top + window.scrollY - (dy || 0),
+      width: r.width,
+      height: r.height,
+    };
+  }
+
   function landingRect() {
     const ty = new DOMMatrixReadOnly(getComputedStyle(illo).transform).f;
-    const r = target.getBoundingClientRect();
-    return { left: r.left, top: r.top - ty, width: r.width, height: r.height };
+    return rectInDocument(target, ty);
   }
 
   function land() {
@@ -39,10 +53,10 @@ export function initLoaderDrop() {
 
   function promote() {
     if (clone) return;
-    const from = mark.getBoundingClientRect();
+    const from = rectInDocument(mark);
     const to = landingRect();
-    // 幕布已经掀完、或目标还没布局（宽度 0）、或落在视口外：什么都不做。
-    if (from.width <= 0 || to.width <= 0 || to.top > innerHeight || to.bottom < 0) return;
+    // 幕布已经掀完、或目标还没布局（宽度 0）、或落在文档可视区外：什么都不做。
+    if (from.width <= 0 || to.width <= 0) return;
 
     clone = document.createElement('span');
     clone.className = 'loader-drop';

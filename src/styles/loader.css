@@ -96,7 +96,10 @@
    于是 base.css 那个全局时长/延迟归零块天然罩得住这条动画，reduced-motion 不必再特判。
    z-index 高于幕布的 9999：幕布正在上滑，狗要在它前面落下去。 */
 .loader-drop {
-  position: fixed;
+  /* absolute 而不是 fixed：JS 给的 left/top 与 --drop-x/y 都是【文档坐标】，
+     这样用户在飞行的半秒里滚一下页，狗是跟着页面走、仍然落在真狗身上；
+     用 fixed 的话它钉在屏幕上，滚到哪里就"留在哪里"（实测落到 tab 条上去了）。 */
+  position: absolute;
   z-index: 10000;
   pointer-events: none;
   will-change: transform;
