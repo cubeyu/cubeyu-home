@@ -1,5 +1,6 @@
 export const sections = [
-  { id: 'works',   eyebrow: '作品 / WORKS',  title: { zh: '七个能上手玩的东西', en: 'Seven things you can actually poke' } },
+  // 标题里不写数量词：用户会换卡，「七个」在第一次换卡后就变成假话（Task 7-8 审查项 9）。
+  { id: 'works',   eyebrow: '作品 / WORKS',  title: { zh: '能上手玩的东西', en: 'Things you can actually poke' } },
   { id: 'skills',  eyebrow: '技能 / SKILLS', title: { zh: '日常在用', en: 'In daily use' } },
   { id: 'sites',   eyebrow: '站点 / SITES',  title: { zh: '我维护的其它东西', en: 'Other things I run' } },
 ];

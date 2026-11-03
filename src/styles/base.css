@@ -30,6 +30,8 @@ h3 { font-size: 30px; font-weight: 800; margin: 0; letter-spacing: -.01em; }
   color: var(--ink-2);
   text-transform: uppercase;
 }
+/* 数字 / 编号的等宽小字。cards.css 的 .card-no 走这个类（build.js 挂 class="card-no num"），
+   组件侧不再抄一遍同样的四条声明 */
 .num { font-family: var(--font-mono); font-size: 12px; color: var(--ink-3); letter-spacing: .04em; }
 .tag {
   font-family: var(--font-mono);

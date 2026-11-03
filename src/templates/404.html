@@ -8,12 +8,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>{{TITLE}}</title>
-<script>
-/* 首帧防闪烁：与 index.html 同一段 3 行脚本（spec 6.1）。
-   两处副本是已知重复 —— 偏好键名或写法变更时要同时改，M4 若把它抽进 build.js 常量更稳。 */
-try{var t=localStorage.getItem('cubeyu-theme')||'auto';
-document.documentElement.dataset.theme=(t==='auto')?(matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light'):t;}catch(e){}
-</script>
+{{ANTI_FLASH}}
 <link rel="stylesheet" href="/assets/app.css">
 </head>
 <body>

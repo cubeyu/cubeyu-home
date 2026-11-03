@@ -18,14 +18,28 @@
 .lmask:nth-child(3) > span { animation-delay: .20s; }
 @keyframes lmask-up { to { transform: translateY(0); } }
 
-/* sub 行同时挂 .zh/.en（本区块的字号与颜色）与 .i18n-*（全局显隐），两套类名各管各的 */
+/* sub 行的两个 span 常驻可见（build.js 不挂 i18n-*）：中文名 + 拉丁身份行是两个品牌元素，
+   不是同一串的两种译文，所以这里的 flex / gap / baseline 真的作用在两个可见子元素上。 */
 .hero-sub { margin-top: 20px; display: flex; gap: 16px; align-items: baseline; flex-wrap: wrap; }
 .hero-sub .zh { font-size: 16px; color: var(--ink-2); }
+/* 全站唯一的一次马克笔黄，落在这条拉丁身份行上 —— 控制器的美学裁定，M1 截图第一现场验收。
+   为什么是这里：spec 4.1 把 --mark-bg 定为唯一强调色，而修复前它在样式里零消费者，
+   整页一个强调点都没有（"每屏一处强调" 变成 "每屏零处"）。h1 那三行都是 58px 大字，
+   任何一行整条上底色都会把强调点变成色块，所以选 12px 等宽的小字身份行划一道 ——
+   参照站的签名动作就是这个尺度。
+   前景配 --mark-fg 而不是 --ink-3：暗色下 --mark-bg 按 spec 4.2 有意降成半透明底纹
+   （降级值只在 tokens.css 里写），半透明黄底配三级灰墨实测只有 2.24:1，低于 AA 对 12px
+   正文所要求的 4.5:1；--mark-fg 是配对的提亮黄字，实测亮色 13.67:1、暗色 8.65:1
+   （合成底色与算法见 Task 7-8 报告 §Fix round 1）。
+   注释里不写字面色值：check.js 的 COLOR_LEAK 扫原文不剥注释，写了会把它自己判成违规。
+   padding 取 2px 6px 与 base.css 的 .tag 同值，不新发明一档间距。 */
 .hero-sub .en {
   font-family: var(--font-mono);
   font-size: 12px;
   letter-spacing: .08em;
-  color: var(--ink-3);
+  background: var(--mark-bg);
+  color: var(--mark-fg);
+  padding: 2px 6px;
 }
 .hero-scroll {
   margin-top: 56px;
