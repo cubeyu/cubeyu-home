@@ -1869,16 +1869,22 @@ export const TOKEN_RESIDUE = {
 
 export const CARD_COUNT = {
   // spec 9.1 第 2 项：不硬编码数量，三者对齐即可。用户会换卡。
+  // 关键：data-demo 与 .card-demo 只在「该 demo 已在 demos/index.js 注册」时才输出
+  // （Task 7-8 修复轮裁定，为了 M2 不给未实现的 demo 留空壳）。所以期望值必须按
+  // 注册态算，不能按声明态算 —— 按声明算的话 M2 到 M3 之间必然失败（声明 7、注册 0）。
   name: 'card count matches data',
-  run({ html, cards }) {
+  run({ html, cards, registry }) {
     const f = [];
     const inHtml = (html.match(/<article class="card"/g) || []).length;
     if (inHtml !== cards.length) f.push(`cards: data=${cards.length} html=${inHtml}`);
     const slugged = (html.match(/data-slug="/g) || []).length;
     if (slugged !== cards.length) f.push(`data-slug: data=${cards.length} html=${slugged}`);
-    const wantDemo = cards.filter((c) => c.demo).length;
+    const wantDemo = cards.filter((c) => c.demo && registry.includes(c.demo)).length;
     const haveDemo = (html.match(/ data-demo="/g) || []).length;
-    if (haveDemo !== wantDemo) f.push(`data-demo: expected=${wantDemo} found=${haveDemo}`);
+    if (haveDemo !== wantDemo) f.push(`data-demo: expected=${wantDemo} (registered) found=${haveDemo}`);
+    const wantRoots = cards.filter((c) => c.demo && registry.includes(c.demo)).length;
+    const haveRoots = (html.match(/data-demo-root="/g) || []).length;
+    if (haveRoots !== wantRoots) f.push(`data-demo-root: expected=${wantRoots} found=${haveRoots}`);
     return f;
   },
 };
@@ -1898,12 +1904,15 @@ export const DEMO_REGISTRY_MATCH = {
 
 export const COLOR_LEAK = {
   // spec 9.1 第 4 项：扫源文件而非合并产物，否则定位不出违规来源
+  // 必须先剥注释：注释里写 "对应 #FFE28A" 或 "dark 用 rgba(255,255,255,.14)" 是文档，
+  // 不是声明。不剥就会逼实现者把解释性注释删掉或改写，那是反向激励。
   name: 'no literal colors outside tokens.css',
   run({ files }) {
     const f = [];
     for (const { name, text } of files) {
       if (name.endsWith('tokens.css')) continue;
-      const hits = text.match(/#[0-9a-fA-F]{3,8}\b|rgba?\([^)]*\)|hsla?\([^)]*\)/g) || [];
+      const code = text.replace(/\/\*[\s\S]*?\*\//g, '');
+      const hits = code.match(/#[0-9a-fA-F]{3,8}\b|rgba?\([^)]*\)|hsla?\([^)]*\)/g) || [];
       if (hits.length) f.push(`${name}: literal color(s) ${hits.slice(0, 3).join(', ')} — use var(--…)`);
     }
     return f;
