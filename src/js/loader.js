@@ -92,10 +92,20 @@ export function initLoaderDrop() {
 
   // 时机不靠再抄一遍 --loader-hold：直接听幕布自己的 animationstart，
   // 两处写同一个 .9s 迟早会漂（token 存在的意义就是只有一份）。
-  curtain.addEventListener('animationstart', promote, { once: true });
+  // 但 animationstart【会冒泡】：幕布里 mark 的 loader-greet、转环 loader-spin、
+  // 进度轨 loader-progress 都在 0ms 就起跳（实测 t=53ms 冒上来三条），
+  // 而幕布自己的 site-loader-exit 要到 t=1059ms 才开始。不挑名字就等于把下坠
+  // 提前整整一个 hold —— 狗在幕布还盖着整页时就落到右下角，等幕布掀开动画早演完了。
+  // 也因此不能用 once:true：第一个事件是错的，用完就再也没人听退场了。
+  function onStart(e) {
+    if (e.animationName !== 'site-loader-exit') return;
+    curtain.removeEventListener('animationstart', onStart);
+    promote();
+  }
+  curtain.addEventListener('animationstart', onStart);
 
   return function destroy() {
-    curtain.removeEventListener('animationstart', promote);
+    curtain.removeEventListener('animationstart', onStart);
     illo.removeEventListener('animationend', land);
     window.clearTimeout(timer);
     if (clone) clone.remove();

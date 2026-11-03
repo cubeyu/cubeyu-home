@@ -97,7 +97,7 @@ test('the drop never owns the curtain: it cannot dismiss, hide, or delay it', ()
 test('the drop timing is not a second copy of --loader-hold', () => {
   const js = loaderJs();
   // 起跳时刻听幕布自己的 animationstart：两处各写一个 .9s 迟早漂
-  assert.match(js, /addEventListener\('animationstart', promote, \{ once: true \}\)/,
+  assert.match(js, /addEventListener\('animationstart', onStart\)/,
     '必须听 animationstart，而不是 setTimeout(900)');
   assert.doesNotMatch(js, /setTimeout\([^)]*,\s*(900|\.9)\)/, '不许把幕布时长抄进 JS');
   assert.match(tokenCss(), /--loader-drop:/, '下落时长要有 token，与 --loader-hold/--hero-start 同一组');
@@ -143,6 +143,24 @@ test('the mark wears a spinning conic ring while it waits', () => {
   assert.ok(dropRule, '找不到 .loader-drop 自己的规则');
   assert.doesNotMatch(mark, /\bfilter:/, 'mark 带 filter 会把转环投影成残影');
   assert.doesNotMatch(dropRule, /\bfilter:/, '克隆体要与 mark 一致地不带投影，否则起飞帧长出影子');
+});
+
+// animationstart 是【会冒泡】的事件。幕布内部自己养着三条无限动画 —— mark 挥手的
+// loader-greet、转环 loader-spin、进度轨 loader-progress —— 它们都在 0ms 起跳，
+// 而幕布自己的 site-loader-exit 要等 --loader-hold 之后才开始。
+// 实测（addInitScript 全程记录）：t=53ms 就有三条 animationstart 冒到幕布上，
+// site-loader-exit 到 t=1059ms 才来。所以"听到任何 animationstart 就放飞"
+// 等于把下坠提前整整一个 hold：狗在幕布还严严实实盖着整页的时候就已经落到右下角
+// （用户截图抓到的正是这一帧），等幕布掀开时动画早演完了 —— 读起来就是"开屏动画没了"。
+test('the drop waits for the curtain\'s own exit, not the first animation inside it', () => {
+  const js = loaderJs();
+  assert.match(js, /animationName\s*[!=]==\s*['"]site-loader-exit['"]/,
+    '必须只认幕布自己那条退场动画，冒泡上来的装饰动画一律忽略');
+  // once:true 会被第一个（错误的）animationstart 消耗掉，之后真正的退场开始时就没人听了
+  assert.doesNotMatch(js, /addEventListener\(\s*['"]animationstart['"]\s*,\s*promote\s*,\s*\{\s*once:\s*true\s*\}\s*\)/,
+    'once 不能直接挂在 promote 上：第一个事件是 greet/spin/progress，用完就再也不会飞了');
+  assert.match(js, /removeEventListener\(\s*['"]animationstart['"]\s*,\s*onStart\s*\)/,
+    '命中之后要自己摘掉监听（destroy 也按同一个函数引用摘）');
 });
 
 test('the clone always leaves: animationend plus a hard timeout', () => {
