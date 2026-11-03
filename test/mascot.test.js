@@ -60,6 +60,11 @@ test('hero illustration is anchored to the headline in em, not to the column edg
   assert.doesNotMatch(illo, /right:\s*\.?\d/, '不得改用 right 定位：那锚的是栏的右边缘，与标题长度无关');
   assert.match(css, /\.hero h1\s*\{[^}]*position:\s*relative/,
     'h1 必须是定位参照物 —— 挂在 .hero 上时包含盒把副行与下滑提示一起算进去，脚会落到副行以下');
+  // 关掉动画后起点位移必须显式收回，否则盒子永久停在 translateY(12%)：
+  // 2.3em 的人往下 39px，手掌从 x 高度顶掉进字母中间，「扶着字」变成「盖住字」。
+  const reduce = /@media \(prefers-reduced-motion: reduce\)\s*\{([\s\S]*)\}/.exec(css)?.[1] ?? '';
+  assert.match(/\.hero-illo\s*\{[^}]*\}/.exec(reduce)?.[0] ?? '', /transform:\s*none/,
+    'reduced-motion 下 .hero-illo 必须 transform: none，把入场起点那 12% 收回来');
 });
 
 // 开屏"升起"的起点必须存在。第一版只抄了参照站关键帧里的 translateY(0)，

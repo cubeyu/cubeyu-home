@@ -186,11 +186,14 @@
 /* reduced-motion：吉祥物必须【仍然在场】，只是不动。
    解除入场裁切（否则 opacity:0 + clip-path:inset(100%) 会让整只吉祥物消失 ——
    那是「减弱动效」变成「内容缺失」，比让它动更糟），停掉呼吸，
-   狗由 mascot.js 直接不绑指针监听、停在正面帧。 */
+   狗由 mascot.js 直接不绑指针监听、停在正面帧。
+   transform 必须显式收回：translateY(12%) 是入场动画的【起点】，animation:none 之后
+   没有关键帧去覆盖它，盒子就永久停在偏移态 —— 2.3em 的人等于往下 39px，
+   手掌从 x 高度顶（490）掉进字母中间，「扶着字」变成「盖住字」。 */
 @media (prefers-reduced-motion: reduce) {
   .lmask { overflow: visible; }
   .lmask > span { transform: none; animation: none; }
   .hero-scroll { animation: none; }
-  .hero-illo { opacity: 1; clip-path: none; animation: none; }
+  .hero-illo { opacity: 1; clip-path: none; transform: none; animation: none; }
   .hero-person { animation: none; }
 }
