@@ -1,5 +1,6 @@
 /* demos/inkmark.css —— N°01 墨痕笔记微原型的样式。DOM 由 src/js/demos/inkmark.js 建，
-   类名一一对应（.d-ink / .d-ink-pane / .d-ink-cap / .d-ink-src / .d-ink-out / .d-md-* / .d-ink-ask）。
+   类名一一对应（.d-ink / .d-ink-pane / .d-ink-cap / .d-ink-src / .d-ink-out / .d-ink-status /
+   .d-md-* / .d-ink-ask）。
    纪律与本仓其余组件文件一致（spec 4 节）：零字面色值，颜色一律 var(--…)；
    缓动只有 var(--ease-expo) 一条（spec 6.2）；字号只用阶梯内的 58 / 30 / 16 / 12，
    不给 demo 单独发明一档（Task 7-8 审查 I2 就是为这个把 11px / 13px 收回 12px 的）。
@@ -41,10 +42,12 @@
 .d-md-li.is-done > span[aria-hidden] { color: var(--ink-2); }
 .d-md-code { font-family: var(--font-mono); font-size: 12px; background: var(--surface); padding: 1px 4px; border-radius: var(--radius-sm); }
 
-/* 读屏可见、视觉不可见的标签。不用 display: none —— 那会连读屏一起摘掉。
-   本仓第一个这种工具类，所以形状自己写全（1px + clip-path 裁切，绝对定位不占版面）；
-   不抽进 base.css：那个文件本任务只授权改焦点环那一条选择器，等第二个消费者出现再归位。 */
-.d-md-sr {
+/* 读屏可见、视觉不可见的工具类。不用 display: none —— 那会连读屏一起摘掉。
+   本仓第一个这种工具类，所以形状自己写全（1px + clip-path 裁切，绝对定位不占版面）。
+   两个消费者：勾选态标签 .d-md-sr，和「问 AI」的播报节点 .d-ink-status（审查 I3 把 aria-live
+   从整块重渲染的 .d-ink-out 挪到它自己的节点上，那个节点就是纯播报、不给眼睛看的）。
+   不抽进 base.css：本轮只授权改 demos/inkmark.css，等它真成为全站第三、第四个消费者时再归位。 */
+.d-md-sr, .d-ink-status {
   position: absolute; width: 1px; height: 1px; margin: -1px; padding: 0;
   overflow: hidden; clip-path: inset(50%); white-space: nowrap;
 }
@@ -58,6 +61,15 @@
    把它挪到 is-done 前面，被标中的那一行会静默退回三级灰 + 无底纹，看起来像标记没生效。
    不给 is-asked 加 padding：那会在标中的瞬间把整行推宽，看着像布局在跳。 */
 .d-ink-out .is-asked { background: var(--mark-bg); color: var(--mark-fg); }
+
+/* 被标中那一行的【记号】也得跟着换墨 —— 上面那条只有 0-2-0，而记号 span 自己的
+   `.d-md-li > span[aria-hidden]`（0-2-1）与已完成行的 `.d-md-li.is-done > span[aria-hidden]`（0-3-1）
+   都压在它头上，于是标记生效时正文走 --mark-fg、✓ 与 · 却留在 --ink-3。
+   --ink-3 落在 --mark-bg 上是 2.24:1（亮）/ 2.19:1（暗），正是 Task 7-8 裁定否掉的那一对底色配三级墨。
+   这条把特异性抬到 0-3-1：与 is-done 那条打平、靠后置取胜，压过裸 li 那条 —— 同一行的文字与记号是同一份墨。
+   位置承重（与上面 .is-asked 那条同一个理由）：挪到 is-done 之前，已完成行的记号会退回 --ink-2，
+   看着像「半截被划了、半截没有」。 */
+.d-ink-out .is-asked > span[aria-hidden] { color: var(--mark-fg); }
 
 /* 划上去的那一下给一点入场：只用 --ease-expo（spec 6.2 全站唯一曲线）。
    reduced-motion 不在本文件重复处理 —— base.css 的全局归零块把 transition-duration 打到 .01ms，

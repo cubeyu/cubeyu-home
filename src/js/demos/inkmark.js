@@ -20,9 +20,11 @@ const SAMPLE = {
 // 界面词。EN 的两个栏标用大写是等宽小标的排版（与 base.css 的 .eyebrow 同气味），不是另一个语种规则。
 // done / todo 是读屏用的：勾选态今天只有「✓/· 加删除线」两个视觉记号，屏幕阅读器拿不到，
 // 所以每个列表项挂一个视觉隐藏的文本标签（.d-md-sr）。
+// asked 是「问 AI」播报的前缀，冒号与尾随空格算在词里：中英文的标点和空格习惯不同（：vs ": "），
+// 拼在模板里就会有一半是错的语种，所以整段交给语种表。
 const LABELS = {
-  zh: { src: '源码', out: '渲染', ask: '问 AI', done: '已完成', todo: '未完成' },
-  en: { src: 'MARKDOWN', out: 'PREVIEW', ask: 'Ask AI', done: 'done', todo: 'to do' },
+  zh: { src: '源码', out: '渲染', ask: '问 AI', done: '已完成', todo: '未完成', asked: '已标记：' },
+  en: { src: 'MARKDOWN', out: 'PREVIEW', ask: 'Ask AI', done: 'done', todo: 'to do', asked: 'Marked: ' },
 };
 
 // 本模块唯一的转义出口。与 src/lib/build-utils.js 的 esc() 同表同形状，但不能 import 它：
@@ -86,6 +88,21 @@ export function askTargetIndex(value, caret) {
   return isBlank(lines[lineIdx]) ? blocksBefore - 1 : blocksBefore;
 }
 
+// 被标中的那一行「读出来」长什么样：播报里不该念出 markdown 的记号（「减 方括号 x」是噪声），
+// 但也不能与 mdToHtml 各写一份识别 —— 前缀全用同一份 LIST_DONE / LIST_TODO / '- ' / '#' 常量，
+// 两处不一致就会「预览里是待办、播报里是原文」。块下标 ↔ 非空源码行的对应关系同 askTargetIndex。
+// 导出与上面两个纯函数同一个理由：这段是要在 Node 里钉住的计算，不是碰了 DOM 才有的副作用。
+export function markedLineText(value, idx) {
+  const line = String(value).split('\n').filter((l) => !isBlank(l))[idx];
+  if (line === undefined) return '';
+  const l = line.trim();
+  if (l.startsWith(LIST_DONE)) return l.slice(LIST_DONE.length);
+  if (l.startsWith(LIST_TODO)) return l.slice(LIST_TODO.length);
+  if (l.startsWith('- ')) return l.slice(2);
+  if (l.startsWith('#')) return l.replace(/^#+\s*/, '');
+  return l;
+}
+
 // 契约（spec 5.1）：mount(el, ctx) → 返回 unmount。el 是卡里的 [data-demo-root="inkmark"] 容器。
 export function mountInkmark(el, ctx) {
   const lang = ctx.lang === 'en' ? 'en' : 'zh'; // 与 base.css 的 :lang(en) 二分同口径：非 en 一律按 zh 画
@@ -103,7 +120,8 @@ export function mountInkmark(el, ctx) {
       </div>
       <div class="d-ink-pane">
         <span class="d-ink-cap">${esc(T.out)}</span>
-        <div class="d-ink-out" aria-live="polite"></div>
+        <div class="d-ink-out"></div>
+        <p class="d-ink-status" aria-live="polite"></p>
       </div>
       <button type="button" class="d-ink-ask">${esc(T.ask)}</button>
     </div>`;
@@ -111,8 +129,18 @@ export function mountInkmark(el, ctx) {
   const ta = el.querySelector('.d-ink-src');
   const out = el.querySelector('.d-ink-out');
   const ask = el.querySelector('.d-ink-ask');
+  const status = el.querySelector('.d-ink-status');
 
-  const render = () => { out.innerHTML = mdToHtml(ta.value, T); };
+  // 播报面与渲染面分开（Task 11 审查 I3）：aria-live 原来压在 .d-ink-out 上，
+  // 而这里每次 input 都整块重写它的 innerHTML —— 读屏会把整篇文档按字符重播一遍，
+  // 盖掉用户本来就在听的字符反馈。所以 .d-ink-out 不再是 live region，
+  // 播报只归 .d-ink-status 那一个节点（它的 textContent 只在「问 AI」那一刻变）。
+  // 顺带清一次播报：重渲染已经把 .is-asked 冲掉了，留着上一行的名字就是假信息。
+  // 清空 textContent 不会被读屏念出来（没有新内容），所以这一步是安静的。
+  const render = () => {
+    out.innerHTML = mdToHtml(ta.value, T);
+    status.textContent = '';
+  };
 
   // 示例文本走 .value 赋值而不是 innerHTML：textarea 的 value 是属性写入、不是 HTML 解析，
   // 所以里面的 `**` 与引号原样进框，不需要也不该再过一次 esc（过了就会显示成 &amp; 字面量）。
@@ -126,8 +154,12 @@ export function mountInkmark(el, ctx) {
   const onAsk = () => {
     const blocks = out.querySelectorAll(BLOCK_SELECTOR);
     for (const node of blocks) node.classList.remove('is-asked');
-    const target = blocks[askTargetIndex(ta.value, ta.selectionStart ?? 0)];
-    if (target) target.classList.add('is-asked');
+    const idx = askTargetIndex(ta.value, ta.selectionStart ?? 0);
+    const target = blocks[idx];
+    if (!target) { status.textContent = ''; return; } // 没标中就不播报，念一句「已标记」是撒谎
+    target.classList.add('is-asked');
+    // 走 textContent 而不是 innerHTML：被播报的是用户手输的原文，这条路径上没有 HTML 解析。
+    status.textContent = T.asked + markedLineText(ta.value, idx);
   };
   ask.addEventListener('click', onAsk);
 
