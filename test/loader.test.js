@@ -100,6 +100,34 @@ test('the drop timing is not a second copy of --loader-hold', () => {
   assert.match(tokenCss(), /--loader-drop:/, '下落时长要有 token，与 --loader-hold/--hero-start 同一组');
 });
 
+// 等待态的转环（机制实测自 lom.entermodetwo.com 的 #heang-splash）：狗不动，
+// 一段 conic 弧绕着它转，起飞时随 mark 一起 visibility:hidden 消失。
+// 这条测试存在的理由是这个效果有两个静默失效面：伪元素写错选择器会整圈不见；
+// mask 写成字面 #000 会被 COLOR_LEAK 判违规，而 mask 只吃 alpha、本来不该有颜色。
+test('the mark wears a spinning conic ring while it waits', () => {
+  const c = loaderCss();
+  const pair = /\.site-loader-mark::before,\s*\.site-loader-mark::after\s*\{([^}]*)\}/s.exec(c)?.[1] ?? '';
+  assert.ok(pair, '找不到两根环的共享规则 —— 环会整体消失，幕布退回一块静止的狗');
+  assert.match(pair, /content:\s*""/, '伪元素必须有 content，否则根本不生成盒子');
+  assert.match(pair, /aspect-ratio:\s*1/, '必须是正圆：mark 是 83×95.8 的竖框，inset 直接撑会得到椭圆环');
+  assert.match(pair, /position:\s*absolute/, '环要贴着狗定位');
+  const mark = /^\.site-loader-mark\s*\{([^}]*)\}/m.exec(c)?.[1] ?? '';
+  assert.match(mark, /position:\s*relative/, 'mark 必须是定位参照物，否则环会跑到视口中心去');
+  // 行首锚定 + 取【最后】一条：共享规则 `.site-loader-mark::before,\n.site-loader-mark::after {`
+  // 的第二行也以 `.site-loader-mark::after {` 开头，不锚行首就会抓到那条没有 conic 的公共体
+  // —— 这是本仓第三次踩同一个形状（前两见 loader.test.js 的 .loader-drop 与 mascot 的 .loader-drop）。
+  const ring = [...c.matchAll(/^\.site-loader-mark::after\s*\{([^}]*)\}/gm)].pop()?.[1] ?? '';
+  assert.ok(ring, '找不到 ::after 转环自己的规则');
+  assert.match(ring, /conic-gradient\(/, '转环是 conic 弧，不是一整圈边框');
+  assert.match(ring, /var\(--ink-2\)\s*50%,\s*var\(--ink\)\s*100%/, '弧的尾→头要用 token，暗色下才自动翻色');
+  assert.match(ring, /animation:\s*loader-spin\b/, '要转起来');
+  assert.match(ring, /mask:\s*radial-gradient\(farthest-side,\s*transparent[^,]*,\s*currentColor/,
+    '磨成环的遮罩必须用 currentColor —— mask 只看 alpha，写 #000 既多余又撞 COLOR_LEAK');
+  assert.match(c, /@keyframes loader-spin\s*\{[^}]*rotate\(1turn\)/, '关键帧要转满一圈');
+  // 环只在幕布那只狗身上；飞起来的克隆体带环会转出一圈残影
+  assert.doesNotMatch(c, /\.loader-drop[^{]*::after/, '克隆体不许有转环');
+});
+
 test('the clone always leaves: animationend plus a hard timeout', () => {
   const js = loaderJs();
   assert.match(js, /addEventListener\('animationend', land, \{ once: true \}\)/,

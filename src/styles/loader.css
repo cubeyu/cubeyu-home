@@ -51,7 +51,6 @@
   background-size: 500% 300%;
   background-position: 50% 50%;
   aspect-ratio: 156 / 180;
-  filter: drop-shadow(5px 6px var(--mark-bg));
 }
 [data-theme="dark"] .site-loader-mark,
 [data-theme="dark"] .loader-drop { background-image: url("/assets/images/hero-dog-dark.webp"); }
@@ -61,6 +60,8 @@
      两个轴都写死就会把sprite压扁或裁掉耳朵。83px 宽 → 95.8px 高，与旧的 69×96 同高；
      新格子比旧的 216×300 方，所以同样的下坠足迹要更宽一点。 */
   width: 83px;
+  /* 两根环要贴着狗画，所以 mark 得是定位参照物 */
+  position: relative;
   /* loader-greet 是无限往复，按 spec 4.1 的循环例外走 ease-in-out */
   animation: loader-greet 1.55s ease-in-out infinite;
 }
@@ -68,6 +69,41 @@
   0%, to { transform: translate(0) rotate(-2deg); }
   52% { transform: translateY(-5px) rotate(2deg); }
 }
+
+/* ---------- 等待态的转环 ----------
+   机制实测自 lom.entermodetwo.com 的 #heang-splash（2026-11-04 抓的 site.css）：
+   狗自己不动，一段 conic 弧被径向遮罩磨成 3px 圆环绕着它转，另有一根不动的静环当轨道。
+   lom 用的是 ::before（静环）+ 一个 .hs-ring 子元素（转环）；我们的 mark 是
+   background-image 的空 div、模板里没有子元素位，所以转环落到 ::after 上。
+   起飞时 loader.js 把 mark 整块 visibility:hidden（克隆体在同位置接手），
+   环是它的伪元素、跟着一起消失 —— 不需要再加一个"起飞"状态类。 */
+.site-loader-mark::before,
+.site-loader-mark::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  /* 圆环按【长边 + 44px】定直径并保持正圆：mark 是 83×95.8 的竖框，
+     直接 inset: -22px 会得到一个椭圆环（lom 的 mark 本来就是正方形，才没这个问题）。
+     两侧各留出的余量因此不等：横向 22px、纵向 15.6px —— 视觉上仍是"围着狗一圈"。 */
+  width: calc(100% + 44px);
+  aspect-ratio: 1;
+  transform: translate(-50%, -50%);
+  border-radius: 50%;
+  pointer-events: none;
+}
+.site-loader-mark::before { border: 2px solid var(--rule); }
+.site-loader-mark::after {
+  /* 18% 之前全透明 = 尾巴，收到 100% 处最亮 = 头；--ink-2 当中间档，
+     暗色下它自动翻成 #A8A8AD，不用另写一条。 */
+  background: conic-gradient(from 0deg, transparent 0 18%, var(--ink-2) 50%, var(--ink) 100%);
+  /* 遮罩只吃 alpha，所以这里用 currentColor 而不是字面黑色（COLOR_LEAK 认 currentColor） */
+  -webkit-mask: radial-gradient(farthest-side, transparent calc(100% - 3px), currentColor calc(100% - 2.5px));
+  mask: radial-gradient(farthest-side, transparent calc(100% - 3px), currentColor calc(100% - 2.5px));
+  /* .9s 与 --loader-hold 数值相同纯属巧合：这是环自己的转速，跟幕布停留多久无关 */
+  animation: loader-spin .9s linear infinite;
+}
+@keyframes loader-spin { to { transform: translate(-50%, -50%) rotate(1turn); } }
 
 /* 不确定态进度轨：子元素来回扫，不是真的进度百分比 —— 我们没有可报告的进度 */
 .site-loader-track {
@@ -111,6 +147,12 @@
   /* 必须绕左上角缩放：--drop-x/y 是【左上角之差】算出来的，而 scale() 默认绕中心，
      于是落点会偏 (原宽−目标宽)/2 —— 实测差 3.5px / 4.2px，正好是这半个缩放量。 */
   transform-origin: 0 0;
+  /* 投影只给飞起来的那只，不在共享规则里：mark 身上挂着转环（见上面的 ::after），
+     共享的话等于让一段 conic 弧带着 5px/6px 的黄色残影转圈 —— 转的是脏影不是狗。
+     也绝不能把这条 filter 单独提成一条新规则插在共享规则与暗色规则之间：
+     lightningcss 会顺着相邻关系重新合并选择器，产物里 .site-loader-mark 会被并进
+     [data-theme=dark] 那条的列表，亮色幕布拿到暗色图集（实测踩过）。 */
+  filter: drop-shadow(5px 6px var(--mark-bg));
   animation: loader-drop var(--loader-drop) var(--ease-expo) both;
 }
 @keyframes loader-drop {
