@@ -4,14 +4,27 @@
 // 这里钉住三件承重的事：图进了 dist、装饰对辅助技术隐藏、狗的图集列数与 JS 的帧数一致。
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { readFileSync, existsSync } from 'node:fs';
+import { readFileSync, readdirSync } from 'node:fs';
 
 const DIST = 'dist/index.html';
 const CSS = 'dist/assets/app.css';
 
-test('mascot images are shipped into dist', () => {
-  for (const f of ['hero-person', 'hero-person-dark', 'hero-dog', 'hero-dog-dark']) {
-    assert.ok(existsSync(`dist/assets/images/${f}.webp`), `dist/assets/images/${f}.webp 缺失 —— build.js 的 images 拷贝被去掉了？`);
+// 图集按内容哈希改名（build.js，为了 vercel.json 能对 /assets/images/* 开 immutable）。
+// 所以这里不再断言固定文件名，而是断言更强的一条：CSS 里每个图片 url 都必须在磁盘上真存在。
+// 旧写法只查"四个文件在不在"，改名/漏重写那一半它看不见；现在只要有一处没同步就红。
+test('mascot images are shipped into dist and every CSS url() resolves to a real file', () => {
+  const files = readdirSync('dist/assets/images');
+  assert.ok(files.length >= 4, `dist/assets/images 只有 ${files.length} 个文件`);
+  for (const base of ['hero-person', 'hero-person-dark', 'hero-dog', 'hero-dog-dark']) {
+    assert.ok(files.some((f) => f.startsWith(`${base}.`) && f.endsWith('.webp')),
+      `${base}.<hash>.webp 没进产物 —— 构建的图片拷贝被去掉了？`);
+  }
+  const css = readFileSync(CSS, 'utf8');
+  const refs = [...css.matchAll(/url\((?:"|')?(\/assets\/images\/[^"')]+)(?:"|')?\)/g)].map((m) => m[1]);
+  assert.ok(refs.length >= 4, `CSS 里的图集引用只有 ${refs.length} 处，少于明暗四张`);
+  for (const href of new Set(refs)) {
+    assert.ok(files.includes(href.split('/').pop()),
+      `CSS 引用 ${href} 但磁盘上没有 —— 哈希改名后有一处没同步，线上会 404`);
   }
 });
 

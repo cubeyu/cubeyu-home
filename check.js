@@ -14,7 +14,7 @@
 //
 // 只用 Node 内置模块（node:fs / node:path）+ 仓库自己的 ESM —— package.json 的 dependencies 必须为空。
 import { readFileSync, readdirSync, existsSync } from 'node:fs';
-import { join } from 'node:path';
+import { join, posix } from 'node:path';
 import { esc } from './src/lib/build-utils.js';
 
 const read = (p) => (existsSync(p) ? readFileSync(p, 'utf8') : '');
@@ -252,6 +252,37 @@ export const CANONICAL_MATCHES_SITE = {
   },
 };
 
+// preload 清单由 build.js 从文件系统算出来（不是手写进模板的），所以它可能出两种偏差：
+// ① 某个模块被 import 但没被 preload —— 那一轮 RTT 又回来了，而页面看起来一样快；
+// ② 某个模块被 preload 但没人 import —— 白下载，通常是 src/js 里留了个死文件。
+// 两种都不会报错、都不会被别的断言抓到，所以按真实 import 图对账。
+export const MODULE_PRELOAD_COVERS_GRAPH = {
+  name: 'modulepreload matches the real import graph',
+  run({ html, jsModules }) {
+    const entry = '/assets/js/app.js';
+    if (!(entry in jsModules)) return [`产物里找不到 ${entry} —— 模板的 <script type=module> 或构建的 js 拷贝坏了`];
+    const pre = new Set([...html.matchAll(/rel="modulepreload" href="([^"]+)"/g)].map((m) => m[1]));
+    const seen = new Set();
+    const stack = [entry];
+    while (stack.length) {
+      const href = stack.pop();
+      if (seen.has(href)) continue;
+      const src = jsModules[href];
+      if (src === undefined) return [`import 指向 ${href}，产物里没有这个文件`];
+      seen.add(href);
+      for (const m of src.matchAll(/(?:from|import)\s*\(?\s*["'](.[^"']*)["']/g)) {
+        stack.push('/' + posix.normalize(posix.join(posix.dirname(href.slice(1)), m[1])));
+      }
+    }
+    const missing = [...seen].filter((h) => h.endsWith('.js') && h !== entry && !pre.has(h));
+    const extra = [...pre].filter((h) => !seen.has(h));
+    const fails = [];
+    if (missing.length) fails.push(`这些模块被 import 但没有 modulepreload，入口解析完才发现它们：${missing.join(', ')}`);
+    if (extra.length) fails.push(`这些模块被 preload 但入口的 import 图里没有：${extra.join(', ')}（白下载；多半是 src/js 里的死文件）`);
+    return fails;
+  },
+};
+
 // 全部断言。加一项就往这里加一条 —— 这是唯一的清单（修复轮 M-2）：
 // check() 直接 map 它，CLI 报的条数由数组长度算出来，不写死。
 // 以前这里和 check() 里的手写 run 列表是两条平行清单，能各漂一次，
@@ -268,6 +299,7 @@ export const ASSERTIONS = [
   STYLESHEETS_MERGED,
   FRAGMENTS_PRESENT,
   CANONICAL_MATCHES_SITE,
+  MODULE_PRELOAD_COVERS_GRAPH,
 ];
 
 export async function check() {
@@ -307,6 +339,8 @@ export async function check() {
     files: styleFiles,
     styleFiles: styleRels,
     url: site.url,
+    // href -> 源码文本。键就是浏览器看到的路径，断言不必再自己拼前缀。
+    jsModules: Object.fromEntries(walk('dist/assets/js').map((p) => ['/' + p.replace(/^dist\//, ''), read(p)])),
   };
   const failures = ASSERTIONS.map((a) => a.run(ctx)).flat();
 

@@ -12,6 +12,13 @@
      卡片以外的那些单边发丝线（技能网格、站点区、页脚）都已改用 .rule-t / .rule-b。 */
   border-top: var(--rule-w) solid var(--rule);
   padding-block: 32px;
+  /* 屏外的卡片不渲染内部（参照站 .pcard 同一条）。contain-intrinsic-size 的 auto
+     让浏览器记住每张卡真实渲染过的高度，滚动条长度因此不会跳。
+     支持线 Chrome 85 / Safari 18 / Firefox 125 —— 我们下限（Safari 15.4、FF 90）上
+     这两条被整条忽略，退回"全部渲染"，不是坏状态。
+     现在 7 张卡的收益很小，值得留着的原因是用户会换卡、也可能加卡。 */
+  content-visibility: auto;
+  contain-intrinsic-size: auto 320px;
 }
 /* 最后一张卡补下边线，整组卡片自成一段发丝线区间（同上：保留在组件里，理由见 .card） */
 .card:last-of-type { border-bottom: var(--rule-w) solid var(--rule); }

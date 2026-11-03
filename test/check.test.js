@@ -23,6 +23,7 @@ import {
   STYLESHEETS_MERGED,
   FRAGMENTS_PRESENT,
   CANONICAL_MATCHES_SITE,
+  MODULE_PRELOAD_COVERS_GRAPH,
 } from '../check.js';
 
 // 唯一的「当前树全绿」用例。未构建时跳过而不是失败：npm test 必须能脱离 npm run build 单独跑通
@@ -318,11 +319,49 @@ test('CANONICAL_MATCHES_SITE flags a missing canonical', () => {
 // 旧结构是两条平行清单：ASSERTIONS 数组 + check() 里手写的 run 调用，各漂一次而 CLI 报数撒谎
 // —— 正是本任务要消灭的失败类型。现在 check() 直接 map(ASSERTIONS)，运行清单由清单派生，
 // 剩下的风险只有「导出了断言常量却忘了进清单」，这条用例钉的就是这一半。
-test('ASSERTIONS lists every exported assertion exactly once', () => {
-  const all = [
+// ── 12. MODULE_PRELOAD_COVERS_GRAPH ───────────────────────────────
+// 这份 ctx 是合成的：断言只吃 (html, jsModules) 两个键，所以能在这里把四种形状各演一遍，
+// 包括真产物里暂时没出现的"死模块"和"import 指向不存在的文件"。
+const PRELOAD_MODULES = {
+  '/assets/js/app.js': 'import { x } from "./theme.js";\nimport "./demos/index.js";',
+  '/assets/js/theme.js': 'export const x = 1;',
+  '/assets/js/demos/index.js': 'import { m } from "./inkmark.js";\nexport default { m };',
+  '/assets/js/demos/inkmark.js': 'export const m = 1;',
+};
+const preHtml = (hrefs) => `<head>${hrefs.map((h) => `<link rel="modulepreload" href="${h}">`).join('')}`
+  + '<script type="module" src="/assets/js/app.js"></script></head>';
+const LEAVES = ['/assets/js/theme.js', '/assets/js/demos/index.js', '/assets/js/demos/inkmark.js'];
+
+test('MODULE_PRELOAD_COVERS_GRAPH passes when preload matches the import graph', () => {
+  assert.deepEqual(MODULE_PRELOAD_COVERS_GRAPH.run({ html: preHtml(LEAVES), jsModules: PRELOAD_MODULES }), []);
+});
+
+test('MODULE_PRELOAD_COVERS_GRAPH catches an imported module that is not preloaded', () => {
+  const r = MODULE_PRELOAD_COVERS_GRAPH.run({ html: preHtml(LEAVES.slice(0, 2)), jsModules: PRELOAD_MODULES });
+  assert.equal(r.length, 1, '漏一个就该报一个');
+  assert.match(r[0], /demos\/inkmark\.js/, '失败信息要指名是哪个模块，否则还得自己跑一遍对账脚本');
+});
+
+test('MODULE_PRELOAD_COVERS_GRAPH catches a preloaded module nobody imports', () => {
+  const r = MODULE_PRELOAD_COVERS_GRAPH.run({
+    html: preHtml([...LEAVES, '/assets/js/dead.js']),
+    jsModules: PRELOAD_MODULES,
+  });
+  assert.equal(r.length, 1);
+  assert.match(r[0], /dead\.js/);
+});
+
+test('MODULE_PRELOAD_COVERS_GRAPH fails loudly when the entry or an import target is missing', () => {
+  assert.match(MODULE_PRELOAD_COVERS_GRAPH.run({ html: preHtml(LEAVES), jsModules: {} })[0], /app\.js/);
+  const broken = { ...PRELOAD_MODULES };
+  delete broken['/assets/js/theme.js'];
+  assert.match(MODULE_PRELOAD_COVERS_GRAPH.run({ html: preHtml(LEAVES), jsModules: broken })[0], /theme\.js/);
+});
+
+test('ASSERTIONS lists every exported assertion exactly once', () => {  const all = [
     TOKEN_RESIDUE, CARD_COUNT, DEMO_REGISTRY_MATCH, COLOR_LEAK, LANG_PAIR,
     NO_UNDEFINED_VALUES, DEPENDENCIES_EMPTY, CSS_JS_SHIPPED, STYLESHEETS_MERGED,
-    FRAGMENTS_PRESENT, CANONICAL_MATCHES_SITE,
+    FRAGMENTS_PRESENT, CANONICAL_MATCHES_SITE, MODULE_PRELOAD_COVERS_GRAPH,
   ];
   assert.equal(ASSERTIONS.length, all.length, '清单条数 == CLI 打印条数的基数；新增断言必须同时进这里');
   for (const a of all) {

@@ -4,7 +4,9 @@
 // 而那个守卫在 Windows 上不可靠 —— process.argv[1] 是反斜杠形式，
 // fileURLToPath(import.meta.url) 是正斜杠形式，比较结果取决于从哪里调用 node。
 import { readFileSync, writeFileSync, mkdirSync, rmSync, cpSync, readdirSync, existsSync } from 'node:fs';
-import { join, dirname } from 'node:path';
+import { join, dirname, basename, relative } from 'node:path';
+// 内容哈希：图片文件名带上字节摘要，才能对它们开一年 immutable 缓存。
+import { createHash } from 'node:crypto';
 import { fileURLToPath } from 'node:url';
 // Task 13：构建期压缩。两者都只在 devDependencies —— 产物本身零运行时依赖的纪律不变，
 // 压缩发生在构建期，浏览器拿到的是纯字节。
@@ -202,6 +204,19 @@ const sectionRenderers = { works: cardHtml, skills: skillsHtml, sites: sitesHtml
 
 // 两个模板共用同一份 token 表：值只在这里定义一次，404 不会和首页漂开。
 // 表里多出的 token 对 404 无害（renderTemplate 只报「模板要了但表里没有」的反向缺失）。
+//
+// modulepreload：入口 app.js 是 <script type=module> 加载的，但它 import 的 8 个模块
+// 要等 app.js 下载【并解析完】才发现 —— 白多一轮往返。把这些叶子模块提前 preload，
+// 浏览器就能和入口并行取。清单由文件系统算，不手写：加一个 js 文件不需要记得改模板
+// （漏登记的后果是那条模块又退回一轮 RTT，看不见也测不出）。
+// 入口自己不列：它已经由 <script type=module src> 取过了，再 preload 是重复声明。
+const modulePreload = walkJs(join(root, 'src/js'))
+  .filter((f) => basename(f) !== 'app.js')
+  .map((f) => `/assets/js/${relative(join(root, 'src/js'), f).replace(/\\/g, '/')}`)
+  .sort()
+  .map((href) => `<link rel="modulepreload" href="${esc(href)}">`)
+  .join('');
+
 const tokens = {
   // 叶子 token（TITLE / DESCRIPTION / CANONICAL）必须过 esc()；
   // NAV / HERO / SECTIONS / FOOTER / ANTI_FLASH 是片段 token，组装处已逐字段转义，必须保持裸值，否则双重转义（见 Global Constraints）
@@ -237,6 +252,7 @@ const tokens = {
   })(),
   FOOTER: footerHtml,
   ANTI_FLASH: antiFlash,
+  MODULE_PRELOAD: modulePreload,
 };
 
 // renderTemplate 的报错只写 token 名；index.html 与 404.html 两个调用点并存后，
@@ -299,17 +315,37 @@ const css = cssOrder
 
 rmSync(out, { recursive: true, force: true });
 mkdirSync(join(out, 'assets'), { recursive: true });
+
+// ---------- 图片按内容哈希改名 ----------
+// 为什么只哈希图片、不哈希 css/js：Vercel 对静态文件默认发 `max-age=0, must-revalidate`，
+// 每次回访都要为 16 个文件各发一次条件请求。图片占 dist 的 72%（两张狗图集 232KB）
+// 且几乎不变，是最值得上 immutable 的一档；而 app.css 与 js 模块的名字是稳定的，
+// 给它们开长缓存 = 改版后用户拿到旧样式配新 HTML（旧图集文件名已经不在新部署里了）。
+// 所以：图片名带哈希 → vercel.json 只对 /assets/images/* 开一年 immutable；
+// css/js 保持默认再验证，一行配置都不用为它们冒险。
+// 引用只存在于 CSS 的 url() 里（HTML 不直接引图，见 grep 结果），所以重写点只有一处。
+const srcImages = join(root, 'src/images');
+let cssOut = css;
+if (existsSync(srcImages)) {
+  mkdirSync(join(out, 'assets/images'), { recursive: true });
+  for (const name of readdirSync(srcImages)) {
+    if (name.startsWith('.')) continue;
+    const bytes = readFileSync(join(srcImages, name));
+    const hash = createHash('sha256').update(bytes).digest('base64url').slice(0, 10);
+    const dot = name.lastIndexOf('.');
+    const hashed = `${name.slice(0, dot)}.${hash}${name.slice(dot)}`;
+    writeFileSync(join(out, 'assets/images', hashed), bytes);
+    // split/join 而不是 replaceAll：文件名里可能带正则元字符，而这里要的是字面替换
+    cssOut = cssOut.split(`/assets/images/${name}`).join(`/assets/images/${hashed}`);
+  }
+}
+
 writeFileSync(join(out, 'index.html'), html, 'utf8');
 // 404 复用同一份 app.css（spec 3 节：只有首页 + 一个极简 404，不另开样式入口）
 writeFileSync(join(out, '404.html'), notFoundHtml, 'utf8');
-writeFileSync(join(out, 'assets/app.css'), css, 'utf8');
+writeFileSync(join(out, 'assets/app.css'), cssOut, 'utf8');
 // 偏离 1：原样拷贝 ES module 树，不做拼接打包
 cpSync(join(root, 'src/js'), join(out, 'assets/js'), { recursive: true });
-// hero 吉祥物的四个 webp（明暗各两套）。src/images 此前不在构建产物里，
-// 导致 /assets/images/* 全部 404 —— 见 hero.css 的 background-image 引用。
-if (existsSync(join(root, 'src/images'))) {
-  cpSync(join(root, 'src/images'), join(out, 'assets/images'), { recursive: true });
-}
 // Task 13：压缩 dist 里的 JS 副本。src/js/** 一个字节都不动 —— build.js 顶部
 // import 的是 './src/js/demos/index.js'（注册表门禁，Task 7-8 裁定），terser 只改写
 // dist/assets/js/ 下的文件，两条路径互不影响；浏览器加载的与构建期读的是各自的文件。
