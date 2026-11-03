@@ -20,6 +20,9 @@
   --rule: rgba(26, 26, 26, .18);
   --rule-strong: #1A1A1A;
   --rule-dashed: rgba(26, 26, 26, .25);
+  /* tab 右上角空心大编号的描边色（tabs.css 的 -webkit-text-stroke）。
+     单独一条而不是复用 --rule：描边只有 1px，需要比发丝线更淡一档才不抢正文。 */
+  --rule-ghost: rgba(26, 26, 26, .10);
   --mark-bg: #FFE28A;
   --mark-fg: #1A1A1A;
   --link: #1E40D8;
@@ -79,6 +82,7 @@
   --rule: rgba(255, 255, 255, .14);
   --rule-strong: #EDEDED;
   --rule-dashed: rgba(255, 255, 255, .22);
+  --rule-ghost: rgba(255, 255, 255, .10);
   /* 纯 #FFE28A 在暗底过曝，降级为半透明底纹 —— 与亮色观感不同源，是 spec 记录的有意取舍 */
   --mark-bg: rgba(255, 226, 138, .24);
   --mark-fg: #FFE9A6;

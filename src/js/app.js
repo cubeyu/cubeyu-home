@@ -9,6 +9,7 @@ import { prefersEnglish } from './pref-ui.js';
 import { initMascot } from './mascot.js';
 import { initPointer } from './pointer.js';
 import { initLoaderDrop } from './loader.js';
+import { initTabs } from './tabs.js';
 import demos from './demos/index.js';
 
 // 两个开关互不依赖，谁先谁后都不影响对方的首帧（Task 9-10 审查 M5 把这条依赖拆掉了：
@@ -47,6 +48,11 @@ for (const root of document.querySelectorAll('[data-demo-root]')) {
 // 是常驻装饰），所以不走 demos/index.js，也不受卡片数量与注册态影响。
 // 触屏与 reduced-motion 下它自己会直接 return，不绑任何监听 —— 见 mascot.js。
 initMascot();
+
+// 把三区块折叠成 tablist。放在 demo 挂载【之后】：挂载遍历的是 [data-demo-root]，
+// 与可见性无关，所以先挂后折不会漏掉任何面板里的 demo；反过来先折叠再挂载，
+// 将来若有 demo 依赖 offsetWidth 量尺寸，就会在 hidden 面板里量到 0。
+initTabs();
 
 // 指针场 + 自定义光标：同一条 rAF、同一份平滑指针。
 // 触屏与 reduced-motion 下它自己 return（并返回一个空 destroy），理由与 mascot.js 同一条：

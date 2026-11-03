@@ -29,5 +29,6 @@ export const cssOrder = [
   'pointer.css',
   'hero.css',
   'cards.css',
+  'tabs.css',
   'demos/inkmark.css',
 ];

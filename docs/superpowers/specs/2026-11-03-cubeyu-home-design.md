@@ -325,16 +325,44 @@ M4 的动效三态开关落地时要接上这里的 `destroy()`，这是它存�
 
 ## 7. 页面信息架构
 
-单页，6 个区块，结构对照 oiloil 实测 DOM。
+单页，结构对照 oiloil 实测 DOM。区块清单的真源是 `data/copy.js` 的 `sections`，
+下表只是当前状态——不写"共 N 个区块"，用户会加区块也会砍区块（同 7.1 不写卡数的理由）。
 
 | 区块 | 内容 | 数据源 |
 |---|---|---|
 | NAV | 右上：`中`/`EN` 语言切换 + 字面文本链接 `github.com/cubeyu` | `data/site.js` |
 | HERO | `.hero.roll-band`：三行逐词遮罩 `Cubeyu®` / `builds` / `small tools.`（字头与 `<title>` 同一符号，复刻 oiloil `Oil®` 的 title/h1 一致关系）；`.sub` 行 `麦 希 屿` + 等宽 `DEVELOPER / AI TOOLS / OPEN-SOURCE`（照 oiloil 的 `ENGINEER / DESIGNER / OPEN-SOURCE` 三段式，**不含「代码诗人」**）；`↓ 往下滑` | 用户确认；技能项取自 portfolio 快照 |
+| TABS | 分类切换条 + 右上角空心大编号，见 7.0 | `data/copy.js` 的 `sections`（数量与名字都由它派生，不写死） |
 | 作品 / WORKS | 7 张 `article`，见 7.1 | `data/projects.js` |
 | 技能 / SKILLS | 13 项排成发丝线网格，等宽字体，**不放图标**（`Simple-Homepage/public/icons/tech/*.svg` 本轮不用） | 清单已在本文件 8 节定稿，源为 portfolio 快照 |
 | 站点 / SITES | 产品化入口 + 社交，见 7.2 | `Simple-Homepage/src/config/linkBtn.json` |
 | FOOTER | `© 2026 麦希屿` + 明暗开关 + 动效开关 + 联系邮箱 | — |
+
+### 7.0 分类切换（机制照搬参照站，分类用我们自己的）
+
+参照站实测是**真 tablist**，不是锚点导航：5 个 `<button role="tab" aria-selected>` 在 `role="tablist"` 里、
+各自 `aria-controls="panel-*"`，5 个 `.work-module` 只有当前那个不 `hidden`，URL 带 `#products` 深链。
+两条视觉签名：选中态底下那条黄带是 `.tab::after` 的 `scaleX(0)→1`（.8s，宽 104% 高 .32em），
+右上角是 220px 的空心大编号（透明填充 + `text-stroke: 1px rgba(0,0,0,.1)`）。
+
+**用户裁定两件事**：① 只搬机制，分类用我们自己的（作品 / 技能 / 站点）——
+照搬它的「产品 / Skills / 文章 / 关于我 / 交流」会造出两个没有内容的空 tab，空 tab 比没有 tab 更难看；
+② **默认全部展开，JS 起来才变 tab**（渐进增强的方向）。
+
+由此定死的三条契约（`test/tabs.test.js` 钉）：
+
+1. **产物里没有** `role="tab"` / `aria-selected` / `hidden`。预写就等于禁 JS 的用户只剩一个面板能看——
+   那不是装饰降级，是内容丢失。ARIA 全部由 `tabs.js` 在升级时写，`destroy()` 必须把它摘干净并退回全展开。
+2. tab 名从 `eyebrow` 派生（`'作品 / WORKS'` → 中文态 作品、英文态 WORKS），不在 copy.js 里另开字段；
+   `href="#works"` 既是无 JS 时的滚动目标，也是升级后的 `aria-controls`，同一个真源。
+   折叠态下区块自己的 eyebrow 用 `html.has-tabs` 藏掉——同一个词在 200px 内出现两次是疏漏不是编辑感。
+3. 区块被砍到只剩一个、或某个 href 找不到面板时**整体不升级**（半升级会出现"点了消失一块内容"的 tab）。
+
+键盘按 ARIA tabs 推荐做法：roving tabindex（整个 tablist 在 Tab 序列里只占一格）+ 左右方向键环绕 + Home/End，
+自动激活（焦点移到哪个就切哪个，切换代价只是一个 14px 入场动画）。
+地址栏用 `history.pushState` 而不是给 `location.hash` 赋值——后者会让浏览器去滚那个刚显示出来的锚点，
+用户看到页面莫名跳一下。认不出的 hash 回落第一类，不报错。
+窄屏（≤640px）不放那个大编号：tab 会换行，220px 的空心数字压在上面只会脏。
 
 ### 7.1 7 张作品卡
 

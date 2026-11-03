@@ -213,14 +213,29 @@ const tokens = {
   CANONICAL: esc(site.url),
   NAV: nav,
   HERO: hero,
-  SECTIONS: sections.map((s) => {
-    if (!Object.hasOwn(sectionRenderers, s.id)) throw new MissingSectionRendererError(s.id);
-    return `<section id="${s.id}" class="col">`
+  SECTIONS: (() => {
+    sections.forEach((s) => {
+      if (!Object.hasOwn(sectionRenderers, s.id)) throw new MissingSectionRendererError(s.id);
+    });
+    // tab 名从 eyebrow 派生（'作品 / WORKS' → 中文态 作品、英文态 WORKS），不在 copy.js 里另开一个
+    // tab 字段：两处写同一个词迟早会漂，而"区块小标"和"tab 名"必须是同一个东西。
+    const tabLabel = (s) => {
+      const [zh, en] = s.eyebrow.split(' / ');
+      if (!en) throw new Error(`section "${s.id}" 的 eyebrow "${s.eyebrow}" 不是「中文 / ENGLISH」形状，无法派生 tab 名`);
+      return i18n(zh, en);
+    };
+    // 产物里【没有】role=tab / aria-selected：无 JS 时这就是一排真锚点，
+    // ARIA 语义由 src/js/tabs.js 在升级成 tablist 时才写上去（用户裁定的渐进增强方向）。
+    // .reel 是右上角那个空心大编号，内容只有 JS 知道是第几类，所以留空。
+    const tabs = `<nav class="tabs col" aria-label="内容分类"><span class="reel" aria-hidden="true"></span>`
+      + sections.map((s) => `<a class="tab" href="#${esc(s.id)}">${tabLabel(s)}</a>`).join('')
+      + `</nav>`;
+    return tabs + sections.map((s) => `<section id="${s.id}" class="col">`
       + `<p class="eyebrow">${esc(s.eyebrow)}</p>`
       + `<h2>${i18n(s.title.zh, s.title.en)}</h2>`
       + sectionRenderers[s.id]
-      + `</section>`;
-  }).join(''),
+      + `</section>`).join('');
+  })(),
   FOOTER: footerHtml,
   ANTI_FLASH: antiFlash,
 };

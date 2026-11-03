@@ -1,0 +1,93 @@
+/* tabs.css —— 分类切换条（机制照搬参照站，分类用我们自己的）。
+   参照站实测：.tab 48px / -1.44px，非选中态 #b8b8b8 + opacity .76，
+   选中态底下那条黄带是 ::after 的 scaleX(0)→1（.8s），右上角是个 220px 的空心大编号。
+   纪律同其它组件：零字面色值，颜色一律 var(…)。 */
+
+.tabs {
+  display: flex;
+  align-items: flex-end;
+  flex-wrap: wrap;
+  gap: 12px 42px;
+  margin-bottom: 48px;
+  padding-bottom: 16px;
+  position: relative;
+}
+
+/* 无 JS 时这里就是一排普通锚点（href="#works" 真的能滚过去），
+   所以【不带】黄带、不带选中态样式 —— 那些是 JS 加上 aria-selected 之后才出现的。
+   判据用属性选择器而不是类，是为了让 tabs.js 写的那份 ARIA 成为唯一状态源。 */
+.tab {
+  position: relative;
+  font-size: clamp(28px, 4.4vw, 48px);
+  font-weight: 700;
+  line-height: 1.16;
+  letter-spacing: -.03em;
+  padding-bottom: 10px;
+  white-space: nowrap;
+  text-decoration: none;
+  color: var(--ink-3);
+  opacity: .76;
+  transition: color .6s var(--ease-expo), opacity .6s var(--ease-expo), transform .6s var(--ease-expo);
+}
+.tab::after {
+  content: "";
+  position: absolute;
+  left: -2%;
+  bottom: 2px;
+  width: 104%;
+  height: .32em;
+  background: var(--mark-bg);
+  /* 抽过去而不是淡入：参照站这条的观感关键就在"扫"这个动作上 */
+  transform: scaleX(0);
+  transform-origin: 0 center;
+  transition: transform .8s var(--ease-expo);
+  z-index: -1;
+}
+/* hover 只在真有鼠标的设备上抬，触屏点完会粘住这个位移 */
+@media (hover: hover) {
+  .tab:hover { color: var(--ink-2); opacity: 1; transform: translateY(-2px); }
+}
+.tab[aria-selected="true"] { color: var(--ink); opacity: 1; }
+.tab[aria-selected="true"]::after { transform: scaleX(1); }
+/* 这里【不写】.tab:focus-visible —— base.css 那条 :where(a,button,input,textarea,[tabindex])
+   已经覆盖 <a>，而 test/budgets 系的那条断言钉住"全站只有一条焦点环规则"：
+   多写一条不会更可见，只会让下一处想改环的人再抄第三份。 */
+
+/* 右上角的空心大编号：当前是第几类。透明填充 + 描边，不是浅色填充 ——
+   填充色在暗色下要么看不见要么糊成一块，描边两档都能靠一个 token 翻。 */
+.reel {
+  position: absolute;
+  right: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: clamp(120px, 18vw, 220px);
+  font-weight: 800;
+  line-height: 1;
+  letter-spacing: -.04em;
+  color: transparent;
+  -webkit-text-stroke: 1px var(--rule-ghost);
+  user-select: none;
+  pointer-events: none;
+  z-index: -2;
+}
+/* 窄屏 tab 会换行、编号又巨大，压在文字上只会脏 —— 这一档直接不放。
+   （参照站窄屏同样把它让位给了排版。） */
+@media (max-width: 640px) {
+  .reel { display: none; }
+  .tabs { gap: 10px 22px; margin-bottom: 32px; }
+}
+
+/* 折叠成 tab 之后，区块自己的 eyebrow（作品 / WORKS）就和上方 48px 的 tab 名重复了——
+   同一个词在 200px 内出现两次不是编辑感，是疏漏。藏在这里而不是从产物里删：
+   无 JS 时没有 tab 条，eyebrow 是该区块唯一的标题，必须留着。
+   h2（"能上手玩的东西"）不藏 —— 它是另一句话，不是同一个词的第二次说法。 */
+html.has-tabs .col > .eyebrow { display: none; }
+
+/* 面板入场：只在 JS 已经把页面折叠成 tab 之后才有意义。
+   时长走全局那条 --dur-enter，reduced-motion 由 base.css 的归零块统一处理，
+   所以这里不需要再写一份分支。 */
+html.has-tabs .panel-enter { animation: panelin var(--dur-enter) var(--ease-expo); }
+@keyframes panelin {
+  from { opacity: 0; transform: translateY(14px); }
+  to { opacity: 1; transform: none; }
+}
