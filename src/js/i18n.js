@@ -18,8 +18,10 @@ export function initLang() {
   const paint = () => {
     document.documentElement.lang = lang;
     // 屏幕阅读器与搜索引擎依赖真实 lang
-    if (btn) {
-      const [zh, en] = (btn.dataset.labels || '').split(',');
+    // 属性缺失时整段跳过：`undefined.split` 会抛，而 `btn.textContent = undefined` 会把
+    // 「undefined」四个字印在导航条上。留着构建时烘好的「中 / EN」反而是不出错的那一侧。
+    if (btn && btn.dataset.labels) {
+      const [zh, en] = btn.dataset.labels.split(',');
       btn.textContent = lang === 'zh' ? zh : en;
       // aria-label 说的是「切过去之后的语言」，与可见文字（当前语言）分指两侧是有意的：
       // 读屏用户听到的正是他即将进入的语种。
