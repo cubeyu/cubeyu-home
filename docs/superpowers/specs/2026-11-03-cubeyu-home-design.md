@@ -366,14 +366,21 @@ M4 的动效三态开关落地时要接上这里的 `destroy()`，这是它存�
 
 ### 7.1 作品卡
 
-> **换卡更正（2026-11-03，用户在候选清单里点了三张）**：下面 `N°01`–`N°07` 那批卡作废，
-> 现行内容以 `data/projects.js` 为准，只有三张，全部指向 GitHub 上可验证的自建仓库：
+> **换卡更正（2026-11-03，用户在候选清单里点了三张 GitHub 项目，随后又补上比赛作品集）**：下面 `N°01`–`N°07` 那批卡作废，
+> 现行内容以 `data/projects.js` 为准，按分量排序：
 >
 > | slug | 项目 | 链接 | `label` / `cat` | 微原型 |
 > |---|---|---|---|---|
+> | `seed-toolkit` | 模力全开 · 小工具合集（豆包 Seed 挑战赛，61 件线上可玩） | cubeyu.rth1.xyz | 即点即用 / Point and use ｜ 合集 / Collection | `null`，M3 候选 |
 > | `vitepress-online-editor` | VitePress 在线编辑器 | github.com/cubeyu/vitepress-online-editor | 实时渲染 / Live render ｜ 编辑器 / Editor | 已注册（原 N°01 那套左栏源码右栏渲染，改名挂到这张卡） |
 > | `simple-homepage` | Simple Homepage（上一版主页） | github.com/cubeyu/Simple-Homepage | 配置驱动 / JSON-driven ｜ 主页 / Homepage | `null`，M3 建 |
 > | `ctools` | CTools 服务端插件 | github.com/cubeyu/CTools | 自动播报 / Auto log ｜ 插件 / Plugin | `null`，M3 建 |
+>
+> **合集那张的两个已知风险**（2026-11-03 实测）：① 根 URL 打开时 `works.json` 先 404，页面靠内置「路径自愈」
+> 回退到 `/feishu/works.json` 才渲染出清单——控制台必有报错，自愈链一失效首页就变成「作品清单没能加载」；
+> ② 域名是活动方的（`rth1.xyz` / CDN `cdn.rthe.cn` / 参赛文档在 `*.feishu.cn/docx`），比赛结束后是否长期保留未知。
+> 主页是长期资产，M5 前要么把 `works.json` 也放一份到站点根并把基准钉死，要么镜像进自己的域名。
+> 引文里不写「61 件」：那个数会随作品增加而过期。
 >
 > **为什么换成这三个**：原先那批卡在 `github.com/cubeyu` 的 101 个公开仓库里一个都找不到，
 > 六张的 `url` 只能写 `#`。用户名下**自建（非 fork）仓库只有 11 个**，逐个查下来：
@@ -558,7 +565,7 @@ M4 的动效三态开关落地时要接上这里的 `destroy()`，这是它存�
 （交付时是当时那份 `N°01`–`N°07` 清单；那份清单已在同日换卡里作废，见 7.1 更正。）
 
 **M3 · 剩余微原型**
-按现行清单（7.1 更正：三张，其中在线编辑器那张已注册）**再补两个**：`simple-homepage`、`ctools`。
+按现行清单（7.1 更正：在线编辑器那张已注册）**给其余三张补**：`seed-toolkit`、`simple-homepage`、`ctools`。
 **开工前先确认一次卡清单**（见 7.1 换卡窗口）—— 换卡窗口就是现在这一次；此后换卡，被换掉的 demo 代码即沉没成本。
 逐个实现。每个 demo 一个文件、契约统一、可单独摘掉降级。
 
