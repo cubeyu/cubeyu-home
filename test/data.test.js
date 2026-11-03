@@ -163,10 +163,8 @@ test('the global reduced-motion zeroing ships intact', async () => {
     assert.match(body, new RegExp(`${decl}: 0s !important`), `${decl} 必须写 0s —— 无单位的 0 会被整条丢掉`);
   }
   assert.match(body, /animation-iteration-count: 1 !important/, '循环动画要停在第一帧');
-  // 组件侧不许再抄时长：整份产物里 !important 只该有全局归零块那 5 条。
-  // 多一条就是某个组件自己开了口子（约束条：--ease-expo 唯一、时长只在 base.css 这一处归零）。
-  assert.equal([...css.matchAll(/!important/g)].length, 5,
-    '产物里的 !important 只许是全局 reduced-motion 那 5 条声明');
+  // 产物里 !important 的总预算（多一条就是某个组件自己开了口子）是【全局预算】断言，
+  // 不是数据断言 —— Task 9-10 裁定迁到 test/budgets.test.js，这里不再重复。
 });
 
 // 焦点环的对比度：审查 I2 要的实测数字，做成【能从仓库复现】的一条，而不只是报告里的一句 prose。
@@ -247,8 +245,9 @@ test('the keyboard-reachable controls are all covered by that one ring', async (
 // i18n.js 首画写回的就是这一串，所以无 JS 态与 JS 态对同一个控件给出同一种承诺。
 // 这条扫 dist/ 而不是 src/：属性值与元素文字是不是同一串，只有产物说了才算。
 // 两个产物分开扫：404 是刻意最小的页面（模板注释写明「除一个回首页链接外没有任何开关」），
-// 所以按钮只在 index 上断言；首帧守卫与「不留死链」两条两侧都要 —— {{ANTI_FLASH}} 是同一个 token，
+// 所以按钮只在 index 上断言；首帧守卫那两条两侧都要 —— {{ANTI_FLASH}} 是同一个 token，
 // 漂出第二份守卫正文就等于「一份偏好各写一遍」回来了。
+// 「不留死链」原先也在这个循环里，它是全局预算断言，已迁至 test/budgets.test.js（两个产物照扫）。
 test('the language control is a real button whose baked text is what JS will paint', async () => {
   const { readFileSync } = await import('node:fs');
   const pair = `${ui.langZh} / ${ui.langEn}`;
@@ -259,8 +258,8 @@ test('the language control is a real button whose baked text is what JS will pai
     'data-labels 必须与元素文字同值 —— 首帧写回同一串，才没有「先显示 A 再变成 B」的替换');
 
   for (const [page, html] of [['dist/index.html', home], ['dist/404.html', readFileSync('dist/404.html', 'utf8')]]) {
-    assert.ok(!html.includes('href="#"'),
-      `${page}: 产物里不该有 href="#" 这种「看着能点、点了跳到页顶」的死链；卡链接按 spec 8.1 在占位时不渲染 <a>`);
+    // 产物里不留 href="#" 死链是【全局预算】断言，Task 9-10 裁定迁到 test/budgets.test.js，
+    // 这里只留首帧守卫那两条（它们才是「语言开关的真按钮」这件事的另一半）。
     assert.match(html, /if\(l==='en'\)document\.documentElement\.lang='en'/,
       `${page}: 语言偏好必须在 <head> 的内联脚本里落定，否则英文用户 reload 先看到一帧中文`);
     assert.equal([...html.matchAll(/<script>([\s\S]*?)<\/script>/g)].length, 1,
