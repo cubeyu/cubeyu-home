@@ -265,11 +265,17 @@ CSS：`html[lang="zh"] .i18n-en { display: none }`，反之同理。默认 `lang
 （我们第一版写的是 `right: 0; height: clamp(320px, 60vh, 560px)`，人形离最近的字 316px，而 112 项测试与 11 项 check 全绿 —— 所以这条几何现在由 `test/mascot.test.js` 的锚点契约钉住：`left`/`height`/`bottom` 必须是 em，且不得出现 `right`，且 `.hero h1` 必须 `position: relative`。）
 
 我们的锚点按同一套式子推导，两个输入都要实测：
-图集逐行扫 alpha 得到手掌在画布 `y 27.5%–35.4%`、指尖在 `x 1.4%`；
+图集逐行扫 alpha 得到手掌在画布 `y 34.3%–44.0%`、指尖在 `x 2.1%`（画布 428×781，宽高比 .548）；
 文字墨盒用 canvas `measureText` 的 `fontBoundingBoxAscent` 反推基线、`actualBoundingBoxAscent` 定 x 高度顶。
-于是 `bottom = 0.646 × height − 0.641em`（桌面 height 2.3em → bottom -.85em；≤480px height 1.55em → bottom -.36em），
-`left` 由"指尖落在最长一行 `small tools.` 的 x 高度顶上方"定出 4.34em。
-换文案、换字号、换图集时这两个数都要重算 —— 式子和测量方法记在 `src/styles/hero.css` 的头注里。
+于是 `盒顶 = 2.179em − 手掌底y × H`、`bottom = (1 − 手掌底y) × H − 0.641em`、`left = 4.355em − 指尖x × 宽高比 × H`。
+桌面 `H = 2.2em → left 4.33em / bottom -.59em`；≤480px `H = 1.55em → bottom -.23em`，
+且狗在窄屏另收一档（30% 盒宽 / top 76%），因为盒底离基线只剩 22px，照桌面的 38% 会让狗头压住句点。
+换文案、换字号、换图集时这三个数都要重算 —— 式子和测量方法记在 `src/styles/hero.css` 的头注里。
+
+人物图集由 `.superpowers/build_person.py <source.png> [leg_factor]` 生成（抠品红 → 去溢色 → 缩腿 → 裁边 → 暗色变体 → WebP）。
+`leg_factor` 是必要的而不是润色：连续两轮把「腿短一点」写进 prompt，模型仍然重画出同样的超长腿，
+所以腿长改由确定性图像处理 —— 按每行墨像素数定位衣摆与鞋（用数量而非跨度：两条细腿离得远，跨度始终很宽，分不开），
+只纵向压缩衣摆到鞋之间那一段，鞋本身不缩放（否则椭圆鞋会被压扁）。当前出厂值 0.62。
 
 人物与狗都用 `background-image` 而不是 `<img>`：纯装饰（`aria-hidden` 才诚实）、暗色只改一条声明、
 浏览器只下载当前主题真正引用的那张。狗是 8 帧朝向图集，`mascot.js` 按光标在 hero 内的水平位置选帧；

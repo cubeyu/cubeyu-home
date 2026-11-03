@@ -96,19 +96,19 @@
 
    我们的数字按同一套推导来（图集墨点位置逐行扫 alpha 得出，文字墨盒用 canvas measureText
    的 font/actualBoundingBox 反推基线，均 @1445 视口 / 140px 字实测）：
-     画布 657x1422（宽高比 .462）：最左墨点 = 指尖，在 x 1.4%；整只手的墨占 y 27.5%–35.4%。
-     "small tools."：基线 567、x 高度顶 493、墨右约 992（advance 右缘 1005 减去 -.045em
+     画布 428x781（宽高比 .548）：最左墨点 = 指尖，在 x 2.1%；整只手的墨占 y 34.3%–44.0%。
+     "small tools."：基线 567、x 高度顶 490、墨右约 992（advance 右缘 1005 减去 -.045em
      记在最后一个字符之后的 6.3px，再减去句点自身的右边距）。
-     盒高 2.3em=322px → 盒宽 1.063em=149px；手掌底（y .354）要落在 x 高度顶 493 →
-     盒顶 = 493 − .354×322 = 379，盒底 = 701，即比标题块底边（583）低 .85em（参照站 .87em）；
-     指尖 = 盒左 + .014×149 取 935（正落在 "s" 上方）→ 盒左 = 933 = 4.34em。
-   相撞检查：腿在画布 x 58% 以右 → 绝对 ≥1019，在墨右 992 之外；小臂整条在 y ≤486，
-   也就是从字【上方】搭过去，不盖住任何字母。 */
+     通式（H = 盒高，p = 手掌底的画布 y）：盒顶 = 2.179em − p×H（把手掌底按在 x 高度顶上），
+     bottom = (1−p)×H − 0.641em，left = 4.355em − .021×.548×H（指尖落在 "s" 正上方）。
+     H = 2.2em → bottom -.59em、left 4.33em。
+   相撞检查：小臂整条在 y ≤2.10em（x 高度顶 2.179em 之上、'l' 的上升部 1.98em 只在
+   x 840–865 那段，手臂从 935 起），腿在画布 x .56 以右 → 绝对 ≥1025，在墨右 992 之外。 */
 .hero-illo {
   position: absolute;
-  left: 4.34em;
-  bottom: -.85em;
-  height: 2.3em;
+  left: 4.33em;
+  bottom: -.59em;
+  height: 2.2em;
   width: auto;
   pointer-events: none;
   z-index: 1;
@@ -124,7 +124,7 @@
   to { opacity: 1; clip-path: inset(0); transform: translateY(0); }
 }
 
-.hero-mascot { position: relative; height: 100%; width: auto; aspect-ratio: 657 / 1422; display: block; }
+.hero-mascot { position: relative; height: 100%; width: auto; aspect-ratio: 428 / 781; display: block; }
 
 .hero-person {
   position: absolute;
@@ -134,10 +134,10 @@
   background-repeat: no-repeat;
   background-size: contain;
   background-position: 50% 100%;
-  /* 支点落在【踩地的那只脚】上（画布 x 82% / y 98%，实测人物墨底 .993）。
-     上一版照抄参照站的 31% 82%，那是它自己画布里的脚位 —— 我们换了姿势后，
-     31% 82% 已经落在胳膊底下的空 magenta 里，绕它转等于让整条腿扫地。 */
-  transform-origin: 82% 98%;
+  /* 支点落在【踩地的那只脚】上（画布 x 86% / y 98%，实测鞋在 x .83–.93、墨底 .986）。
+     第一版照抄参照站的 31% 82%，那是它自己画布里的脚位 —— 我们的画布贴人物裁，
+     31% 82% 落在胳膊底下的空白里，绕它转等于让整条腿扫地。 */
+  transform-origin: 86% 98%;
   /* 呼吸是无循环动效，按 spec 4.1 的「除循环 pulse 外」例外走 ease-in-out：
      expo 曲线用在无限往复上会让回程变成硬弹，反而不像呼吸。 */
   animation: person-breathe 5.4s ease-in-out infinite;
@@ -148,15 +148,14 @@
 }
 
 .hero-dog {
-  /* 新姿势的画布是空的：左臂伸出去扶字，胳膊底下到脚边这一整块（x 10%–70%、y 55%–100%）
-     没有墨，狗正好坐在里面。人物的两条腿在新图里靠右（y 55% 以下时 x 71%–93%），
-     狗占 x 22%–74%，两只并排不相交 —— 上一版狗压在腿正中，截图里像狗长了火柴腿。
-     狗的底边按脚落地算：帧格宽高比 216/300，宽 52% 盒宽 → 高 33% 盒高，
-     top 66% + 33% ≈ 99%，与人物墨底 .993 同一条地平线。 */
+  /* 腿缩短后画布变矮，狗能待的空白只剩胳膊底下那一块（x 5%–60%、y 55%–100%），
+     人物的两条腿在 x .56 以右。尺寸是被【句点】定死的：狗的头顶必须低于基线 567，
+     否则它会坐在 "small tools." 的点上。底边按脚落地算（墨底 .986）→
+     宽 38% 盒宽 = 64px，帧格 216/300 → 高 89px = 盒高的 29% → top 70%、头顶 574。 */
   position: absolute;
-  top: 66%;
+  top: 70%;
   left: 22%;
-  width: 52%;
+  width: 38%;
   aspect-ratio: 216 / 300;
   display: block;
   background-image: url("/assets/images/hero-dog.webp");
@@ -173,14 +172,17 @@
 [data-theme="dark"] .hero-person { background-image: url("/assets/images/hero-person-dark.webp"); }
 [data-theme="dark"] .hero-dog { background-image: url("/assets/images/hero-dog-dark.webp"); }
 
-/* 窄屏只降【高度】，不降 left：手尖的位置 = left + 画布内 1.4% 盒宽，
-   与盒高无关，所以缩高度不会让「扶着字」变成「悬在字旁边」——
+/* 窄屏只降【高度】，不降 left：手尖的位置 = left + 画布内 2.1% 盒宽，
+   与盒高无关（差不到 1px），所以缩高度不会让「扶着字」变成「悬在字旁边」——
    它只把腿和盒子的右边缘收进视口，免得被 base.css 的 overflow-x: clip 切掉鞋尖。
-   bottom 必须跟着高度重算，否则手掌会压进 x 高度里盖住字母：
-   手掌底在画布 y .354、x 高度顶在标题块顶以下 2.179em、块高 2.82em，
-   于是 bottom = 0.646 × height − 0.641em（桌面 2.3em → −.85em，与此处 1.55em → −.36em 同一条式子）。 */
+   bottom 必须跟着高度重算，同一条式子 (1−p)×H − 0.641em，p = .44：
+   桌面 2.2em → -.59em；此处 1.55em → -.23em。 */
 @media (max-width: 480px) {
-  .hero-illo { height: 1.55em; bottom: -.36em; }
+  .hero-illo { height: 1.55em; bottom: -.23em; }
+  /* 狗的尺寸在窄屏另外收一档：盒底离基线只剩 22px（桌面 99px），
+     照桌面的 38% 盒宽画下来，狗头会顶到基线以上 8px、压住句点。
+     30% 盒宽 → 高 22.7% 盒高，top 76% 让底边仍与人物墨底 .986 同一条地平线。 */
+  .hero-dog { width: 30%; top: 76%; }
 }
 
 /* reduced-motion：吉祥物必须【仍然在场】，只是不动。
