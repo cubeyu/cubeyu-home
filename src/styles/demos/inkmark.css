@@ -1,1 +1,78 @@
-/* 由 Task 11 整文件替换 */
+/* demos/inkmark.css —— N°01 墨痕笔记微原型的样式。DOM 由 src/js/demos/inkmark.js 建，
+   类名一一对应（.d-ink / .d-ink-pane / .d-ink-cap / .d-ink-src / .d-ink-out / .d-md-* / .d-ink-ask）。
+   纪律与本仓其余组件文件一致（spec 4 节）：零字面色值，颜色一律 var(--…)；
+   缓动只有 var(--ease-expo) 一条（spec 6.2）；字号只用阶梯内的 58 / 30 / 16 / 12，
+   不给 demo 单独发明一档（Task 7-8 审查 I2 就是为这个把 11px / 13px 收回 12px 的）。
+   .card-demo 那层已经给了 --surface 底、发丝边框与 16px padding（cards.css），
+   所以这里不再画外框，只画框里的两栏。 */
+
+/* 两栏等宽；min-width: 0 让等宽长行在窄栏里能收缩而不是把卡片撑破。 */
+.d-ink { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; align-items: start; }
+.d-ink-pane { display: flex; flex-direction: column; gap: 6px; min-width: 0; }
+/* 窄屏上下叠：与 base.css / cards.css 同一个 640px 断点，不新造一档。 */
+@media (max-width: 640px) { .d-ink { grid-template-columns: 1fr; } }
+
+/* 栏标：等宽 12px 小标，与 base.css 的 .num / .eyebrow 同一档，颜色取三级墨。 */
+.d-ink-cap { font-family: var(--font-mono); font-size: 12px; letter-spacing: .08em; color: var(--ink-3); }
+
+/* 源码栏。textarea 的字体已由 base.css 开头的 `button, input, textarea { font: inherit }` 接上正文，
+   这里只把它换成等宽 —— 代码栏用等宽是有理由的显式声明，不是抄一遍。 */
+.d-ink-src {
+  width: 100%; min-height: 132px; resize: vertical;
+  font-family: var(--font-mono); font-size: 12px; line-height: 1.6;
+  color: var(--ink); background: var(--paper);
+  border: var(--rule-w) solid var(--rule); border-radius: var(--radius-sm); padding: 10px;
+}
+/* 焦点环不在这里画：base.css 那条全局 :where(a, button, input, textarea, [tabindex]):focus-visible
+   已经罩到 textarea（Task 11 按控制器裁定把 input / textarea 补进选择器，就是这个控件要的）。 */
+.d-ink-out {
+  min-height: 132px; padding: 10px;
+  border: var(--rule-w) solid var(--rule); border-radius: var(--radius-sm); background: var(--paper);
+  overflow-wrap: anywhere;
+}
+
+/* 渲染出的 markdown 子集。字号不写：继承 body 的 16/24（阶梯内），标题靠字重分级而不是靠发明字号。 */
+.d-md-h { font-size: 16px; font-weight: 700; margin: 0 0 6px; }
+.d-md-p, .d-md-li { margin: 0 0 6px; color: var(--ink-2); }
+.d-md-li { padding-left: 18px; position: relative; }
+.d-md-li > span[aria-hidden] { position: absolute; left: 0; color: var(--ink-3); }
+/* 已完成 = 删除线 + 提亮的记号。勾选态另有 .d-md-sr 的文本给读屏，所以这里不是「只靠视觉传达」。 */
+.d-md-li.is-done { color: var(--ink-3); text-decoration: line-through; }
+.d-md-li.is-done > span[aria-hidden] { color: var(--ink-2); }
+.d-md-code { font-family: var(--font-mono); font-size: 12px; background: var(--surface); padding: 1px 4px; border-radius: var(--radius-sm); }
+
+/* 读屏可见、视觉不可见的标签。不用 display: none —— 那会连读屏一起摘掉。
+   本仓第一个这种工具类，所以形状自己写全（1px + clip-path 裁切，绝对定位不占版面）；
+   不抽进 base.css：那个文件本任务只授权改焦点环那一条选择器，等第二个消费者出现再归位。 */
+.d-md-sr {
+  position: absolute; width: 1px; height: 1px; margin: -1px; padding: 0;
+  overflow: hidden; clip-path: inset(50%); white-space: nowrap;
+}
+
+/* 本卡唯一一次马克笔黄：「问 AI」把光标那一行划成荧光笔底。
+   底配 --mark-bg、字必须配 --mark-fg（Task 7-8 裁定）：暗色下 --mark-bg 按 spec 4.2 有意降成
+   半透明底纹，此时若配三级墨实测只有 2.19:1，配 --mark-fg 是 8.70:1（亮色 13.67:1）——
+   两个数都是 chrome-devtools 在现场量的 computed color 现算，不是抄来的。
+   位置承重：这条必须排在 .d-md-li.is-done 之后。两者特异性同为 0-2-0
+   （.d-ink-out .is-asked 与 .d-md-li.is-done），完成的行被标中时靠的就是「后置取胜」；
+   把它挪到 is-done 前面，被标中的那一行会静默退回三级灰 + 无底纹，看起来像标记没生效。
+   不给 is-asked 加 padding：那会在标中的瞬间把整行推宽，看着像布局在跳。 */
+.d-ink-out .is-asked { background: var(--mark-bg); color: var(--mark-fg); }
+
+/* 划上去的那一下给一点入场：只用 --ease-expo（spec 6.2 全站唯一曲线）。
+   reduced-motion 不在本文件重复处理 —— base.css 的全局归零块把 transition-duration 打到 .01ms，
+   作用在 * 上，覆盖本 demo 由 JS 建出来的 DOM；而本 demo 是输入驱动的，
+   没有计时器、没有 rAF、没有自动播放，所以 ctx.prefersReducedMotion 在这里没有消费者，
+   JS 那半边无事可停（对照 spec 6.2 点名要停的是 mc-agent / weflow / dailyhot 那一类循环）。 */
+.d-md-h, .d-md-p, .d-md-li { transition: background-color .3s var(--ease-expo), color .3s var(--ease-expo); }
+
+/* 反色小胶囊：底用 --ink、字用 --paper，明暗两态自动翻转（同 .pref-toggle 的思路，形状换成药丸）。
+   padding 6px 14px 配 12px 字 ≈ 28px 高，过 WCAG 2.2 的 24px 最小目标。 */
+.d-ink-ask {
+  grid-column: 1 / -1; justify-self: start;
+  font-family: var(--font-mono); font-size: 12px; padding: 6px 14px;
+  background: var(--ink); color: var(--paper); border: none; border-radius: var(--radius-pill); cursor: pointer;
+}
+/* hover 只在真有鼠标的设备上给：触屏下 :hover 会点击后一直粘着，胶囊停在「已强调」态。
+   （base.css 的 .pref-toggle:hover 是同一条理由、同一个写法。） */
+@media (hover: hover) { .d-ink-ask:hover { background: var(--link); } }

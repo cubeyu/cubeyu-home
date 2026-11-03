@@ -125,8 +125,10 @@ test('content does not depend on JS to appear', async () => {
 // 近黑的 `outline: auto` 焦点环（实测约 1.04:1）、亮色调色板的原生滚动条与选区 ——
 // 浏览器 UI 跟的是 color-scheme，不是我们的 data-theme。两条都要钉住：
 // 1) :root 声明 light、[data-theme="dark"] 声明 dark；
-// 2) 焦点环只有一条全局规则、覆盖 a / button / [tabindex]，那两个一次性补丁不再存在
+// 2) 焦点环只有一条全局规则、覆盖 a / button / input / textarea / [tabindex]，那两个一次性补丁不再存在
 //    （原先只有被点到过的控件有环，卡标题与页脚邮箱仍是 UA 环）。
+//    input / textarea 两个名字是 Task 11 补的（控制器裁定：inkmark 的源码栏是 textarea），
+//    下面的期望值跟着产物一起改，条数仍必须是 1 —— 换名不换「全站一种环」这条约束。
 // 扫的是 dist/assets/app.css —— 合并后的产物才是浏览器加载的那份字节。
 // 先剥注释再扫：与 check.js 的 COLOR_LEAK 同一条口径，注释里引用字面量是允许的。
 test('the shipped CSS sets color-scheme and carries one global focus ring', async () => {
@@ -139,7 +141,7 @@ test('the shipped CSS sets color-scheme and carries one global focus ring', asyn
   assert.match(css, /\[data-theme="dark"\]\s*\{[^}]*color-scheme\s*:\s*dark/,
     'data-theme="dark" 块里要有 color-scheme: dark，否则暗色页仍是亮调色板的滚动条与选区');
   const rings = [...css.matchAll(/([^{}]+):focus-visible\s*\{[^}]*outline[^}]*\}/g)].map((m) => m[1].trim());
-  assert.deepEqual(rings, [':where(a, button, [tabindex])'],
+  assert.deepEqual(rings, [':where(a, button, input, textarea, [tabindex])'],
     `全站只该有一条 :focus-visible 描边规则，实际有：${rings.join(' | ')}`);
 });
 

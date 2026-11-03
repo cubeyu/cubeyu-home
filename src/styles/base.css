@@ -127,5 +127,8 @@ section { padding-block: 72px; }
    合成一条同时消掉审查里那对逐字重复的声明块。
    :focus-visible（不是 :focus）保证鼠标点击不留环、键盘 Tab 必有环。
    :where() 让特异性停在 0-1-0（只有伪类参与）：组件日后要改自己那一环仍然盖得住；
-   `button` 在这里而不是只写 `a`，因为页脚的主题开关与导航条的语言开关都是真控件。 */
-:where(a, button, [tabindex]):focus-visible { outline: 2px solid var(--ink); outline-offset: 2px; }
+   `button` 在这里而不是只写 `a`，因为页脚的主题开关与导航条的语言开关都是真控件。
+   `input` 与 `textarea` 是 Task 11 补的（控制器裁定）：inkmark 的源码栏是 textarea，
+   少这两个名字它就只拿到 color-scheme 那半（UA 环跟着调色板走），拿不到这条作者环 ——
+   表单控件本来就该和按钮同级，写漏了才是要修的东西。 */
+:where(a, button, input, textarea, [tabindex]):focus-visible { outline: 2px solid var(--ink); outline-offset: 2px; }
