@@ -45,3 +45,17 @@ test('mascot does not animate for reduced motion or touch', () => {
   assert.match(js, /hover: hover[\s\S]{0,80}pointer: fine[\s\S]{0,120}return/, '触屏必须完全不绑指针监听');
   assert.match(js, /prefers-reduced-motion[\s\S]{0,120}return/, 'reduced-motion 必须不追踪，狗停在静止帧');
 });
+
+// 开屏"升起"的起点必须存在。第一版只抄了参照站关键帧里的 translateY(0)，
+// 没抄它基础规则里的 translateY(12%) —— 起点终点都是 0，于是只剩擦开、没有升起，
+// 而页面看起来完全正常：clip-path 在动、opacity 在动，没有任何东西报错。
+test('hero illustration entrance actually rises, not just wipes', () => {
+  const css = readFileSync('dist/assets/app.css', 'utf8');
+  const illo = /\.hero-illo\{([^}]*)\}/s.exec(css)?.[1] ?? '';
+  const start = /transform:\s*translateY\(([-\d.]+)%\)/.exec(illo)?.[1];
+  assert.ok(start !== undefined, '.hero-illo 缺少初始 transform —— 升起动画没有起点');
+  assert.notEqual(Number(start), 0, '.hero-illo 初始 translateY 为 0，升起动画等于原地不动');
+  const key = /@keyframes hero-illo-enter\{([^}]*)\}/s.exec(css)?.[1] ?? '';
+  assert.match(key, /transform:\s*translateY\(0(?:%|deg)?\)|transform:\s*none/,
+    '关键帧必须动画到 translateY(0)，否则起点位移永远不会被收回');
+});

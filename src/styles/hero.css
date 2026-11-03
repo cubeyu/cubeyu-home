@@ -71,13 +71,17 @@
   position: absolute;
   right: 0;
   bottom: -20px;
-  height: clamp(300px, 56vh, 500px);
+  height: clamp(320px, 60vh, 560px);
   width: auto;
   pointer-events: none;
   z-index: 1;
   opacity: 0;
   clip-path: inset(100% 0 0);
-  animation: hero-illo-enter 1.2s var(--ease-expo) .3s forwards;
+  /* 初始位移是这条开屏动画的【起点】，缺了它关键帧的 translateY(0) 就是原地不动 ——
+     第一版只抄了 to 里的 translateY(0)、没抄参照站基础规则的 translateY(12%)，
+     结果只剩擦开、没有升起。时长与延迟照参照站取 1.5s / .24s。 */
+  transform: translateY(12%);
+  animation: hero-illo-enter 1.5s var(--ease-expo) .24s forwards;
 }
 @keyframes hero-illo-enter {
   to { opacity: 1; clip-path: inset(0); transform: translateY(0); }
@@ -108,9 +112,12 @@
      原先 top:56% / left:34% / width:62% 让狗正好盖住整条腿（实测截图里像狗长了火柴腿）。
      挪到右下、只与腿轻微相邻，两只才读得出是「一个人和一只狗」。 */
   position: absolute;
-  top: 64%;
-  left: 46%;
-  width: 58%;
+  /* 人物的两条腿大约在 x 42%-58%、y 58%-100%。狗要坐在腿的【外侧】并排，
+     而不是压在腿正中 —— 上一版 left:46% 的结果是狗盖住整条腿，
+     截图里看起来像狗长了火柴腿。 */
+  top: 66%;
+  left: 54%;
+  width: 54%;
   aspect-ratio: 207 / 300;
   display: block;
   background-image: url("/assets/images/hero-dog.webp");
