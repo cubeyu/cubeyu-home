@@ -1,4 +1,4 @@
-// test/demos.test.js —— demo 挂载契约（spec 5.1）+ inkmark 的三个纯函数 + 那一次马克笔黄与它的播报面。
+// test/demos.test.js —— demo 挂载契约（spec 5.1）+ vitepress-online-editor 的三个纯函数 + 那一次马克笔黄与它的播报面。
 // 分工照 Task 9-10 的断言归属裁定：本文件管「契约与语义」，
 // 产物与源文件的机器门禁（data-demo 数量对齐、字面色值泄漏、零依赖）归 Task 12 的 check.js，
 // 同一道门禁写两处必然漂移，所以这里不重复扫。
@@ -6,7 +6,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync, readdirSync } from 'node:fs';
 import demos from '../src/js/demos/index.js';
-import { mdToHtml, askTargetIndex, markedLineText } from '../src/js/demos/inkmark.js';
+import { mdToHtml, askTargetIndex, markedLineText } from '../src/js/demos/vitepress-online-editor.js';
 
 test('registry keys match the files on disk', () => {
   const files = readdirSync('src/js/demos')
@@ -24,7 +24,7 @@ test('every registered demo is a function', () => {
 // 契约的另一半：mount 必须返回卸载函数，且卸载把自己挂上的监听全部摘掉、清空容器。
 // 无真 DOM —— 用一副最小假 DOM，手法与 test/pref-harness.js 同源（那里假的是两个开关，这里假的是卡内容器）。
 // 假 root 只认「往 innerHTML 写」和「按选择器要一个节点」两件事，节点本身是通用的，
-// 所以改类名不会让这个测试变红：它钉的是契约，不是 inkmark 的实现细节。
+// 所以改类名不会让这个测试变红：它钉的是契约，不是 vitepress-online-editor 的实现细节。
 function fakeNode() {
   return {
     listeners: [],
@@ -180,9 +180,9 @@ test('markedLineText reads back the marked block without markdown noise', () => 
 // 马克笔黄的两条约束：底与字必须成对取 --mark-bg / --mark-fg（Task 7-8 裁定，暗色下底是半透明的，
 // 配 --ink-3 实测只有 2.24:1），以及 :hover 必须关在 @media (hover: hover) 里（触屏不留粘住的态）。
 test('the 问 AI mark uses both mark tokens and its hover is gated', () => {
-  const css = readFileSync('src/styles/demos/inkmark.css', 'utf8').replace(/\/\*[\s\S]*?\*\//g, '');
+  const css = readFileSync('src/styles/demos/vitepress-online-editor.css', 'utf8').replace(/\/\*[\s\S]*?\*\//g, '');
   const rule = /\.is-asked\s*\{([^}]*)\}/.exec(css);
-  assert.ok(rule, 'inkmark.css 里找不到 .is-asked');
+  assert.ok(rule, 'vitepress-online-editor.css 里找不到 .is-asked');
   assert.match(rule[1], /background:\s*var\(--mark-bg\)/);
   assert.match(rule[1], /color:\s*var\(--mark-fg\)/);
   assert.equal((css.match(/:hover/g) || []).length, 1, '本 demo 只该有一处 hover');
@@ -195,14 +195,14 @@ test('the 问 AI mark uses both mark tokens and its hover is gated', () => {
 // 「Task 7-8 裁定否掉」的那对（--ink-3 打在 --mark-bg 上：亮 2.24:1 / 暗 2.19:1）。
 // 光看「规则在不在」不够：同特异性靠的是后置，所以位置也一起钉。
 test('the marked task-list line carries one ink for text and marker glyph', () => {
-  const css = readFileSync('src/styles/demos/inkmark.css', 'utf8').replace(/\/\*[\s\S]*?\*\//g, '');
+  const css = readFileSync('src/styles/demos/vitepress-online-editor.css', 'utf8').replace(/\/\*[\s\S]*?\*\//g, '');
   const at = (re, what) => {
     const i = css.search(re);
-    assert.notEqual(i, -1, `inkmark.css 里找不到${what}`);
+    assert.notEqual(i, -1, `vitepress-online-editor.css 里找不到${what}`);
     return i;
   };
   const inked = /\.d-ink-out \.is-asked > span\[aria-hidden\]\s*\{([^}]*)\}/.exec(css);
-  assert.ok(inked, 'inkmark.css 里没有「标记行的记号也换墨」这条规则');
+  assert.ok(inked, 'vitepress-online-editor.css 里没有「标记行的记号也换墨」这条规则');
   assert.match(inked[1], /color:\s*var\(--mark-fg\)/, '记号必须配 --mark-fg，不许留在 --ink-3');
   const marker = at(/\.d-ink-out \.is-asked > span\[aria-hidden\]\s*\{/, '记号那条规则');
   assert.ok(at(/\.d-ink-out \.is-asked\s*\{/, '正文那条 .is-asked') < marker,
@@ -217,7 +217,7 @@ test('the marked task-list line carries one ink for text and marker glyph', () =
 // 每条都是正面钉形状：aria-live 挪回 .d-ink-out、播报节点落进重渲染的容器里、
 // 或者「顺手」把 input 的重渲染一起摘掉，都会红。
 test('the live region is the status node, not the re-rendered preview', () => {
-  const js = readFileSync('src/js/demos/inkmark.js', 'utf8');
+  const js = readFileSync('src/js/demos/vitepress-online-editor.js', 'utf8');
   // 渲染容器「开到即关」：既证明它身上没有 aria-live，也证明播报节点没被塞进它内部
   // （塞进去就会被 render() 的 innerHTML 一起冲掉，live region 又变回整块重播）。
   assert.match(js, /<div class="d-ink-out"><\/div>/, '.d-ink-out 不许带 aria-live，也不许有内部节点');
@@ -230,7 +230,7 @@ test('the live region is the status node, not the re-rendered preview', () => {
   assert.equal((js.match(/status\.textContent = '';/g) || []).length, 2, '「重渲染」与「没标中」两处都清空播报');
 
   // 视觉隐藏但不许用 display:none —— 那会连读屏一起摘掉，live region 就废了。
-  const css = readFileSync('src/styles/demos/inkmark.css', 'utf8').replace(/\/\*[\s\S]*?\*\//g, '');
+  const css = readFileSync('src/styles/demos/vitepress-online-editor.css', 'utf8').replace(/\/\*[\s\S]*?\*\//g, '');
   const hide = /\.d-md-sr[^{]*\{([^}]*)\}/.exec(css);
   assert.ok(hide && /\.d-ink-status/.test(hide[0]), '.d-ink-status 要挂进「读屏可见、视觉不可见」那条工具规则');
   assert.doesNotMatch(hide[1], /display:\s*none/, '视觉隐藏不许用 display:none');

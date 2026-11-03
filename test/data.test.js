@@ -111,8 +111,8 @@ test('hero mask lines are identical in both languages, as build.js assumes', () 
 test('content does not depend on JS to appear', async () => {
   const { readFileSync } = await import('node:fs');
   const html = readFileSync('dist/index.html', 'utf8');
-  assert.ok(html.includes('笔记存在自己电脑上'), 'zh copy must be baked at build time');
-  assert.ok(html.includes('Your notes stay on your own machine'), 'en copy must be baked too');
+  assert.ok(html.includes('在浏览器里写 Markdown'), 'zh copy must be baked at build time');
+  assert.ok(html.includes('Write Markdown in the browser'), 'en copy must be baked too');
 });
 
 // 审查 I2 的产物面。这个仓库此前从没设过 CSS `color-scheme`，于是暗色下 Chrome 画的是

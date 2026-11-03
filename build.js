@@ -95,22 +95,20 @@ const hero = `<header class="hero roll-band col">`
 
 // Task 8：作品卡纸面形态。
 //
-// url === '#' 时【不输出 <a>】，标题渲染成纯文本。spec 8.1 只授权一处 '#'：
-// N°07 云隐博客的落点三处记载互斥、待用户在 M1 验收时给 URL。而 projects.js 今天有六张卡
-// 都是 '#'，于是产物里躺着六个点了没反应的死链接 —— 一个不骗人但什么都不做的标题
-// 比一个看起来可点、点了跳到页面顶部的链接好。真实链接由 Task 14 逐项向用户索取。
+// url === '#' 时【不输出 <a>】，标题渲染成纯文本。今天这三张卡都有真实仓库地址，所以产物里
+// 一个 '#' 也没有；这条分支留着是因为换卡时"项目存在但地址还没定"是常态 ——
+// 一个不骗人但什么都不做的标题，比一个看起来可点、点了跳到页面顶部的链接好。
+// 反面证据在 Task 8 当时：那时六张卡都是 '#'，产物里躺着六个死链接。
 const cardTitle = (p) => {
   const text = i18n(p.title.zh, p.title.en);
   return p.url === '#' ? text : `<a class="card-link" href="${esc(p.url)}">${text}</a>`;
 };
 
 // demo 区（data-demo + .card-demo 容器）与 data-demo 属性都只在【该 demo 名已在注册表里实现】时输出，
-// 判据不再是 projects.js 里声明了 p.demo。理由（Task 7-8 审查项 5）：每一张卡都声明了 demo，
-// 而 demo 要 Task 11 起才逐个实现 —— 按声明输出会让空心边框盒进 M1 截图，看着像半成品。
-// 按注册态输出：今天注册表是空的 `export default {}`，所以是零个；
-// Task 11 注册 inkmark 之后自动变成恰好一个，之后每注册一个就多一个，build.js 不再需要改。
-// 顺带永久关掉计划 Task 11 Step 7 记的那个洞：注册名拼错现在渲染成一张干净的纸面卡，
-// 不再留空盒子，而拼错本身仍由 check.js（Task 12）的 DEMO_REGISTRY_MATCH 抓到。
+// 判据不是 projects.js 里声明了 p.demo。理由（Task 7-8 审查项 5）：声明是意图、注册才是实现，
+// 按声明输出会让空心边框盒进截图，看着像半成品 —— 那个洞在计划 Task 11 Step 7 里记过。
+// 按注册态输出：注册几个就渲染几个，M3 加 demo 时 build.js 一行都不用改；
+// 注册名拼错渲染成一张干净的纸面卡，而拼错本身由 check.js 的 DEMO_REGISTRY_MATCH 抓到。
 // card-hint 跟着一起走：那句话描述的是 demo 里的操作（「在左边改几个字」），
 // demo 不在的时候留着它就是在指一个不存在的交互。
 const hasDemo = (name) => typeof name === 'string' && Object.hasOwn(demoRegistry, name);

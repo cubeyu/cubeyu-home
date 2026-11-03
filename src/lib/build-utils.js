@@ -30,5 +30,5 @@ export const cssOrder = [
   'hero.css',
   'cards.css',
   'tabs.css',
-  'demos/inkmark.css',
+  'demos/vitepress-online-editor.css',
 ];

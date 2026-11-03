@@ -7,8 +7,8 @@
 //   所以未实现的 demo 不会在 M1 截图里留一个空心盒子；
 // · app.js 在浏览器里按 [data-demo-root] 查它挂载，查不到即静默降级为纸面卡。
 // 因此本文件与它 import 的每个 demo 都不得在模块求值期碰 DOM —— 那会把构建打断。
-import { mountInkmark } from './inkmark.js';
+import { mountVitepressOnlineEditor } from './vitepress-online-editor.js';
 
 export default {
-  'inkmark': mountInkmark,
+  'vitepress-online-editor': mountVitepressOnlineEditor,
 };

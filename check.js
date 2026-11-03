@@ -123,7 +123,7 @@ export const DEMO_REGISTRY_MATCH = {
   name: 'demo names, registry and files all agree',
   // 三条规则按【阶段语义】拆开（控制器裁定，Task 11 之后 M2 的真实状态就是「有声明、没注册」）：
   //
-  // 1) 已声明 + 已注册 + 有文件 → 健康，今天 inkmark 就是这个形态。
+  // 1) 已声明 + 已注册 + 有文件 → 健康，今天 vitepress-online-editor 就是这个形态。
   // 2) 已声明 + 未注册 + 无文件，且 demo === 卡片 slug → 【不算失败】。
   //    这是 spec 要求的纸面卡降级：build.js 按注册态门禁不给未实现的 demo 留空壳，
   //    app.js 查不到注册就静默跳过（Task 11 实测过这两条）。
