@@ -121,6 +121,151 @@ test('content does not depend on JS to appear', async () => {
   assert.ok(html.includes('Your notes stay on your own machine'), 'en copy must be baked too');
 });
 
+// 审查 I2 的产物面。这个仓库此前从没设过 CSS `color-scheme`，于是暗色下 Chrome 画的是
+// 近黑的 `outline: auto` 焦点环（实测约 1.04:1）、亮色调色板的原生滚动条与选区 ——
+// 浏览器 UI 跟的是 color-scheme，不是我们的 data-theme。两条都要钉住：
+// 1) :root 声明 light、[data-theme="dark"] 声明 dark；
+// 2) 焦点环只有一条全局规则、覆盖 a / button / [tabindex]，那两个一次性补丁不再存在
+//    （原先只有被点到过的控件有环，卡标题与页脚邮箱仍是 UA 环）。
+// 扫的是 dist/assets/app.css —— 合并后的产物才是浏览器加载的那份字节。
+// 先剥注释再扫：与 check.js 的 COLOR_LEAK 同一条口径，注释里引用字面量是允许的。
+test('the shipped CSS sets color-scheme and carries one global focus ring', async () => {
+  const { readFileSync } = await import('node:fs');
+  const css = readFileSync('dist/assets/app.css', 'utf8').replace(/\/\*[\s\S]*?\*\//g, '');
+  const scheme = [...css.matchAll(/color-scheme\s*:\s*(light|dark)/g)].map((m) => m[1]);
+  assert.deepEqual(scheme, ['light', 'dark'],
+    'color-scheme 必须恰好两处、且亮在前暗在后（同为 0-1-0 特异性，靠暗色块排在后面取胜）');
+  assert.match(css, /:root\s*\{[^}]*color-scheme\s*:\s*light/, ':root 里要有 color-scheme: light');
+  assert.match(css, /\[data-theme="dark"\]\s*\{[^}]*color-scheme\s*:\s*dark/,
+    'data-theme="dark" 块里要有 color-scheme: dark，否则暗色页仍是亮调色板的滚动条与选区');
+  const rings = [...css.matchAll(/([^{}]+):focus-visible\s*\{[^}]*outline[^}]*\}/g)].map((m) => m[1].trim());
+  assert.deepEqual(rings, [':where(a, button, [tabindex])'],
+    `全站只该有一条 :focus-visible 描边规则，实际有：${rings.join(' | ')}`);
+});
+
+// 约束条：base.css 保留全局的 reduced-motion 归零，组件文件不得再自己声明时长。
+// 这条在仓库侧能验的部分是「产物里那一段还在、形状没退」：chrome-devtools MCP 的 emulate
+// 工具没有 prefers-reduced-motion 这一档（实测报 Unknown argument），运行时那一半只能在
+// 真 DevTools 的 Rendering 面板里跑，见报告的「未能验证项」。
+// animation-delay 必须带单位（写 0 会被解析器整条丢掉，规则序列化成空块），这条也在这里钉住。
+test('the global reduced-motion zeroing ships intact', async () => {
+  const { readFileSync } = await import('node:fs');
+  const css = readFileSync('dist/assets/app.css', 'utf8').replace(/\/\*[\s\S]*?\*\//g, '');
+  const block = /@media \(prefers-reduced-motion: reduce\)\s*\{\s*\*, \*::before, \*::after\s*\{([^}]*)\}/.exec(css);
+  assert.ok(block, 'base.css 的全局 reduced-motion 归零块在产物里找不到了');
+  const body = block[1];
+  for (const decl of ['animation-duration', 'transition-duration']) {
+    assert.match(body, new RegExp(`${decl}: \\.01ms !important`), `${decl} 应归到 .01ms`);
+  }
+  for (const decl of ['animation-delay', 'transition-delay']) {
+    assert.match(body, new RegExp(`${decl}: 0s !important`), `${decl} 必须写 0s —— 无单位的 0 会被整条丢掉`);
+  }
+  assert.match(body, /animation-iteration-count: 1 !important/, '循环动画要停在第一帧');
+  // 组件侧不许再抄时长：整份产物里 !important 只该有全局归零块那 5 条。
+  // 多一条就是某个组件自己开了口子（约束条：--ease-expo 唯一、时长只在 base.css 这一处归零）。
+  assert.equal([...css.matchAll(/!important/g)].length, 5,
+    '产物里的 !important 只许是全局 reduced-motion 那 5 条声明');
+});
+
+// 焦点环的对比度：审查 I2 要的实测数字，做成【能从仓库复现】的一条，而不只是报告里的一句 prose。
+// 环色取 computed outline-color 的唯一来源 --ink，底色取它压着的 --paper，两套调色板各算一次
+// WCAG 1.4.11（非文本对比度，焦点指示器的门槛是 3:1）。
+// 跑出来的数就打在 t.diagnostic 里（npm test 可见）：亮 17.40:1、暗 16.69:1，
+// 都远过 3:1。反面对照是修之前那个 UA `outline: auto` 的约 1.04:1 —— 那是 Chrome
+// 内部按 color-scheme 取的环色，仓库里算不出来，只能在浏览器里量（见报告的 MCP 步骤），
+// 所以那一个数标为不可复现，而这一条算出的两个数是可复现的。
+function srgb(c) {
+  return c <= 0.03928 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4;
+}
+
+function luminance(hex) {
+  const m = hex.trim().match(/^#([\da-f]{3}|[\da-f]{6})$/i);
+  assert.ok(m, `对比度计算只吃十六进制色值，拿到的是 ${hex}`);
+  const h = m[1].length === 3 ? [...m[1]].map((x) => x + x) : [m[1].slice(0, 2), m[1].slice(2, 4), m[1].slice(4, 6)];
+  const [r, g, b] = h.map((x) => parseInt(x, 16) / 255);
+  return 0.2126 * srgb(r) + 0.7152 * srgb(g) + 0.0722 * srgb(b);
+}
+
+function contrast(a, b) {
+  const [hi, lo] = [luminance(a), luminance(b)].sort((x, y) => y - x);
+  return (hi + 0.05) / (lo + 0.05);
+}
+
+// 从产物的 CSS 里按块取声明：剥注释 → 定位选择器 → 取配对花括号内的体（同 tokens.test.js 的口径）
+function declarations(css, selector) {
+  const at = css.indexOf(selector);
+  assert.notEqual(at, -1, `${selector} not in the shipped css`);
+  const open = css.indexOf('{', at);
+  let depth = 0;
+  for (let i = open; i < css.length; i += 1) {
+    if (css[i] === '{') depth += 1;
+    else if (css[i] === '}' && (depth -= 1) === 0) return css.slice(open + 1, i);
+  }
+  return assert.fail(`${selector} block has no closing }`);
+}
+
+function tokenOf(body, name) {
+  const m = body.match(new RegExp(`--${name}\\s*:\\s*([^;]+)`));
+  assert.ok(m, `--${name} missing`);
+  return m[1];
+}
+
+test('the focus ring clears WCAG 1.4.11 contrast on the page background, both themes', async (t) => {
+  const { readFileSync } = await import('node:fs');
+  const css = readFileSync('dist/assets/app.css', 'utf8').replace(/\/\*[\s\S]*?\*\//g, '');
+  const light = declarations(css, ':root');
+  const dark = declarations(css, '[data-theme="dark"]');
+  const rings = {
+    light: contrast(tokenOf(light, 'ink'), tokenOf(light, 'paper')),
+    dark: contrast(tokenOf(dark, 'ink'), tokenOf(dark, 'paper')),
+  };
+  for (const [mode, ratio] of Object.entries(rings)) {
+    t.diagnostic(`焦点环对比度 ${mode}: ${ratio.toFixed(2)}:1（--ink 压在 --paper 上，WCAG 1.4.11 门槛 3:1）`);
+    assert.ok(ratio >= 3, `${mode} 态焦点环对比度 ${ratio.toFixed(2)}:1 低于非文本 3:1`);
+  }
+});
+
+// 上面那条只说「有一条规则」，这条钉住它真的罩得住键盘可达的三类控件：
+// spec 9.2 要求卡片链接可键盘到达，而 Task 9-10 的审查正是「只有开关有环」。
+// 语言开关还得是控件而不是伪装成链接的 <a>（审查 I4），所以顺带扫产物 DOM 的标签名。
+test('the keyboard-reachable controls are all covered by that one ring', async () => {
+  const { readFileSync } = await import('node:fs');
+  const html = readFileSync('dist/index.html', 'utf8');
+  assert.match(html, /<a class="card-link"/, '卡标题要渲染成真链接（可键盘到达的前提）');
+  assert.match(html, /<footer[^>]*>[\s\S]*<button type="button" class="pref-toggle"/,
+    '页脚主题开关必须是 button');
+  assert.match(html, /<button type="button" data-lang-toggle/, '语言开关必须是 button');
+  assert.ok(!/tabindex=["'][^"']*\b-1\b/.test(html),
+    '产物里不该有 tabindex="-1"：那会让控件从 Tab 序列里消失，焦点环规则罩不住不存在的路径');
+});
+
+// 审查 I4 + I3 的产物面。原先的语言控件是 `<a href="#">`：关掉 JS 后它是个会滚到页顶、
+// 什么都切不了的假链接，Ctrl/中键还能多开一个同页标签。现在它是真 <button type="button">，
+// 无 JS 时点了不动；可见文字仍是烘进产物的两项「中 / EN」，且与 data-labels 那一项逐字相同 ——
+// i18n.js 首画写回的就是这一串，所以无 JS 态与 JS 态对同一个控件给出同一种承诺。
+// 这条扫 dist/ 而不是 src/：属性值与元素文字是不是同一串，只有产物说了才算。
+// 两个产物分开扫：404 是刻意最小的页面（模板注释写明「除一个回首页链接外没有任何开关」），
+// 所以按钮只在 index 上断言；首帧守卫与「不留死链」两条两侧都要 —— {{ANTI_FLASH}} 是同一个 token，
+// 漂出第二份守卫正文就等于「一份偏好各写一遍」回来了。
+test('the language control is a real button whose baked text is what JS will paint', async () => {
+  const { readFileSync } = await import('node:fs');
+  const pair = `${ui.langZh} / ${ui.langEn}`;
+  const home = readFileSync('dist/index.html', 'utf8');
+  assert.match(home, new RegExp(`<button type="button" data-lang-toggle[^>]*>${pair.replace(/[/\\^$*+?.()|[\]{}]/g, '\\$&')}</button>`),
+    '语言开关必须是烘进产物的 <button type="button">，可见文字是两项同场的「中 / EN」');
+  assert.ok(home.includes(`data-labels="${pair}"`),
+    'data-labels 必须与元素文字同值 —— 首帧写回同一串，才没有「先显示 A 再变成 B」的替换');
+
+  for (const [page, html] of [['dist/index.html', home], ['dist/404.html', readFileSync('dist/404.html', 'utf8')]]) {
+    assert.ok(!html.includes('href="#"'),
+      `${page}: 产物里不该有 href="#" 这种「看着能点、点了跳到页顶」的死链；卡链接按 spec 8.1 在占位时不渲染 <a>`);
+    assert.match(html, /if\(l==='en'\)document\.documentElement\.lang='en'/,
+      `${page}: 语言偏好必须在 <head> 的内联脚本里落定，否则英文用户 reload 先看到一帧中文`);
+    assert.equal([...html.matchAll(/<script>([\s\S]*?)<\/script>/g)].length, 1,
+      `${page}: 内联守卫只许一段`);
+  }
+});
+
 test('no classical-Chinese branding anywhere', () => {
   // links 与 ui 同样是文案，之前没进扫描 = 网漏了两块。人工核过今天它们是干净的，
   // 补进来的意义在于以后往站点区加文案时网仍然罩得住。
