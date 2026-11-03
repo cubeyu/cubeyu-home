@@ -65,6 +65,22 @@ test('hero entrance waits for the curtain instead of playing underneath it', () 
 // 于是下面第一条是这一节唯一真正承重的断言。
 const loaderJs = () => readFileSync('src/js/loader.js', 'utf8');
 
+// 从 #works（或任何滚过 hero 的位置）刷新时，真狗在视口上方几百像素，而幕布上的 mark 在视口中心。
+// 不加这道闸的话 --drop-y ≈ -799px，狗会从屏幕中间【往上飞出屏幕】—— 用户看到的正是
+// 「开屏动画怪/没了」。装饰失败的正确后果是没有装饰：狗跟着幕布一起走掉。
+test('the drop declines to fly when the hero dog is not in view', () => {
+  const js = loaderJs();
+  const promote = /function promote\(\)[\s\S]*?\n  \}/.exec(js)?.[0] ?? '';
+  assert.ok(promote, '找不到 promote()');
+  assert.match(promote, /to\.top - window\.scrollY/, '落点要换算成视口坐标再判可见性');
+  assert.match(promote, /viewportTop < 0 \|\| viewportTop \+ to\.height > window\.innerHeight/,
+    '狗顶在视口之上或狗底在视口之下都必须直接 return');
+  // 必须在建克隆体【之前】判：判晚了会留下一只已经飞起来的狗
+  const guard = promote.search(/viewportTop < 0/);
+  const create = promote.search(/createElement/);
+  assert.ok(guard >= 0 && create >= 0 && guard < create, '可见性闸必须排在建克隆体之前');
+});
+
 test('the drop never owns the curtain: it cannot dismiss, hide, or delay it', () => {
   const js = loaderJs();
   assert.doesNotMatch(js, /curtain\.remove\(\)/, 'loader.js 不许摘幕布 —— 它一报错首屏就永久被盖住');

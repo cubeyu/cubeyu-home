@@ -58,6 +58,13 @@ export function initLoaderDrop() {
     // 幕布已经掀完、或目标还没布局（宽度 0）、或落在文档可视区外：什么都不做。
     if (from.width <= 0 || to.width <= 0) return;
 
+    // 落点必须【此刻就在视口里】。从 #works 或任何滚过 hero 的位置刷新时，真狗在屏幕上方
+    // 几百像素处（实测 scrollY=955 时狗顶 = 视口 -415），而幕布上的 mark 在视口中心 ——
+    // 于是 --drop-y ≈ -799px，狗会从屏幕中间【往上飞出屏幕】，比不飞更怪。
+    // 装饰失败的正确后果是「没有装饰」：狗就跟着幕布一起走掉。
+    const viewportTop = to.top - window.scrollY;
+    if (viewportTop < 0 || viewportTop + to.height > window.innerHeight) return;
+
     clone = document.createElement('span');
     clone.className = 'loader-drop';
     clone.setAttribute('aria-hidden', 'true');
