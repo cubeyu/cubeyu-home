@@ -100,6 +100,23 @@ test('the drop timing is not a second copy of --loader-hold', () => {
   assert.match(tokenCss(), /--loader-drop:/, '下落时长要有 token，与 --loader-hold/--hero-start 同一组');
 });
 
+// 下坠必须等幕布开始退场才起飞。两者同时开跑时，狗会在幕布还整块盖着的情况下从中心的
+// 加载标志脱开、滑进一片空网格中间停住 —— 窄屏最刺眼（916×1156 实测位移 +127/+122px，
+// 用户截图里"狗偏右压在进度条下面"就是这一帧）。串在同一个 --loader-exit 上，
+// 改幕布时长不会把下坠时机落下。
+test('the drop waits for the curtain to start leaving, via one shared token', () => {
+  const c = loaderCss();
+  assert.match(tokenCss(), /--loader-exit:\s*\.62s/, '幕布上滑时长要有 token');
+  const curtain = /\.site-loader\s*\{([^}]*)\}/s.exec(c)?.[1] ?? '';
+  assert.match(curtain, /animation:\s*site-loader-exit var\(--loader-exit\)/,
+    '幕布的退场时长必须走 --loader-exit，不能写字面 .62s');
+  assert.doesNotMatch(c, /\.62s/, 'loader.css 里不该再有第二处字面 .62s —— 那就是第二份真源');
+  const drop = /^\.loader-drop\s*\{([^}]*)\}/m.exec(c)?.[1] ?? '';
+  assert.match(drop, /animation:\s*loader-drop var\(--loader-drop\)[^;]*var\(--loader-exit\)/,
+    '下坠的延迟必须是 --loader-exit（幕布开始退场的时刻），不是 0s');
+  assert.match(drop, /\bboth\b/, '延迟段里要靠 fill 取 0% 关键帧，狗才停在标志原位而不是闪一下');
+});
+
 test('the clone always leaves: animationend plus a hard timeout', () => {
   const js = loaderJs();
   assert.match(js, /addEventListener\('animationend', land, \{ once: true \}\)/,

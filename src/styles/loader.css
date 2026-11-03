@@ -21,7 +21,7 @@
   /* 幕布上没有任何可交互内容，全程不吃指针：即使动画因任何原因没跑完，
      用户也仍然能点到底下的东西，不会被一块透明层困住。 */
   pointer-events: none;
-  animation: site-loader-exit .62s var(--ease-expo) var(--loader-hold) forwards;
+  animation: site-loader-exit var(--loader-exit) var(--ease-expo) var(--loader-hold) forwards;
 }
 
 @keyframes site-loader-exit {
@@ -111,7 +111,9 @@
   /* 必须绕左上角缩放：--drop-x/y 是【左上角之差】算出来的，而 scale() 默认绕中心，
      于是落点会偏 (原宽−目标宽)/2 —— 实测差 3.5px / 4.2px，正好是这半个缩放量。 */
   transform-origin: 0 0;
-  animation: loader-drop var(--loader-drop) var(--ease-expo) both;
+  /* 延迟 = 幕布上滑本身的时长（同一个 --loader-exit），于是下坠在幕布开始退场时才起飞。
+     fill: both 让这段延迟里狗就停在 0% 关键帧 = 加载标志原位，看起来仍是"标志还挂在幕布上"。 */
+  animation: loader-drop var(--loader-drop) var(--ease-expo) var(--loader-exit) both;
 }
 @keyframes loader-drop {
   /* 前 72% 是加速下坠（--ease-drop 是本站第二条、也是最后一条缓动例外，理由见 tokens.css），
