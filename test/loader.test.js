@@ -19,7 +19,10 @@ test('loader is present, announced, and its innards are hidden from AT', () => {
   assert.match(h, /class="site-loader" role="status" aria-live="polite" aria-label="正在准备首屏"/,
     '幕布必须自报状态：role=status + aria-label，否则读屏用户只看到一片静默');
   assert.match(h, /site-loader-mark" aria-hidden="true"/, '装饰性的狗图必须 aria-hidden');
-  assert.match(h, /site-loader-track" aria-hidden="true"/, '进度轨不是真进度，必须对 AT 隐藏');
+  // 进度轨已删（2026-11-04 裁定）：转环已经在说"我在等"，再来一根来回扫的条子是
+  // 同一句话讲两遍，而且它假装我们有可报告的进度 —— 并没有。钉住"不许回来"。
+  assert.doesNotMatch(h, /site-loader-track/, '幕布上不许有进度轨');
+  assert.doesNotMatch(loaderCss(), /loader-progress/, '进度轨的关键帧也要一起删干净');
 });
 
 // 幕布靠 CSS 动画自己退场（不用 JS）。若退场终态不遮内容，页面会被一块 fixed 层永久盖住。
@@ -145,10 +148,10 @@ test('the mark wears a spinning conic ring while it waits', () => {
   assert.doesNotMatch(dropRule, /\bfilter:/, '克隆体要与 mark 一致地不带投影，否则起飞帧长出影子');
 });
 
-// animationstart 是【会冒泡】的事件。幕布内部自己养着三条无限动画 —— mark 挥手的
-// loader-greet、转环 loader-spin、进度轨 loader-progress —— 它们都在 0ms 起跳，
+// animationstart 是【会冒泡】的事件。幕布内部养着 0ms 就起跳的无限动画 —— mark 挥手的
+// loader-greet、转环 loader-spin（这条 bug 被发现时还多一条进度轨 loader-progress），
 // 而幕布自己的 site-loader-exit 要等 --loader-hold 之后才开始。
-// 实测（addInitScript 全程记录）：t=53ms 就有三条 animationstart 冒到幕布上，
+// 实测（addInitScript 全程记录，删轨之前）：t=53ms 就有三条 animationstart 冒到幕布上，
 // site-loader-exit 到 t=1059ms 才来。所以"听到任何 animationstart 就放飞"
 // 等于把下坠提前整整一个 hold：狗在幕布还严严实实盖着整页的时候就已经落到右下角
 // （用户截图抓到的正是这一帧），等幕布掀开时动画早演完了 —— 读起来就是"开屏动画没了"。

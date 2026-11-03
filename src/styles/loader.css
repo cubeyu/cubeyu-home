@@ -32,11 +32,12 @@
   }
 }
 
+/* 进度轨在的时候，inner 这一列的下半截被 24px 间距 + 3px 轨道占着，所以要上抬 1.5vh
+   才读起来居中。轨道删掉之后这个补偿没有对象了 —— 留着就是一圈悬空地高出中心 16.5px。 */
 .site-loader-inner {
   display: flex;
   flex-direction: column;
   align-items: center;
-  transform: translateY(-1.5vh);
 }
 
 /* mark 用图集正中间那格（正脸平视）—— 与 hero 狗的静止态、mascot.js 的 IDLE 同一格，
@@ -105,27 +106,8 @@
 }
 @keyframes loader-spin { to { transform: translate(-50%, -50%) rotate(1turn); } }
 
-/* 不确定态进度轨：子元素来回扫，不是真的进度百分比 —— 我们没有可报告的进度 */
-.site-loader-track {
-  position: relative;
-  width: 76px;
-  height: 3px;
-  margin-top: 24px;
-  overflow: hidden;
-  background: var(--rule);
-}
-.site-loader-track i {
-  position: absolute;
-  inset: 0;
-  background: var(--mark-bg);
-  transform-origin: 0;
-  animation: loader-progress 1.25s ease-in-out infinite;
-}
-@keyframes loader-progress {
-  0% { transform: translate(-100%) scaleX(.35); }
-  52% { transform: translate(4%) scaleX(.72); }
-  to { transform: translate(100%) scaleX(.35); }
-}
+/* 进度轨已删除（2026-11-04 裁定）：转环已经把"有意图地在等"讲完，再来一根来回扫的
+   条子是同一个意思说两遍；而它本身是个谎 —— 我们没有可报告的进度。 */
 
 @media (max-width: 640px) {
   .site-loader-mark { width: 73px; }
