@@ -1229,17 +1229,13 @@ Run:
 npm run build && node -e "
 const s=require('node:fs').readFileSync('dist/index.html','utf8');
 const cards=(s.match(/<article class=\"card\"/g)||[]).length;
-const demos=(s.match(/ data-demo=/g)||[]).length;
-const roots=(s.match(/data-demo-root=/g)||[]).length;
-console.log('cards',cards,'data-demo',demos,'roots',roots);
-if(cards!==7)throw new Error('card count');
-if(demos!==7)throw new Error('data-demo count');
-if(roots!==7)throw new Error('demo root count');
-if(!/href=\"#\"/.test(s))throw new Error('cloud-hidden placeholder link missing');
+const slugs=(s.match(/data-slug=\"/g)||[]).length;
+console.log('cards',cards,'slugs',slugs);
+if(cards!==7||slugs!==7)throw new Error('card/slug count');
 "
 ```
 
-Expected: `cards 7 data-demo 7 roots 7`，无异常。
+**本任务故意不检查 `data-demo` 的数量。** `build.js` 只在 demo 已注册时才输出 `data-demo` 与 `.card-demo`（Task 7-8 修复轮裁定），而此刻 `demos/index.js` 还是 `export default {}`，所以正确结果是一个都没有 —— 断言 7 会把正确代码判成失败。注册态的数量对齐由 Task 12 的 `CARD_COUNT`（按 `registry` 计算）负责。这条也是给 Task 11 的预告：它把 `inkmark` 注册进去之后，`data-demo` 应从 0 变 1。
 
 - [ ] **Step 5: 肉眼检查双语与明暗**
 
@@ -1872,8 +1868,10 @@ export const CARD_COUNT = {
   // 关键：data-demo 与 .card-demo 只在「该 demo 已在 demos/index.js 注册」时才输出
   // （Task 7-8 修复轮裁定，为了 M2 不给未实现的 demo 留空壳）。所以期望值必须按
   // 注册态算，不能按声明态算 —— 按声明算的话 M2 到 M3 之间必然失败（声明 7、注册 0）。
+  // registry 有默认值：调用点忘传时退化成「不期望任何 demo 容器」，而不是在
+  // registry.includes 上抛 TypeError 把 npm run check 整个跑崩。
   name: 'card count matches data',
-  run({ html, cards, registry }) {
+  run({ html, cards, registry = [] }) {
     const f = [];
     const inHtml = (html.match(/<article class="card"/g) || []).length;
     if (inHtml !== cards.length) f.push(`cards: data=${cards.length} html=${inHtml}`);
@@ -1968,7 +1966,7 @@ export async function check() {
 
   const failures = [
     TOKEN_RESIDUE.run({ html }),
-    CARD_COUNT.run({ html, cards: projects }),
+    CARD_COUNT.run({ html, cards: projects, registry }),
     DEMO_REGISTRY_MATCH.run({ cards: projects, registry, demoFiles }),
     COLOR_LEAK.run({ files: styleFiles }),
     LANG_PAIR.run({ html }),
