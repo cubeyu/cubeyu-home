@@ -1,8 +1,13 @@
 // check.js —— 产物与源文件的契约断言，`npm run check` 的门禁（spec 9.1）。
 //
 // 分工（Task 9-10 的断言归属裁定，控制器定死）：本文件只管【契约】——
-// token 残留、卡数与注册表对齐、字面色值泄漏、双语成对、零运行时依赖、demo 文件与注册表互等、
-// 样式全合并、必需片段落地、canonical 与 site.url 同源。
+// token 残留、卡数与注册表对齐、字面色值泄漏、双语成对、产物值位无字面 undefined/null、零运行时依赖、
+// demo 文件与注册表互等、样式全合并、必需片段落地、canonical 与 site.url 同源。
+//
+// NO_UNDEFINED_VALUES 是产物侧兜底：这件事的最终 owner 是 src/lib/build-utils.js 的 esc()
+// —— 对 null/undefined 直接 throw（与本项目「静默空 <section> 当场红」同一纪律）。
+// 但 build-utils.js 不在本任务授权文件内，故先记在这里、留给后续任务收编；
+// 届时本断言继续留着也不碍事（构建期是第一道，产物侧是最后一道）。
 // color-scheme、全站唯一焦点环、`!important` 预算、`href="#"` 预算这四类【全局预算】留在 test/
 // （前两条在 test/data.test.js，后两条在 test/budgets.test.js），这里不重复：
 // 同一道门禁写两处，改一处忘另一处就漂，而且两边都会绿一段时间。
@@ -43,7 +48,7 @@ export const CARD_COUNT = {
   // spec 9.1 第 2 项：不硬编码数量，三者对齐即可。用户会换卡。
   // 关键：data-demo 与 .card-demo 只在「该 demo 已在 demos/index.js 注册」时才输出
   // （Task 7-8 修复轮裁定，为了 M2 不给未实现的 demo 留空壳）。所以期望值必须按
-  // 注册态算，不能按声明态算 —— 按声明算的话 M2 到 M3 之间必然失败（声明 7、注册 0）。
+  // 注册态算，不能按声明态算 —— 按声明算的话 M2 到 M3 之间必然失败（声明全部、注册 0）。
   // registry 有默认值：调用点忘传时退化成「不期望任何 demo 容器」，而不是在
   // registry.includes 上抛 TypeError 把 npm run check 整个跑崩。
   name: 'card count matches data',
@@ -63,29 +68,54 @@ export const CARD_COUNT = {
   },
 };
 
-// 双语成对的【结构】判据，不是两个总数相比。
-// 形状来自 src/lib/build-utils.js 的 i18n()：zh 与 en 两个兄弟 span 紧邻发射，
-// 中间只允许空白（404.html 那种模板手写的位置有换行）。
-const I18N_PAIR = /<span class="i18n i18n-zh">[\s\S]*?<\/span>\s*<span class="i18n i18n-en">[\s\S]*?<\/span>/g;
-
+// 双语成对的【文档顺序】判据，不是两个总数相比，也不再假装是邻接判据（修复轮 I-3 裁定）。
+// 旧版注释声称「zh 必须紧贴它的 en」，但正则里的 [\s\S]*? 根本不是邻接约束：
+// · `zh <span class="tag">x</span> en` 会靠回溯吞掉中间那个 </span> 拼成一对 —— 假绿；
+// · `zh</span><em>·</em><span …en` 这种被非 span 内容隔开的合法写法反倒配不上 —— 假红。
+// 两条保证不可兼得时只保一个诚实的：这里改为扫描 `class="i18n i18n-(zh|en)"` 的出现序列，
+// 要求【文档序严格 zh,en 交替】且两侧总数相等 —— 配对之间夹什么 markup 都不管，
+// 顺序坏了（zh zh en en / en 抢先 / 单侧漏文案）必抓；en 抢先那一支还被顺带 subsume 了。
 export const LANG_PAIR = {
   name: 'every i18n slot has both languages',
-  // 为什么这一版不会在「单侧漏文案」上放行（控制器裁定 5）：
-  // 判据是三个数互等 —— zh 的个数、en 的个数、以及【按结构配上的对数】。
-  // · 只写了 zh 没写 en：zh=1 / en=0 / pairs=0，三个数两两不等，报。
-  // · 只写了 en 没写 zh：同上，报。
-  // · 两侧总数相等但发射顺序坏了（zh zh en en）：pairs 只能配上 1 对，zh=2 / en=2，
-  //   对数 != 个数，报 —— 这正是「只比两个总数」会放行的一种（数字完全对称，画面是错的）。
-  // · en 在前 zh 在后（发射器参数写反）：正则要求 zh 紧邻 en，pairs=0，报。
+  // 为什么这一版不会在「单侧漏文案」上放行（控制器裁定 5 的语义不变，实现换判据）：
+  // · 只写了 zh 没写 en：zh != en，报。只写了 en 没写 zh：同上，报。
+  // · 两侧总数相等但顺序坏了（zh zh en en）：文档序第 2 槽是 zh（期望 en），交替在第二槽断，报
+  //   —— 这正是「只比两个总数」会放行的一种（数字完全对称，画面是错的）。
+  // · en 在前 zh 在后（发射器参数写反）：第 1 槽就断，报 —— 旧版靠「zh 紧邻 en」的正则形状抓它，
+  //   新版靠交替判据抓它，不再依赖跨度写法。
   // 已知盲区（不在这里补，交给 test/data.test.js 的 hasBoth 逐字段扫数据层）：
-  // 整对一起删掉时三个数仍然互等 —— 那是「少一个槽位」不是「少一侧文案」，
+  // 整对一起删掉时序列仍严格交替、两侧仍相等 —— 那是「少一个槽位」不是「少一侧文案」，
   // 配对检查在产物面上无法与「这段本来就没有双语」区分，所以由数据层那一侧守。
   run({ html }) {
-    const zh = (html.match(/class="i18n i18n-zh"/g) || []).length;
-    const en = (html.match(/class="i18n i18n-en"/g) || []).length;
-    const pairs = (html.match(I18N_PAIR) || []).length;
-    if (zh === en && en === pairs) return [];
-    return [`i18n unpaired: zh=${zh} en=${en} adjacent pairs=${pairs} — 每个 .i18n 位置都得是 zh 紧贴它的 en`];
+    const seq = [...html.matchAll(/class="i18n i18n-(zh|en)"/g)].map((m) => m[1]);
+    const zh = seq.filter((x) => x === 'zh').length;
+    const en = seq.length - zh;
+    const bad = seq.findIndex((lang, i) => lang !== (i % 2 === 0 ? 'zh' : 'en'));
+    if (zh === en && bad === -1) return [];
+    return [`i18n unpaired: zh=${zh} en=${en}`
+      + (bad === -1 ? '' : `，文档序第 ${bad + 1} 个槽位是 ${seq[bad]}（期望 ${bad % 2 === 0 ? 'zh' : 'en'}）`)
+      + ' —— 按文档顺序每个 zh 槽位必须由它的 en 紧随其后（严格 zh,en 交替）'];
+  },
+};
+
+// 只扫【值位】：属性整值恰好是 undefined/null，或元素的整段文本只有这一个词。
+// 故意不做全文档 substring 扫 —— 「undefined」是合法文案里可能出现的词（引文、技术名词），
+// 值位判据要误报除非真给什么东西起名叫 "undefined"。
+const UNDEFINED_VALUE = /\b(?:href|src|content|alt|aria-label|aria-describedby|title|data-[a-z-]+)="(?:undefined|null)"|>\s*(?:undefined|null)\s*</g;
+
+export const NO_UNDEFINED_VALUES = {
+  name: 'no literal undefined/null in artifact value positions',
+  // 可达路径（修复轮 I-2，评审实测）：site.description、site.nav.githubText / githubUrl
+  // 都没有数据层守卫（只有 site.title 有）。删掉任何一个，esc(undefined) 会把字符串
+  // "undefined" 静默烘进产物：<meta name="description" content="undefined"> 或导航里的
+  // >undefined<，而 LANG_PAIR / FRAGMENTS_PRESENT / TOKEN_RESIDUE / CANONICAL 全都不响。
+  // 最终 owner 应是 esc() 对 null/undefined 直接 throw（见文件头注），这条是产物侧兜底。
+  run({ html }) {
+    const hits = html.match(UNDEFINED_VALUE) || [];
+    return hits.length
+      ? [`产物值位出现字面 undefined/null：${[...new Set(hits)].slice(0, 3).join(' | ')}`
+        + ' —— 数据层某字段被删了或传参漏了（esc(undefined) 会把缺值烘成字符串 "undefined"）']
+      : [];
   },
 };
 
@@ -192,6 +222,9 @@ export const FRAGMENTS_PRESENT = {
   // 改一个类名不该让门禁变红，而片段没了就是真没了。
   // ANTI_FLASH 不列在这里 —— 它在 test/data.test.js 里已被逐字断言（内联守卫只许一段 + 语言回落那行）。
   run({ html }) {
+    // 先剥 HTML 注释再查（修复轮 M-7）：元素名出现在注释里不算「落地」。
+    // 否则一个陈旧的 <!-- <footer> --> 留档就能把「{{FOOTER}} 真的没了」掩掉 —— 探测返回 []。
+    const live = html.replace(/<!--[\s\S]*?-->/g, '');
     const required = [
       ['NAV', /<nav\b/],
       ['HERO', /<header\b/],
@@ -199,7 +232,7 @@ export const FRAGMENTS_PRESENT = {
       ['FOOTER', /<footer\b/],
     ];
     return required
-      .filter(([name, re]) => !re.test(html))
+      .filter(([name, re]) => !re.test(live))
       .map(([name]) => `产物里没有 {{${name}}} 片段渲染出来的根元素 —— 模板漏了这个 token，`
         + '或 build.js 的对应 renderer 被删了（renderTemplate 对「多给的 token」是静默的）');
   },
@@ -219,13 +252,17 @@ export const CANONICAL_MATCHES_SITE = {
   },
 };
 
-// 全部断言。加一项就往这里加一条，CLI 报的条数由数组长度算出来，不写死。
+// 全部断言。加一项就往这里加一条 —— 这是唯一的清单（修复轮 M-2）：
+// check() 直接 map 它，CLI 报的条数由数组长度算出来，不写死。
+// 以前这里和 check() 里的手写 run 列表是两条平行清单，能各漂一次，
+// 而漂了的那次是 CLI 报数在撒谎 —— 正是本任务要消灭的失败类型。
 export const ASSERTIONS = [
   TOKEN_RESIDUE,
   CARD_COUNT,
   DEMO_REGISTRY_MATCH,
   COLOR_LEAK,
   LANG_PAIR,
+  NO_UNDEFINED_VALUES,
   DEPENDENCIES_EMPTY,
   CSS_JS_SHIPPED,
   STYLESHEETS_MERGED,
@@ -247,23 +284,31 @@ export async function check() {
     ? readdirSync('src/js/demos').filter((x) => x.endsWith('.js') && x !== 'index.js').map((x) => x.replace(/\.js$/, ''))
     : [];
   const registry = Object.keys(demos);
-  const styleFiles = walk('src/styles').map((name) => ({ name, text: read(name) }));
+  // 样式契约只看 .css（修复轮 I-1）：walk 给的是目录里的一切文件，而说明文档
+  // （NOTES.md / README.md 之类）挨着样式放是常态 —— 不过滤的话 STYLESHEETS_MERGED 会让
+  // 那个 markdown 去 cssOrder 登记（失败消息原话如此，照做就把非 CSS 塞进了层叠），
+  // COLOR_LEAK 还会把文档里引述的 rgba(…) 当字面色值报。两条消费者共用这一处清单，
+  // 所以过滤放在清单建好的地方。
+  const styleFiles = walk('src/styles').filter((p) => p.endsWith('.css')).map((name) => ({ name, text: read(name) }));
   // 与 cssOrder / STYLESHEETS_MERGED 同形的相对路径（去掉 src/styles/ 前缀），
   // 否则两条断言的判据字符串会因分隔符或前缀不同而各漂一次。
   const styleRels = styleFiles.map(({ name }) => name.replace(/^src\/styles\//, ''));
 
-  const failures = [
-    TOKEN_RESIDUE.run({ html }),
-    CARD_COUNT.run({ html, cards: projects, registry }),
-    DEMO_REGISTRY_MATCH.run({ cards: projects, registry, demoFiles }),
-    COLOR_LEAK.run({ files: styleFiles }),
-    LANG_PAIR.run({ html }),
-    DEPENDENCIES_EMPTY.run({ pkg }),
-    CSS_JS_SHIPPED.run({ css, demoFiles }),
-    STYLESHEETS_MERGED.run({ css, styleFiles: styleRels }),
-    FRAGMENTS_PRESENT.run({ html }),
-    CANONICAL_MATCHES_SITE.run({ html, url: site.url }),
-  ].flat();
+  // 断言只跑一遍：输入组好一份上下文交给 ASSERTIONS，运行清单由清单本身派生（修复轮 M-2）。
+  // 每条断言的 run 只从 ctx 里解构自己需要的键；加断言只改 ASSERTIONS 一处，
+  // CLI 报的条数（ASSERTIONS.length）不可能再和实际跑的对不上。
+  const ctx = {
+    html,
+    css,
+    pkg,
+    cards: projects,
+    registry,
+    demoFiles,
+    files: styleFiles,
+    styleFiles: styleRels,
+    url: site.url,
+  };
+  const failures = ASSERTIONS.map((a) => a.run(ctx)).flat();
 
   return { ok: failures.length === 0, failures };
 }

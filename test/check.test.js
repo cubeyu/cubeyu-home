@@ -2,8 +2,8 @@
 // 每条断言都必须有「坏数据被抓到」与「好数据不误报」两个方向 —— 只有后者的话，
 // 断言可能压根没在跑（正则永不匹配、文件名拼错、传参漏字段），等于没测。
 // 分工（Task 9-10 的断言归属裁定）：本文件与 check.js 只管产物/源文件契约
-// （token 残留、数量与注册表对齐、字面色值、双语成对、零运行时依赖、demo 文件与注册表互等、
-// 样式全合并、必需片段落地、canonical 与 site.url 同源）。
+// （token 残留、数量与注册表对齐、字面色值、双语成对、产物值位无字面 undefined/null、零运行时依赖、
+// demo 文件与注册表互等、样式全合并、必需片段落地、canonical 与 site.url 同源）。
 // color-scheme、全站唯一焦点环、!important 预算、href="#" 预算这四类「全局预算」在 test/ 里
 // （前两条在 data.test.js，后两条在 budgets.test.js），这里不重复 —— 同一道门禁写两处必然漂移。
 import { test } from 'node:test';
@@ -11,11 +11,13 @@ import assert from 'node:assert/strict';
 import { existsSync } from 'node:fs';
 import {
   check,
+  ASSERTIONS,
   TOKEN_RESIDUE,
   CARD_COUNT,
   DEMO_REGISTRY_MATCH,
   COLOR_LEAK,
   LANG_PAIR,
+  NO_UNDEFINED_VALUES,
   DEPENDENCIES_EMPTY,
   CSS_JS_SHIPPED,
   STYLESHEETS_MERGED,
@@ -175,6 +177,57 @@ test('LANG_PAIR catches an en-first slot', () => {
   assert.equal(LANG_PAIR.run({ html }).length, 1);
 });
 
+// I-3（修复轮裁定）：旧版注释声称「zh 紧贴 en」，但 [\s\S]*? 不是邻接约束 ——
+// `zh <span class="tag">x</span> en` 会靠回溯吞掉中间的 </span> 拼成一对（假绿），
+// 被非 span 内容隔开的合法对反而报红（假红）。两条不可兼得，只保一个诚实的保证：
+// 【文档序严格 zh,en 交替】。配对之间夹什么 markup 都不管，顺序坏了必抓。
+test('LANG_PAIR judges by document order, not markup adjacency', () => {
+  const separated = '<span class="i18n i18n-zh">甲</span><em>·</em><span class="i18n i18n-en">A</span>';
+  assert.deepEqual(LANG_PAIR.run({ html: separated }), [], '被非 span 内容隔开的合法对不再是假红');
+  const nested = '<span class="i18n i18n-zh">甲<span class="tag">x</span></span><span class="i18n i18n-en">A</span>';
+  assert.deepEqual(LANG_PAIR.run({ html: nested }), [], '交替判据不关心配对内部长什么样');
+});
+
+// 保住的保证的另一半：错位必须抓，哪怕隔着任意 markup —— 判据只看 i18n 出现序列。
+test('LANG_PAIR catches order breakage across arbitrary markup', () => {
+  const bad = '<span class="i18n i18n-zh">甲</span><p>填</p>'
+    + '<span class="i18n i18n-zh">乙</span><span class="i18n i18n-en">B</span>'
+    + '<span class="i18n i18n-en">A</span>';
+  const r = LANG_PAIR.run({ html: bad });
+  assert.equal(r.length, 1);
+  assert.match(r[0], /zh=2 en=2/);
+  assert.match(r[0], /第 2 个槽位是 zh（期望 en）/, '断点要指到具体槽位，否则读者只能自己数');
+});
+
+// ── 5b. NO_UNDEFINED_VALUES（修复轮 I-2）───────────────────────────
+// esc(undefined) 把缺文案静默烘成字符串 "undefined"：site.description / nav.githubText 等
+// 无守卫字段删掉任何一个，四条老断言全绿而产物已带伤。只扫【值位】：
+// 属性整值恰为 undefined/null，或元素整段文本只有这一个词 —— 不做全文档 substring 扫，
+// 「undefined」是合法文案里可能出现的词。
+test('NO_UNDEFINED_VALUES catches a missing site.description baked into the meta', () => {
+  const r = NO_UNDEFINED_VALUES.run({ html: '<meta name="description" content="undefined">' });
+  assert.equal(r.length, 1);
+  assert.match(r[0], /content="undefined"/);
+});
+
+test('NO_UNDEFINED_VALUES catches the words as an element\'s whole text', () => {
+  const html = '<a href="/x"><span class="nav-text">undefined</span></a><p>null</p>';
+  const r = NO_UNDEFINED_VALUES.run({ html });
+  assert.equal(r.length, 1, '一条消息，命中值去重后一起报');
+  assert.match(r[0], />undefined</);
+  assert.match(r[0], />null</);
+});
+
+test('NO_UNDEFINED_VALUES catches a null href but not multi-word attribute values', () => {
+  assert.equal(NO_UNDEFINED_VALUES.run({ html: '<a href="null">x</a>' }).length, 1);
+  assert.equal(NO_UNDEFINED_VALUES.run({ html: '<a title="why undefined matters">x</a>' }).length, 0);
+});
+
+test('NO_UNDEFINED_VALUES ignores the words inside prose', () => {
+  const html = '<p>这段讲 undefined behavior 的引文合法</p><code>arr.length !== undefined</code>';
+  assert.deepEqual(NO_UNDEFINED_VALUES.run({ html }), []);
+});
+
 // ── 6. DEPENDENCIES_EMPTY ─────────────────────────────────────────
 test('DEPENDENCIES_EMPTY flags a runtime dep', () => {
   assert.equal(DEPENDENCIES_EMPTY.run({ pkg: '{"dependencies":{"vue":"^3"}}' }).length, 1);
@@ -228,6 +281,15 @@ test('FRAGMENTS_PRESENT passes on a full page', () => {
   assert.deepEqual(FRAGMENTS_PRESENT.run({ html }), []);
 });
 
+// M-7（修复轮）：旧版在整份 html 上匹配元素名，注释里的 <!-- <footer> --> 留档
+// 能把「{{FOOTER}} 真的没了」掩掉 —— 探测返回 []，正好放过本断言存在的理由那种事故。
+test('FRAGMENTS_PRESENT is not fooled by fragment roots parked inside comments', () => {
+  const html = '<nav></nav><header></header><section></section><!-- 旧页脚留档：<footer class="col foot"></footer> -->';
+  const r = FRAGMENTS_PRESENT.run({ html });
+  assert.equal(r.length, 1, '注释里的 <footer> 不算落地');
+  assert.ok(r[0].includes('FOOTER'));
+});
+
 // ── 10. CANONICAL_MATCHES_SITE ────────────────────────────────────
 // site.url 自 Task 7-8 起是 canonical 的唯一真源（{{CANONICAL}} 从它取）。
 // 这一项守的是「别退回第二处真源」：产物里的 href 必须逐字等于数据里那个值转义后的样子。
@@ -250,4 +312,20 @@ test('CANONICAL_MATCHES_SITE escapes the same way build.js does', () => {
 
 test('CANONICAL_MATCHES_SITE flags a missing canonical', () => {
   assert.equal(CANONICAL_MATCHES_SITE.run({ html: '<title>x</title>', url: 'https://techisle.top/' }).length, 1);
+});
+
+// ── 11. ASSERTIONS 清单本身（修复轮 M-2）──────────────────────────
+// 旧结构是两条平行清单：ASSERTIONS 数组 + check() 里手写的 run 调用，各漂一次而 CLI 报数撒谎
+// —— 正是本任务要消灭的失败类型。现在 check() 直接 map(ASSERTIONS)，运行清单由清单派生，
+// 剩下的风险只有「导出了断言常量却忘了进清单」，这条用例钉的就是这一半。
+test('ASSERTIONS lists every exported assertion exactly once', () => {
+  const all = [
+    TOKEN_RESIDUE, CARD_COUNT, DEMO_REGISTRY_MATCH, COLOR_LEAK, LANG_PAIR,
+    NO_UNDEFINED_VALUES, DEPENDENCIES_EMPTY, CSS_JS_SHIPPED, STYLESHEETS_MERGED,
+    FRAGMENTS_PRESENT, CANONICAL_MATCHES_SITE,
+  ];
+  assert.equal(ASSERTIONS.length, all.length, '清单条数 == CLI 打印条数的基数；新增断言必须同时进这里');
+  for (const a of all) {
+    assert.equal(ASSERTIONS.filter((x) => x === a).length, 1, `${a.name} 必须恰好在清单里出现一次`);
+  }
 });
