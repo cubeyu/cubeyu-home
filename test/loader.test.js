@@ -10,6 +10,9 @@ const html = () => readFileSync('dist/index.html', 'utf8');
 const loaderCss = () => readFileSync('src/styles/loader.css', 'utf8');
 const heroCss = () => readFileSync('src/styles/hero.css', 'utf8');
 const tokenCss = () => readFileSync('src/styles/tokens.css', 'utf8');
+// 反面例子写进注释后，doesNotMatch 会咬到说明文字本身（本文件的 inset:-22px 就踩过一次），
+// 所以结构性的"不许出现 X"断言一律先在去注释的文本上跑。
+const codeOnly = (css) => css.replace(/\/\*[\s\S]*?\*\//g, '');
 
 test('loader is present, announced, and its innards are hidden from AT', () => {
   const h = html();
@@ -105,18 +108,25 @@ test('the drop timing is not a second copy of --loader-hold', () => {
 // 这条测试存在的理由是这个效果有两个静默失效面：伪元素写错选择器会整圈不见；
 // mask 写成字面 #000 会被 COLOR_LEAK 判违规，而 mask 只吃 alpha、本来不该有颜色。
 test('the mark wears a spinning conic ring while it waits', () => {
-  const c = loaderCss();
+  const c = codeOnly(loaderCss());
   const pair = /\.site-loader-mark::before,\s*\.site-loader-mark::after\s*\{([^}]*)\}/s.exec(c)?.[1] ?? '';
   assert.ok(pair, '找不到两根环的共享规则 —— 环会整体消失，幕布退回一块静止的狗');
   assert.match(pair, /content:\s*""/, '伪元素必须有 content，否则根本不生成盒子');
-  assert.match(pair, /aspect-ratio:\s*1/, '必须是正圆：mark 是 83×95.8 的竖框，inset 直接撑会得到椭圆环');
+  // 正圆靠"确定宽度 + aspect-ratio:1"，两条都要钉住：
+  // 只判 aspect-ratio 的话，写成 inset 撑开（确定高度压过 aspect-ratio）会得到 127×139.8
+  // 的椭圆环，测试照样绿；而 `aspect-ratio:\s*1` 又能匹配上 `aspect-ratio: 156/180` 里
+  // 的那个 "1"。两条正向断言 + 一条排除 inset，三种改法才都拦得住。
+  assert.match(pair, /width:\s*calc\(100% \+ 44px\)/, '环的直径要由确定宽度给出，不能用 inset 撑');
+  assert.match(pair, /aspect-ratio:\s*1(?![0-9.\/])/, '必须是正圆：mark 是 83×95.8 的竖框，用 inset 撑会得到椭圆环');
+  assert.doesNotMatch(pair, /inset:/, 'inset 给的高度会压过 aspect-ratio，环变成椭圆');
   assert.match(pair, /position:\s*absolute/, '环要贴着狗定位');
   const mark = /^\.site-loader-mark\s*\{([^}]*)\}/m.exec(c)?.[1] ?? '';
   assert.match(mark, /position:\s*relative/, 'mark 必须是定位参照物，否则环会跑到视口中心去');
-  // 行首锚定 + 取【最后】一条：共享规则 `.site-loader-mark::before,\n.site-loader-mark::after {`
-  // 的第二行也以 `.site-loader-mark::after {` 开头，不锚行首就会抓到那条没有 conic 的公共体
-  // —— 这是本仓第三次踩同一个形状（前两见 loader.test.js 的 .loader-drop 与 mascot 的 .loader-drop）。
-  const ring = [...c.matchAll(/^\.site-loader-mark::after\s*\{([^}]*)\}/gm)].pop()?.[1] ?? '';
+  // 按内容挑，不按位置挑：共享规则 `.site-loader-mark::before,\n.site-loader-mark::after {`
+  // 的第二行也以 `.site-loader-mark::after {` 开头，不锚行首就会抓到那条没有 conic 的公共体；
+  // 而只锚行首再 .pop() 又依赖"转环写在后面"这个书写顺序 —— 本仓第四次踩同一个形状。
+  const ring = [...c.matchAll(/^\.site-loader-mark::after\s*\{([^}]*)\}/gm)].map((m) => m[1])
+    .find((b) => /conic-gradient\(/.test(b)) ?? '';
   assert.ok(ring, '找不到 ::after 转环自己的规则');
   assert.match(ring, /conic-gradient\(/, '转环是 conic 弧，不是一整圈边框');
   assert.match(ring, /var\(--ink-2\)\s*50%,\s*var\(--ink\)\s*100%/, '弧的尾→头要用 token，暗色下才自动翻色');
@@ -126,6 +136,13 @@ test('the mark wears a spinning conic ring while it waits', () => {
   assert.match(c, /@keyframes loader-spin\s*\{[^}]*rotate\(1turn\)/, '关键帧要转满一圈');
   // 环只在幕布那只狗身上；飞起来的克隆体带环会转出一圈残影
   assert.doesNotMatch(c, /\.loader-drop[^{]*::after/, '克隆体不许有转环');
+  // 环带来一个必须连带遵守的约束：filter 不能落在 mark 上 —— 它连伪元素一起投影，
+  // 转的是一圈残影而不是狗。克隆体也得跟着不投影：交接那一帧两者重合在同一位置，
+  // 只给克隆体留影子就是"狗起飞的那一帧凭空长出一块投影"（上一版就是这样，已改）。
+  const dropRule = /^\.loader-drop\s*\{([^}]*)\}/m.exec(c)?.[1] ?? '';
+  assert.ok(dropRule, '找不到 .loader-drop 自己的规则');
+  assert.doesNotMatch(mark, /\bfilter:/, 'mark 带 filter 会把转环投影成残影');
+  assert.doesNotMatch(dropRule, /\bfilter:/, '克隆体要与 mark 一致地不带投影，否则起飞帧长出影子');
 });
 
 test('the clone always leaves: animationend plus a hard timeout', () => {

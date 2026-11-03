@@ -83,7 +83,7 @@
   position: absolute;
   left: 50%;
   top: 50%;
-  /* 圆环按【长边 + 44px】定直径并保持正圆：mark 是 83×95.8 的竖框，
+  /* 圆环按【短边 + 44px】定直径并保持正圆：mark 是 83×95.8 的竖框，
      直接 inset: -22px 会得到一个椭圆环（lom 的 mark 本来就是正方形，才没这个问题）。
      两侧各留出的余量因此不等：横向 22px、纵向 15.6px —— 视觉上仍是"围着狗一圈"。 */
   width: calc(100% + 44px);
@@ -147,12 +147,11 @@
   /* 必须绕左上角缩放：--drop-x/y 是【左上角之差】算出来的，而 scale() 默认绕中心，
      于是落点会偏 (原宽−目标宽)/2 —— 实测差 3.5px / 4.2px，正好是这半个缩放量。 */
   transform-origin: 0 0;
-  /* 投影只给飞起来的那只，不在共享规则里：mark 身上挂着转环（见上面的 ::after），
-     共享的话等于让一段 conic 弧带着 5px/6px 的黄色残影转圈 —— 转的是脏影不是狗。
-     也绝不能把这条 filter 单独提成一条新规则插在共享规则与暗色规则之间：
-     lightningcss 会顺着相邻关系重新合并选择器，产物里 .site-loader-mark 会被并进
-     [data-theme=dark] 那条的列表，亮色幕布拿到暗色图集（实测踩过）。 */
-  filter: drop-shadow(5px 6px var(--mark-bg));
+  /* 飞的这一程【不带投影】—— 幕布上那只也不带，两边一致才是要紧的。
+     mark 加不了 filter：环是它的伪元素，drop-shadow 会连弧一起投影，转出来是一圈残影。
+     但若只给克隆体加，交接那一帧两者重合，狗就凭空长出一块影子 —— 起飞是同一只狗的
+     连续动作，不该在那里冒出可见变化。落定后由 hero.css 的软阴影接管，那一下读作"着陆"，
+     有变化是对的。 */
   animation: loader-drop var(--loader-drop) var(--ease-expo) both;
 }
 @keyframes loader-drop {
