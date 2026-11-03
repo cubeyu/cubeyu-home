@@ -11,11 +11,13 @@
 .lmask > span {
   display: block;
   transform: translateY(110%);
-  animation: lmask-up .9s var(--ease-expo) forwards;
+  /* 延迟必须从 --hero-start 起算，不能从 0s：幕布要盖到 .9s，
+     若字在幕布底下就落完，掀开时只剩静止标题 —— 入场动画整个白做。 */
+  animation: lmask-up .9s var(--ease-expo) var(--hero-start) both;
 }
 /* stagger：第二、三行各延后 .10s / .20s（延迟值由 base.css 的 reduced-motion 统一归零） */
-.lmask:nth-child(2) > span { animation-delay: .10s; }
-.lmask:nth-child(3) > span { animation-delay: .20s; }
+.lmask:nth-child(2) > span { animation-delay: calc(var(--hero-start) + .10s); }
+.lmask:nth-child(3) > span { animation-delay: calc(var(--hero-start) + .20s); }
 @keyframes lmask-up { to { transform: translateY(0); } }
 
 /* sub 行的两个 span 常驻可见（build.js 不挂 i18n-*）：中文名 + 拉丁身份行是两个品牌元素，
@@ -81,7 +83,7 @@
      第一版只抄了 to 里的 translateY(0)、没抄参照站基础规则的 translateY(12%)，
      结果只剩擦开、没有升起。时长与延迟照参照站取 1.5s / .24s。 */
   transform: translateY(12%);
-  animation: hero-illo-enter 1.5s var(--ease-expo) .24s forwards;
+  animation: hero-illo-enter 1.5s var(--ease-expo) calc(var(--hero-start) + .24s) both;
 }
 @keyframes hero-illo-enter {
   to { opacity: 1; clip-path: inset(0); transform: translateY(0); }

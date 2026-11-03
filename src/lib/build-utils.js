@@ -25,6 +25,7 @@ export function renderTemplate(tpl, tokens) {
 export const cssOrder = [
   'tokens.css',
   'base.css',
+  'loader.css',
   'hero.css',
   'cards.css',
   'demos/inkmark.css',

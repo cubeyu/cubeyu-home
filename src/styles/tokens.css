@@ -26,6 +26,16 @@
   /* hero 吉祥物的投影色。放在这里是因为它是全站唯一允许字面色值的文件 ——
      hero.css 的 drop-shadow 需要它，直接写 rgba() 会被 check.js 的 COLOR_LEAK 判失败。 */
   --shadow-illo: rgba(0, 0, 0, .08);
+  /* 开屏幕布的 32px 网格纸纹理线色 */
+  --loader-grid: rgba(0, 0, 0, .024);
+
+  /* 开屏时序的单一真源。幕布在 --loader-hold 后开始上滑，
+     hero 的逐词遮罩与吉祥物从 --hero-start 起跳 —— 两者必须一起算：
+     若 hero 仍从 0s 开始，字会在幕布底下落完，幕布升起时观众只会看到静止的标题。
+     --hero-start 略大于 --loader-hold，让「幕布开始上升」和「字开始落地」几乎同时，
+     掀开时正好看见第一行升起。 */
+  --loader-hold: .9s;
+  --hero-start: .95s;
 
   /* 排版与布局 —— 主题中性 */
   --font-sans: "Helvetica Neue", -apple-system, "PingFang SC", "Noto Sans SC", sans-serif;
@@ -60,6 +70,7 @@
   --link: #6E9BFF;
   /* 近黑影在 #0C0C0E 上几乎不显形，暗色下加深才托得住吉祥物 */
   --shadow-illo: rgba(0, 0, 0, .5);
+  --loader-grid: rgba(255, 255, 255, .05);
 }
 
 @media (prefers-reduced-motion: reduce) {

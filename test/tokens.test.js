@@ -54,6 +54,8 @@ function rootVars() {
 const THEME_NEUTRAL = new Set([
   '--font-sans', '--font-mono', '--ease-expo', '--dur-enter',
   '--col', '--rule-w', '--radius-sm', '--radius-pill',
+  // 开屏时序：时长不随配色变，属同一类中性变量
+  '--loader-hold', '--hero-start',
 ]);
 
 test('every non-neutral token is redefined for dark', () => {

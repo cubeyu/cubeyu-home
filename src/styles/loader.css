@@ -1,0 +1,94 @@
+/* loader.css —— 开屏幕布。纯 CSS 自退场，不依赖 JS。
+   为什么不用 JS：参照站的 loader 靠 .is-exiting 类退场，那是 Next.js 有水合时机可等；
+   本站是零依赖静态页，若用 JS 摘它，一旦脚本出错或被拦截，整页就被一块 fixed 幕布
+   永久盖住 —— 那是「装饰功能把主内容打死」的失效类，代价远大于收益。
+   所以这里用 animation-fill-mode: forwards 让幕布自己滑走并 visibility:hidden，
+   JS 禁用、脚本异常、模块加载失败都能正常退场。 */
+
+.site-loader {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  display: grid;
+  place-items: center;
+  background-color: var(--paper);
+  /* 32px 网格纸纹理：与参照站同款的两条 linear-gradient。
+     颜色走 --loader-grid 而不是字面值 —— 只有 tokens.css 允许写字面色值。 */
+  background-image:
+    linear-gradient(var(--loader-grid) 1px, transparent 0),
+    linear-gradient(90deg, var(--loader-grid) 1px, transparent 0);
+  background-size: 32px 32px;
+  /* 幕布上没有任何可交互内容，全程不吃指针：即使动画因任何原因没跑完，
+     用户也仍然能点到底下的东西，不会被一块透明层困住。 */
+  pointer-events: none;
+  animation: site-loader-exit .62s var(--ease-expo) var(--loader-hold) forwards;
+}
+
+@keyframes site-loader-exit {
+  to {
+    transform: translateY(-100%);
+    opacity: 0;
+    visibility: hidden;
+  }
+}
+
+.site-loader-inner {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  transform: translateY(-1.5vh);
+}
+
+/* mark 用狗的第 0 帧（正面看向读者）。复用已有图集而不是新做一张 logo：
+   狗比人更适合当小方块图标，且暗色下自动跟着换 -dark 变体。 */
+.site-loader-mark {
+  width: 66px;
+  height: 96px;
+  background-image: url("/assets/images/hero-dog.webp");
+  background-repeat: no-repeat;
+  background-size: 800% 100%;
+  background-position: 0% 50%;
+  /* loader-greet 是无限往复，按 spec 4.1 的循环例外走 ease-in-out */
+  animation: loader-greet 1.55s ease-in-out infinite;
+  filter: drop-shadow(5px 6px var(--mark-bg));
+}
+@keyframes loader-greet {
+  0%, to { transform: translate(0) rotate(-2deg); }
+  52% { transform: translateY(-5px) rotate(2deg); }
+}
+
+/* 不确定态进度轨：子元素来回扫，不是真的进度百分比 —— 我们没有可报告的进度 */
+.site-loader-track {
+  position: relative;
+  width: 76px;
+  height: 3px;
+  margin-top: 24px;
+  overflow: hidden;
+  background: var(--rule);
+}
+.site-loader-track i {
+  position: absolute;
+  inset: 0;
+  background: var(--mark-bg);
+  transform-origin: 0;
+  animation: loader-progress 1.25s ease-in-out infinite;
+}
+@keyframes loader-progress {
+  0% { transform: translate(-100%) scaleX(.35); }
+  52% { transform: translate(4%) scaleX(.72); }
+  to { transform: translate(100%) scaleX(.35); }
+}
+
+[data-theme="dark"] .site-loader-mark { background-image: url("/assets/images/hero-dog-dark.webp"); }
+
+@media (max-width: 640px) {
+  .site-loader-mark { width: 58px; height: 84px; }
+}
+
+/* reduced-motion：整块幕布直接不存在，而不是「停在原地不动」。
+   参照站那版是 animation:none —— 它的幕布靠 JS 摘，所以停在原地也还能退；
+   我们的幕布靠 animation 退场，把动画关掉就等于让幕布永久盖住首屏。
+   这里必须 display:none：装饰性动效的正确降级是「没有装饰」，不是「卡住」。 */
+@media (prefers-reduced-motion: reduce) {
+  .site-loader { display: none; }
+}
