@@ -33,12 +33,6 @@ test('every card carries both languages', () => {
   }
 });
 
-test('card numbering is sequential from N°01', () => {
-  projects.forEach((c, i) => {
-    assert.equal(c.no, `N°${String(i + 1).padStart(2, '0')}`, `${c.slug} should be N°${i + 1}`);
-  });
-});
-
 test('slug is unique and filesystem-safe', () => {
   const slugs = projects.map((c) => c.slug);
   assert.equal(new Set(slugs).size, slugs.length, 'duplicate slug');

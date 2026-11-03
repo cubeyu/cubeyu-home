@@ -2,7 +2,6 @@
 // demo: null 表示纯纸面卡，无微原型 —— 用户可能换卡，不得假设数量。
 export const projects = [
   {
-    no: 'N°01',
     slug: 'inkmark',
     label: { zh: '实时渲染', en: 'Live render' },
     cat: { zh: '编辑器', en: 'Editor' },
@@ -16,7 +15,6 @@ export const projects = [
     url: '#',
   },
   {
-    no: 'N°02',
     slug: 'weflow',
     label: { zh: '年度数字', en: 'Count up' },
     cat: { zh: '归档', en: 'Archive' },
@@ -30,7 +28,6 @@ export const projects = [
     url: '#',
   },
   {
-    no: 'N°03',
     slug: 'anchor-deck',
     label: { zh: '翻页', en: 'Deck' },
     cat: { zh: '演示', en: 'Slides' },
@@ -44,7 +41,6 @@ export const projects = [
     url: '#',
   },
   {
-    no: 'N°04',
     slug: 'mc-agent',
     label: { zh: '自主决策', en: 'Autoplay' },
     cat: { zh: '代理', en: 'Agent' },
@@ -58,7 +54,6 @@ export const projects = [
     url: '#',
   },
   {
-    no: 'N°05',
     slug: 'dailyhot',
     label: { zh: '换源', en: 'Switch' },
     cat: { zh: '接口', en: 'API' },
@@ -72,7 +67,6 @@ export const projects = [
     url: 'https://hot.techisle.top',
   },
   {
-    no: 'N°06',
     slug: 'keyboard-word',
     label: { zh: '逐字母判定', en: 'Keystroke' },
     cat: { zh: '练习', en: 'Drill' },
@@ -86,7 +80,6 @@ export const projects = [
     url: '#',
   },
   {
-    no: 'N°07',
     slug: 'cloud-hidden',
     label: { zh: '展开', en: 'Expand' },
     cat: { zh: '写作', en: 'Writing' },

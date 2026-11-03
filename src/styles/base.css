@@ -47,15 +47,6 @@ h3 { font-size: clamp(30px, 4.4vw, 40px); font-weight: 800; margin: 0; letter-sp
   color: var(--ink-2);
   text-transform: uppercase;
 }
-/* 数字 / 编号的等宽小字。cards.css 的 .card-no 走这个类（build.js 挂 class="card-no num"）。
-   「等宽 + 12px」这一对全站只在这里出现一次：页脚的偏好开关 `.pref-toggle` 从同一条拿，
-   M4 的动效开关共用 `.pref-toggle` 这个类，因此也不必抄第三份。审查 M3 掉的就是原先
-   `.pref-toggle` 把这两条重抄一遍 —— 那正违背本文件给 `.num` 写的「组件侧不再抄一遍」的纪律。
-   `font: inherit` 同理不写：文件开头 `button, input, textarea` 那条已经给到。
-   开关的颜色由后面 `.pref-toggle` 自己给（--ink-2），与 .num 的 --ink-3 不同，
-   同特异性、靠后置取胜，所以那条规则必须排在下面。 */
-.num, .pref-toggle { font-family: var(--font-mono); font-size: 12px; }
-.num { color: var(--ink-3); letter-spacing: .04em; }
 .tag {
   font-family: var(--font-mono);
   font-size: 12px;
@@ -142,8 +133,20 @@ section { padding-block: 12vh; }
    焦点环），而 cards.css 的边界是「作品卡 + 技能 + 站点 + 页脚」这套内容区。
    圆角取 --radius-pill —— spec 4.3 的圆角纪律是「卡片与区块 2px–8px，只有 pill 与圆点用 999px」，
    一个胶囊形的小开关正是 pill，不是被禁的那种大圆角玻璃卡片。
-   等宽与字号在上面 `.num, .pref-toggle` 那条拿，这里不再抄（审查 M3）。 */
-.pref-toggle { background: none; border: var(--rule-w) solid var(--rule); border-radius: var(--radius-pill); padding: 3px 10px; color: var(--ink-2); cursor: pointer; }
+   等宽 12px 直接写在这里：它原先挂在 `.num, .pref-toggle` 那条共享规则上，而 `.num` 是
+   作品卡序号（.card-no num）的类；序号整批去掉后 `.num` 零消费者，共享的借口就没了——
+   留一个没人用的类名不会"以后可能用到"，只会让下一个人去猜谁在用。
+   `font: inherit` 不写：文件开头 `button, input, textarea` 那条已经给到基础字体。 */
+.pref-toggle {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  background: none;
+  border: var(--rule-w) solid var(--rule);
+  border-radius: var(--radius-pill);
+  padding: 3px 10px;
+  color: var(--ink-2);
+  cursor: pointer;
+}
 /* hover 只在真有鼠标的设备上给：触屏下 :hover 会在点击后一直粘着，
    开关看起来停在「已强调」态，而下一次点别的又会残留到页脚另一头。 */
 @media (hover: hover) { .pref-toggle:hover { color: var(--ink); border-color: var(--rule-strong); } }

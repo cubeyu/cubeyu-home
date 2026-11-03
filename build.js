@@ -115,7 +115,6 @@ const hasDemo = (name) => typeof name === 'string' && Object.hasOwn(demoRegistry
 
 const cardHtml = projects.map((p) => `
     <article class="card" data-slug="${esc(p.slug)}"${hasDemo(p.demo) ? ` data-demo="${esc(p.demo)}"` : ''}>
-      <div class="card-no num">${esc(p.no)}</div>
       <div>
         <div class="card-meta">
           <span class="card-label">${i18n(p.label.zh, p.label.en)}</span>

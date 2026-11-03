@@ -13,7 +13,7 @@
 /* 窄屏上下叠：与 base.css / cards.css 同一个 640px 断点，不新造一档。 */
 @media (max-width: 640px) { .d-ink { grid-template-columns: 1fr; } }
 
-/* 栏标：等宽 12px 小标，与 base.css 的 .num / .eyebrow 同一档，颜色取三级墨。 */
+/* 栏标：等宽 12px 小标，与 base.css 的 .eyebrow 同一档，颜色取三级墨。 */
 .d-ink-cap { font-family: var(--font-mono); font-size: 12px; letter-spacing: .08em; color: var(--ink-3); }
 
 /* 源码栏。textarea 的字体已由 base.css 开头的 `button, input, textarea { font: inherit }` 接上正文，
