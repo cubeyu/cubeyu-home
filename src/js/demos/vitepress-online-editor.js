@@ -1,4 +1,4 @@
-// inkmark.js —— N°01「墨痕笔记」的微原型（spec 7.1）：左栏 Markdown 源码、右栏实时渲染，
+// vitepress-online-editor.js —— 同名作品卡的微原型（spec 7.1）：左栏 Markdown 源码、右栏实时渲染，
 // 一个「问 AI」按钮把光标所在那一行标成马克笔黄。零依赖，故意只做 markdown 的一个子集
 // （标题 / 任务列表 / 加粗 / 行内代码）—— 完整 CommonMark 是另一个项目，不是这个演示。
 //
@@ -103,8 +103,9 @@ export function markedLineText(value, idx) {
   return l;
 }
 
-// 契约（spec 5.1）：mount(el, ctx) → 返回 unmount。el 是卡里的 [data-demo-root="inkmark"] 容器。
-export function mountInkmark(el, ctx) {
+// 契约（spec 5.1）：mount(el, ctx) → 返回 unmount。el 是卡里的 [data-demo-root="vitepress-online-editor"] 容器。
+// 注册名 === 文件名 === projects.js 的 demo 字段 === 卡片 slug（demos/index.js 头注那条约定）。
+export function mountVitepressOnlineEditor(el, ctx) {
   const lang = ctx.lang === 'en' ? 'en' : 'zh'; // 与 base.css 的 :lang(en) 二分同口径：非 en 一律按 zh 画
   const T = LABELS[lang];
 
@@ -116,7 +117,7 @@ export function mountInkmark(el, ctx) {
     <div class="d-ink">
       <div class="d-ink-pane">
         <span class="d-ink-cap">${esc(T.src)}</span>
-        <textarea class="d-ink-src" name="inkmark-src" spellcheck="false" aria-label="${esc(T.src)}"></textarea>
+        <textarea class="d-ink-src" name="md-src" spellcheck="false" aria-label="${esc(T.src)}"></textarea>
       </div>
       <div class="d-ink-pane">
         <span class="d-ink-cap">${esc(T.out)}</span>

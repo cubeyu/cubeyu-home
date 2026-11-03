@@ -1,4 +1,4 @@
-/* demos/inkmark.css —— N°01 墨痕笔记微原型的样式。DOM 由 src/js/demos/inkmark.js 建，
+/* demos/vitepress-online-editor.css —— 那张卡的微原型样式。DOM 由 src/js/demos/vitepress-online-editor.js 建，
    类名一一对应（.d-ink / .d-ink-pane / .d-ink-cap / .d-ink-src / .d-ink-out / .d-ink-status /
    .d-md-* / .d-ink-ask）。
    纪律与本仓其余组件文件一致（spec 4 节）：零字面色值，颜色一律 var(--…)；
@@ -46,7 +46,7 @@
    本仓第一个这种工具类，所以形状自己写全（1px + clip-path 裁切，绝对定位不占版面）。
    两个消费者：勾选态标签 .d-md-sr，和「问 AI」的播报节点 .d-ink-status（审查 I3 把 aria-live
    从整块重渲染的 .d-ink-out 挪到它自己的节点上，那个节点就是纯播报、不给眼睛看的）。
-   不抽进 base.css：本轮只授权改 demos/inkmark.css，等它真成为全站第三、第四个消费者时再归位。 */
+   不抽进 base.css：它是本仓第一个这种工具类，等出现全站第三、第四个消费者时再归位。 */
 .d-md-sr, .d-ink-status {
   position: absolute; width: 1px; height: 1px; margin: -1px; padding: 0;
   overflow: hidden; clip-path: inset(50%); white-space: nowrap;
