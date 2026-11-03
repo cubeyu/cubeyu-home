@@ -31,7 +31,9 @@
 .card-title a { text-decoration: none; color: var(--ink); border-bottom: var(--rule-w) solid transparent; }
 .card-title a:hover { border-bottom-color: var(--ink); }
 
-.card-quote { margin: 10px 0 0; max-width: 62ch; color: var(--ink-2); }
+/* 15px / 1.95 是参照站 .pinfo p 的实测值（h3 用 clamp 到 40px 之后，
+   16px/24px 的说明文字相对太粗太重，卡片会读起来像正文段落而不是注脚）。 */
+.card-quote { margin: 10px 0 0; max-width: 62ch; font-size: 15px; line-height: 1.95; color: var(--ink-2); }
 .card-tags { margin-top: 14px; display: flex; gap: 6px; flex-wrap: wrap; }
 .card-demo { margin-top: 20px; border: var(--rule-w) solid var(--rule); border-radius: var(--radius-sm); background: var(--surface); padding: 16px; }
 /* 12px：spec 4.3 的阶梯是 58 / 30 / 16 / 12 加正文 16/24，本批其余等宽小项也全是 12px。
@@ -56,5 +58,13 @@
 .site a { font-family: var(--font-mono); font-size: 12px; text-decoration: none; }
 .site-note { font-size: 12px; color: var(--ink-3); }
 
-/* 页脚：上边线走 .foot 上的 .rule-t */
-.foot { padding-block: 40px; display: flex; justify-content: space-between; gap: 16px; flex-wrap: wrap; font-family: var(--font-mono); font-size: 12px; color: var(--ink-3); }
+/* 页脚：上边线走 .foot 上的 .rule-t。纵向节奏照参照站 .col > footer
+   （桌面 12vh / 46px，窄屏 8vh / 32px 在 base.css 的 760 档里，与 .col、section 同一断点）。 */
+.foot { padding-block: 12vh 46px; display: flex; justify-content: space-between; gap: 16px; flex-wrap: wrap; font-family: var(--font-mono); font-size: 12px; color: var(--ink-3); }
+
+/* 页脚的窄屏节奏（参照站 .col > footer：12vh/46px → 8vh/32px）。
+   写在 cards.css 而不是 base.css 的 760 档里：.foot 的桌面值在本文件更靠后，
+   跨文件的同特异性后来者赢，base.css 里那条会被静默覆盖。 */
+@media (max-width: 760px) {
+  .foot { padding-block: 8vh 32px; }
+}

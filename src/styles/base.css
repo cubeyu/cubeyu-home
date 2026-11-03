@@ -13,8 +13,9 @@ body {
    组件确有理由的显式 font-family（.pref-toggle 的等宽）照样能覆盖，本条 0-0-3。 */
 button, input, textarea { font: inherit; }
 
-/* 窄栏：spec 4.1 --col = 820px */
-.col { max-width: var(--col); margin-inline: auto; padding-inline: 20px; }
+/* 窄栏：spec 4.1 --col = 820px。内边距按参照站实测取 32px，≤760px 回落到 20px ——
+   20px 是参照站【窄屏】的值，早期我们把它当成了桌面值（与 h1 的 58px 同一类错）。 */
+.col { max-width: var(--col); margin-inline: auto; padding-inline: 32px; }
 
 /* 参照站同一条（body, html { max-width: 100%; overflow-x: clip }）。
    hero 的吉祥物按 em 锚在标题上，盒子的右边缘会越过 .col 的内容盒几个像素，
@@ -33,7 +34,7 @@ html, body { max-width: 100%; overflow-x: clip; }
    字是 58px 而人是 496px 高时，两者不可能读成「一个人扶着字」。 */
 h1 { font-size: clamp(64px, 12vw, 140px); font-weight: 700; line-height: .94; letter-spacing: -.045em; margin: 0; }
 h2 { font-size: 16px; font-weight: 400; margin: 0; }
-h3 { font-size: 30px; font-weight: 800; margin: 0; letter-spacing: -.01em; }
+h3 { font-size: clamp(30px, 4.4vw, 40px); font-weight: 800; margin: 0; letter-spacing: -.03em; }
 
 /* eyebrow：等宽小标，形如 作品 / WORKS */
 .eyebrow {
@@ -81,11 +82,18 @@ a:hover { color: var(--link); text-decoration-color: var(--link); }
 html:not(:lang(en)) .i18n-en { display: none; }
 html:lang(en) .i18n-zh { display: none; }
 
-/* 区块节奏 */
-section { padding-block: 72px; }
-@media (max-width: 640px) {
-  h3 { font-size: 24px; }
-  section { padding-block: 48px; }
+/* 区块节奏：参照站是 `main > section { padding: 12vh 0 }`，窄屏 8vh —— 用 vh 而不是定值，
+   区块的呼吸量跟着视口走，首屏高（86vh）与内容区的疏密才成同一套比例。
+   我们原先的 72px / 48px 是定值，视口越高显得越挤。 */
+section { padding-block: 12vh; }
+/* 参照站全站只有一个 760px 断点（.col 内边距、区块节奏、导航行、卡片都在那里换档）。
+   我们另有自己的 640px（卡片塌成一列）与 480/360px（hero）档，那些是结构性的、不动；
+   这一档只承接"同一断点"里属于节奏的那几条。
+   .nav 的降档不在这里 —— 它自己的规则排在文件更后面，同特异性下后来者赢，
+   写在这里等于没写；文件末尾另起一档。跨文件的 .foot 同理归 cards.css。 */
+@media (max-width: 760px) {
+  .col { padding-inline: 20px; }
+  section { padding-block: 8vh; }
 }
 /* h1 不在这里降档：clamp 的下界已经接管（见上面的排版阶梯），
    再写一条 h1 { font-size: … } 只会因为同特异性、排在后面而赢掉 clamp，
@@ -94,8 +102,10 @@ section { padding-block: 72px; }
   h1 { font-size: 52px; }
 }
 
-/* 导航条：等宽小字，左右两端对齐。语言切换与 GitHub 链接都在右侧一组 */
-.nav { display: flex; justify-content: space-between; align-items: center; padding-block: 20px; font-family: var(--font-mono); font-size: 12px; }
+/* 导航条：等宽小字，左右两端对齐。语言切换与 GitHub 链接都在右侧一组。
+   padding-top 34px 是参照站 .col > header 的实测值（窄屏 22px，见上面 760 档），
+   它没有 padding-bottom —— 下面的 hero 是 86vh 的居中容器，行距由它自己给。 */
+.nav { display: flex; justify-content: space-between; align-items: center; padding-top: 34px; font-family: var(--font-mono); font-size: 12px; }
 /* 审查 I4：语言开关原先是 `<a href="#">` + preventDefault —— 关掉 JS 后它是个会滚到页顶、
    什么都切不了的假链接，Ctrl/中键还会多开一个同页标签。现在它是真 `<button type="button">`，
    无 JS 时点了不动，与页脚主题开关一样诚实（主题开关本来就是按钮，本来也不会骗人去跳转）。
@@ -151,3 +161,10 @@ section { padding-block: 72px; }
    少这两个名字它就只拿到 color-scheme 那半（UA 环跟着调色板走），拿不到这条作者环 ——
    表单控件本来就该和按钮同级，写漏了才是要修的东西。 */
 :where(a, button, input, textarea, [tabindex]):focus-visible { outline: 2px solid var(--ink); outline-offset: 2px; }
+
+/* 导航条的窄屏降档必须排在 .nav 自己那条之后：两条同为 0-1-0，写在前面会被后来者赢掉，
+   等于 22px 从来没生效过（上面 760 档里只留了 .col 与 section，它们自己的规则都在前头）。
+   34px → 22px 是参照站 .col > header 的实测换档值。 */
+@media (max-width: 760px) {
+  .nav { padding-top: 22px; }
+}

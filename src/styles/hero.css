@@ -6,7 +6,7 @@
    不是加装饰：h1 升到 clamp(…,140px) 之后，标题块 2.82em 高 + 副行 + 吉祥物垂到块底以下，
    靠 padding 排不出参照站那种「标题在首屏竖向居中、脚落在标题之下」的构图。
    min-height 而非 height —— 视口很矮时内容仍然完整可见，不被裁掉。 */
-.hero { display: flex; flex-direction: column; justify-content: center; min-height: 86vh; padding-block: 40px; }
+.hero { display: flex; flex-direction: column; justify-content: center; min-height: 86vh; }
 
 /* 吉祥物是【对标题盒】做绝对定位的装饰，所以定位参照物必须是 h1 本身，
    不是外层 .hero —— 参照站的 .hero h1 也是 position: relative。
