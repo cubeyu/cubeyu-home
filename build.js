@@ -29,9 +29,13 @@ const tpl404 = readFileSync(join(root, 'src/templates/404.html'), 'utf8');
 // 行为由 Task 10 的 i18n.js 挂上；此处先把 DOM 与双语节点烘出来。
 // ui.langZh / langEn 也过 esc()：这两个值今天是「中」「EN」，安全得没什么好挡的，
 // 但整行别的字段都转义了，唯独这一处裸插 —— 下一段复制这行代码的人不会注意到差别。
+// Task 10 补 data-labels：i18n.js 切换后要把当前语言写回按钮文字，而它不读 src/data/*
+// （浏览器侧拿不到数据层），标签只能从 DOM 属性进来。值同样过 esc()，不照 brief 裸插。
+// 静态文字保持「中 / EN」成对：这是无 JS 态与首帧的可见 affordance，
+// i18n.js 的 paint() 之后会把它收成当前语言一项（brief 定的形状）。
 const nav = `<nav class="col nav"><a href="/">${i18n('首页', 'Home')}</a>`
   + `<span class="nav-right">`
-  + `<a href="#" data-lang-toggle>${esc(ui.langZh)} / ${esc(ui.langEn)}</a>`
+  + `<a href="#" data-lang-toggle data-labels="${esc(ui.langZh)},${esc(ui.langEn)}">${esc(ui.langZh)} / ${esc(ui.langEn)}</a>`
   + `<a href="${esc(site.nav.githubUrl)}">${esc(site.nav.githubText)}</a>`
   + `</span></nav>`;
 
@@ -126,11 +130,20 @@ const footerHtml = `<footer class="col foot rule-t"><span>${i18n(ui.copyright.zh
 // Task 9 的 theme.js 会成为第三份副本、'cubeyu-theme' 这个键名也会在三个地方各漂一次。
 // 现在只有这一处定义，两个模板拿同一个 {{ANTI_FLASH}} 片段 token（裸值，不过 esc：
 // 转义它等于把 <script> 变成页面上的一行文本）。
-// 键名 cubeyu-theme 是 prefs.js（Task 9）与这里唯一的共享约定。
+// 键名 cubeyu-theme 是 prefs.js（Task 9）与这里唯一的共享约定，test/prefs.test.js 两侧都钉了。
+//
+// Task 9 实测改掉一处：写入原本在 try 里面，于是「读偏好失败」连带「写入也失败」。
+// 隐私模式下 localStorage 一访问就抛（复现方法见报告：给同源 iframe 的 window 装一个
+// 抛异常的 localStorage getter，让同一份 head 在它里面重跑一遍），首帧因此拿不到 data-theme，
+// 暗色系统 + 存储被禁的用户照样白闪 —— 正是这段脚本存在的理由。
+// 现在 try 只包住读，写入无条件执行，读不到就按 'auto' 走系统色。
+// 判据也从 `t==='auto'` 换成 `light|dark` 白名单，与 prefs.js 的 normalizeTheme 同一语义：
+// 存储里是坏值（手改出来的 'blue'）时首帧就按系统色画，而不是写进 data-theme="blue"、
+// 等 theme.js 再纠正回系统色 —— 中间那一帧就是白闪。
 const antiFlash = `<script>
 /* 首帧防闪烁：CSS 加载前写入偏好，否则暗色用户每次刷新都白闪一下。spec 6.1 */
-try{var t=localStorage.getItem('cubeyu-theme')||'auto';
-document.documentElement.dataset.theme=(t==='auto')?(matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light'):t;}catch(e){}
+var t='auto';try{t=localStorage.getItem('cubeyu-theme')||'auto'}catch(e){}
+document.documentElement.dataset.theme=(t==='light'||t==='dark')?t:(matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light');
 </script>`;
 
 // 区块内容按 id 取。这里原来是 `[s.id] ?? ''`，它兜的「新增了一个 section 但还没实现内容」

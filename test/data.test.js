@@ -97,6 +97,30 @@ test('hero brand head matches the document title', () => {
   // 同一件事写两处，将来改扫法时只会改到一处。
 });
 
+// 上面那条 hasBoth 只保证两侧都【有】，没保证两侧【同值】，而 build.js 的遮罩渲染只取 l.zh：
+//   site.hero.lines.map((l) => `<span class="lmask"><span>${esc(l.zh)}</span></span>`)
+// 单份渲染成立的理由是这三行是品牌字头 Cubeyu® + 拉丁动词 builds / small tools.，中英本就是同一串。
+// 这个前提是承重的：lmask 节点上没有 .i18n-* 类，CSS 的语言显隐罩不到它，英文态没有第二份文字可换。
+// 所以一旦有人把某行的 en 改成不同值，英文模式下就静默显示中文 —— 没有报错、没有空节点，
+// 只有截图上看不出来的一处错。真要做出双语差异时得改渲染结构（每行发 zh / en 两层），不能只改数据。
+test('hero mask lines are identical in both languages, as build.js assumes', () => {
+  site.hero.lines.forEach((l, i) => {
+    assert.equal(l.en, l.zh,
+      `site.hero.lines[${i}]：遮罩行按「中英同值」设计，build.js 只渲染 l.zh，`
+      + `改这一行的 en 会让英文态静默显示中文；需要双语差异时得改渲染结构，不能只改数据`);
+  });
+});
+
+// Task 10 Step 5：无 JS 完整性。双语两套节点在构建时烘进产物，运行时只翻 <html lang>，
+// 所以关掉 JavaScript 页面仍有全部文案 —— 这条断言扫的是 dist/，不是 src/，
+// 测的正是「内容不靠运行时渲染」这件事本身（先 npm run build 再 npm test）。
+test('content does not depend on JS to appear', async () => {
+  const { readFileSync } = await import('node:fs');
+  const html = readFileSync('dist/index.html', 'utf8');
+  assert.ok(html.includes('笔记存在自己电脑上'), 'zh copy must be baked at build time');
+  assert.ok(html.includes('Your notes stay on your own machine'), 'en copy must be baked too');
+});
+
 test('no classical-Chinese branding anywhere', () => {
   // links 与 ui 同样是文案，之前没进扫描 = 网漏了两块。人工核过今天它们是干净的，
   // 补进来的意义在于以后往站点区加文案时网仍然罩得住。

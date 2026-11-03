@@ -60,6 +60,22 @@ test('the inline anti-flash guard reads the same key prefs.js writes', () => {
     'build.js ANTI_FLASH must read the exact key writePref("theme") produces');
 });
 
+// 这段脚本唯一的价值是「比首帧更早」，所以两件事必须成立，都得钉住：
+// 1) 写入不在 try 里面 —— 读不到偏好（隐私模式）时也要按系统色写下去，否则暗色用户照样白闪；
+// 2) 只有 light / dark 两个值能直接落到 data-theme，坏值回落到系统色，与 normalizeTheme 同语义。
+// 浏览器侧的同一条实测：给同源 iframe 的 window 装一个抛异常的 localStorage getter，
+// 解析到这段脚本为止就检查 <html> —— 改前 data-theme 是 null，改后是系统色。
+test('the inline guard writes data-theme even when the read throws', () => {
+  const buildSrc = readFileSync('build.js', 'utf8');
+  const tryAt = buildSrc.indexOf('try{');
+  const catchAt = buildSrc.indexOf('}catch(e){}', tryAt);
+  const writeAt = buildSrc.indexOf('document.documentElement.dataset.theme=');
+  assert.ok(tryAt > 0 && catchAt > tryAt && writeAt > catchAt,
+    'data-theme 的写入必须在 try/catch 之外：包在 try 里时，localStorage 一抛就连同写入一起没了，首帧回到默认亮色');
+  assert.match(buildSrc, /dataset\.theme=\(t==='light'\|\|t==='dark'\)\?t:/,
+    '内联判据必须是 light|dark 白名单，坏偏好值不能直接写进 data-theme');
+});
+
 // theme.js 取文案是 labels[ORDER.indexOf(mode)] —— 下标直接落在数组上。
 // 一旦标签项数与三态错开（加一个「跟随」少一个「亮」），点「亮」会显示「暗」的字，
 // 而 data-theme 确实切到了亮：颜色和文字各说一半真话，肉眼看截图发现不了。

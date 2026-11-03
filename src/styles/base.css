@@ -108,3 +108,11 @@ section { padding-block: 72px; }
    1px 的发丝线描边在键盘焦点上根本认不出来。2px 实墨 + 2px 外偏移，明暗两态都靠 --ink 自动翻转。
    :focus-visible（不是 :focus）保证鼠标点击不留环、键盘 Tab 必有环。 */
 .pref-toggle:focus-visible { outline: 2px solid var(--ink); outline-offset: 2px; }
+/* 语言切换在 Task 10 之后是一个真控件（改 <html lang>），不能再靠 UA 默认焦点环：
+   Chrome 的 `outline: auto` 取的是 -webkit-focus-ring-color，跟的是【操作系统】的深浅，
+   不是我们的 data-theme。实测页面暗 + 系统亮时它是 rgb(16,16,16)，压在 --paper 的
+   rgb(12,12,14) 上对比度 1.02:1 —— 键盘用户 Tab 到它等于没有焦点指示（spec 9.2 明确要避免）。
+   本批新增的两个控件到此罩全（.pref-toggle 上一条、语言切换这一条）。
+   站点其余链接在暗色下同样是那个 1.02:1 的 UA 环，但那是 Task 7-8 已验收过的外观，
+   改成全局 a:focus-visible 属于跨批次视觉决定，已记进报告留给控制器。 */
+[data-lang-toggle]:focus-visible { outline: 2px solid var(--ink); outline-offset: 2px; }
