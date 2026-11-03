@@ -88,6 +88,18 @@ test('the panel entrance animation restarts, and is gated on the JS upgrade', ()
     '时长由 base.css 的全局归零块统一处理，组件里再写一份就是第二个真源');
 });
 
+test('the tab bar sits below the fold, and carries the section rhythm itself', () => {
+  const css = stripComments(readFileSync(CSS, 'utf8'));
+  const bar = /^\.tabs\s*\{([^}]*)\}/m.exec(css)?.[1] ?? '';
+  // 首屏切到「作品 技能 站点」就是这么来的：hero 86vh + 导航行 ≈ 763px，
+  // 而 .tabs 紧贴 hero 下沿长出来。参照站的 tab 条坐在第一个 section 的 12vh 上边距里，
+  // 所以它天然在折叠线以下 —— 86vh + 12vh = 98vh，再叠上导航行的固定高度，任何窗口高度都落在 fold 之下。
+  assert.match(bar, /margin-block-start:\s*12vh/, '.tabs 必须自己带上 12vh 的上边距');
+  assert.doesNotMatch(bar, /padding-block-start/, '必须是 margin 不是 padding：.reel 按盒子高度居中，padding 会把盒子一起撑高');
+  // 折叠态下这段距离只能算一次，否则 tab 条与内容之间叠出 160px+ 的空档
+  assert.match(css, /html\.has-tabs section\s*\{\s*padding-block-start:\s*0/, '面板自己那份 12vh 要收掉');
+});
+
 test('the tab bar visual signature uses tokens, not literals', () => {
   const css = stripComments(readFileSync(CSS, 'utf8'));
   const band = /\.tab::after\s*\{([^}]*)\}/s.exec(css)?.[1] ?? '';

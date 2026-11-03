@@ -3,15 +3,27 @@
    选中态底下那条黄带是 ::after 的 scaleX(0)→1（.8s），右上角是个 220px 的空心大编号。
    纪律同其它组件：零字面色值，颜色一律 var(…)。 */
 
+/* 上边距这 12vh 是承重的，不是留白审美：
+   .hero 是 86vh，导航行约 52px，两者相加 763px —— 在 820 高的视口里只剩 57px 给首屏底部。
+   参照站的 tab 条坐在第一个 section 的 12vh 上边距【里面】，所以它天然在折叠线以下；
+   我们把它发成 hero 的兄弟节点、又没带上边距，首屏就会把「作品 技能 站点」切一半。
+   12vh 与 section 的节奏同源，视口越高这段越大，切不切得到与窗口高度无关。
+   用 margin 不用 padding：.reel 是按这条盒子的高度居中的，padding 会把盒子一起撑高，
+   编号就跟着偏到字行上方去了；margin 只挪位置、不改盒子，居中基准仍然是那一行字。 */
 .tabs {
   display: flex;
   align-items: flex-end;
   flex-wrap: wrap;
   gap: 12px 42px;
+  margin-block-start: 12vh;
   margin-bottom: 48px;
   padding-bottom: 16px;
   position: relative;
 }
+/* 折叠成 tab 后，这段上边距由 tab 条一个人扛：面板自己那份 12vh 要收掉，
+   否则「tab 条 → 内容」之间会叠出 48+16+12vh ≈ 163px 的空档。
+   无 JS 时区块是竖着堆的，各自的 12vh 必须留着当分隔节奏。 */
+html.has-tabs section { padding-block-start: 0; }
 
 /* 无 JS 时这里就是一排普通锚点（href="#works" 真的能滚过去），
    所以【不带】黄带、不带选中态样式 —— 那些是 JS 加上 aria-selected 之后才出现的。
