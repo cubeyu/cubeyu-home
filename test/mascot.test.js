@@ -46,6 +46,22 @@ test('mascot does not animate for reduced motion or touch', () => {
   assert.match(js, /prefers-reduced-motion[\s\S]{0,120}return/, 'reduced-motion 必须不追踪，狗停在静止帧');
 });
 
+// 锚点契约。上一版写的是 `right: 0; height: clamp(320px, 60vh, 560px)`，人形浮在 820px
+// 栏的右边缘、离最近的字 316px（实测），读起来是「一张图放在标题旁边」而不是
+// 「一个人扶着字」—— 而 112 项测试与 11 项 check 全绿，没有任何东西会因此变红。
+// 参照站的写法把这件事钉在 CSS 里：left/bottom/height 全是 em，em 就是 h1 的字高，
+// 所以字放大时手仍然落在字尾，缩小时也不会脱开。锚点生效的前提是包含盒是 h1。
+test('hero illustration is anchored to the headline in em, not to the column edge', () => {
+  const css = readFileSync('src/styles/hero.css', 'utf8');
+  const illo = /\.hero-illo\s*\{([^}]*)\}/s.exec(css)?.[1] ?? '';
+  assert.match(illo, /left:\s*[\d.]+em/, '吉祥物必须按 em 锚在标题的字宽上，换字号才不脱开');
+  assert.match(illo, /height:\s*[\d.]+em/, '高度也要按 em，人才跟着标题一起缩放');
+  assert.match(illo, /bottom:\s*-[\d.]+em/, '脚的位置也要按 em，才始终垂在标题块底边以下同样多');
+  assert.doesNotMatch(illo, /right:\s*\.?\d/, '不得改用 right 定位：那锚的是栏的右边缘，与标题长度无关');
+  assert.match(css, /\.hero h1\s*\{[^}]*position:\s*relative/,
+    'h1 必须是定位参照物 —— 挂在 .hero 上时包含盒把副行与下滑提示一起算进去，脚会落到副行以下');
+});
+
 // 开屏"升起"的起点必须存在。第一版只抄了参照站关键帧里的 translateY(0)，
 // 没抄它基础规则里的 translateY(12%) —— 起点终点都是 0，于是只剩擦开、没有升起，
 // 而页面看起来完全正常：clip-path 在动、opacity 在动，没有任何东西报错。

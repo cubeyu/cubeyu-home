@@ -148,11 +148,18 @@ cubeyu-home/
 
 | 层级 | 字号 / 字重 |
 |---|---|
-| H1（hero） | `58px / 700` |
-| H3（卡标题） | `30px / 800` |
+| H1（hero） | `clamp(64px, 12vw, 140px) / 700`，`line-height: .94`，`letter-spacing: -.045em` |
+| H3（卡标题） | `30px / 800` **（见下方更正记录：参照站实测 40px）** |
 | H2（区块标题） | `16px / 400` |
 | eyebrow（区块小标） | `12px / 650`，等宽，`中文 / ENGLISH` 形式 |
 | body | `16px / 400`，`line-height: 24px` |
+
+**H1 的 2026-11-03 更正**：本表原先记的是 `58px / 1.04`，那是把移动断点上的值当成了桌面值。
+在 1444 视口重读参照站的 computed style：`.hero h1 { font-size: clamp(72px, 12vw, 140px); line-height: .94; letter-spacing: -.045em }` → 实际 140px / 131.6px / -6.3px。
+这条不是审美微调，而是 6.4 节吉祥物几何的前提：字 58px 而人形 496px 高时，人不可能"扶着字"。
+下界取 64px 而非参照站的 72px：我们最长的一行 `small tools.` 实测 4.86em，72px 时 350px 宽，在 390px 视口上余量为 0（我们的 `.col` 内边距 20px），64px 留 39px；≤360px 再单独降到 52px。
+
+**仍未跟上的三项（同一批实测，等用户裁定后再改，不在本轮动）**：参照站 `h3` 是 `40px / 800 / -1.2px`（我们是 30px）、`.col` 内边距是 `32px`（我们是 20px）、区块纵向节奏是 `12vh`（我们是 72px/48px），正文 `p` 是 `15px / 29.25px`。这三项影响的是作品区而不是首屏，改任何一项都要重跑 M1 截图矩阵。
 
 圆角纪律：卡片与区块用 `2px`–`8px`，只有 pill 与圆点用 `999px`/`50%`。**不使用 MoeHome 那种大圆角玻璃卡片。**
 
@@ -248,6 +255,25 @@ CSS：`html[lang="zh"] .i18n-en { display: none }`，反之同理。默认 `lang
 4. 补真正的 `destroy()` —— 原实现只有 `visibilitychange` 暂停，没有卸载路径；页脚手动关动效时必须能移除元素并停掉 rAF。
 
 `cursor: none` 会让用户找不到鼠标，因此以上任一条不满足时保留原生光标。
+
+### 6.4 hero 吉祥物（人物 + 狗）
+
+参照站把人物与狗做进 `.hero-illo` 一个盒子里，**盒子的位置全部用 `em` 表达，而 `em` 就是 h1 的字高**：
+`left: calc(2.94em - min(6.5vw, 26px)); bottom: -.87em; width: min(36vw, 330px)`。
+那个 2.94em 不是魔法数 —— 它最长的一行 `makes`/`things.` 实测 2.86em，再减去它自己画布内部 7.5% 的左侧空白，手尖正好落在字尾上。
+**锚在字上而不是栏的右边，才是"一个人扶着字"而不是"一张图放在标题旁边"的原因。**
+（我们第一版写的是 `right: 0; height: clamp(320px, 60vh, 560px)`，人形离最近的字 316px，而 112 项测试与 11 项 check 全绿 —— 所以这条几何现在由 `test/mascot.test.js` 的锚点契约钉住：`left`/`height`/`bottom` 必须是 em，且不得出现 `right`，且 `.hero h1` 必须 `position: relative`。）
+
+我们的锚点按同一套式子推导，两个输入都要实测：
+图集逐行扫 alpha 得到手掌在画布 `y 27.5%–35.4%`、指尖在 `x 1.4%`；
+文字墨盒用 canvas `measureText` 的 `fontBoundingBoxAscent` 反推基线、`actualBoundingBoxAscent` 定 x 高度顶。
+于是 `bottom = 0.646 × height − 0.641em`（桌面 height 2.3em → bottom -.85em；≤480px height 1.55em → bottom -.36em），
+`left` 由"指尖落在最长一行 `small tools.` 的 x 高度顶上方"定出 4.34em。
+换文案、换字号、换图集时这两个数都要重算 —— 式子和测量方法记在 `src/styles/hero.css` 的头注里。
+
+人物与狗都用 `background-image` 而不是 `<img>`：纯装饰（`aria-hidden` 才诚实）、暗色只改一条声明、
+浏览器只下载当前主题真正引用的那张。狗是 8 帧朝向图集，`mascot.js` 按光标在 hero 内的水平位置选帧；
+触屏与 `prefers-reduced-motion` 完全不绑监听，狗停在抬头帧。
 
 ---
 

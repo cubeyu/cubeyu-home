@@ -16,8 +16,22 @@ button, input, textarea { font: inherit; }
 /* 窄栏：spec 4.1 --col = 820px */
 .col { max-width: var(--col); margin-inline: auto; padding-inline: 20px; }
 
-/* 排版阶梯（实测 oiloil） */
-h1 { font-size: 58px; font-weight: 700; line-height: 1.04; margin: 0; letter-spacing: -.02em; }
+/* 参照站同一条（body, html { max-width: 100%; overflow-x: clip }）。
+   hero 的吉祥物按 em 锚在标题上，盒子的右边缘会越过 .col 的内容盒几个像素，
+   窄视口上更明显；clip 让它裁在视口边而不是长出横向滚动条。
+   用 clip 不用 hidden：hidden 会把这里变成滚动容器，滚动条与 scrollLeft 都会出来。 */
+html, body { max-width: 100%; overflow-x: clip; }
+
+/* 排版阶梯（实测 oiloil）
+   h1 这一档在 2026-11-03 的复核里被更正：spec 4.1 原先记的 58px 是把移动断点上的值
+   当成了桌面值，参照站桌面实测是 clamp(72px, 12vw, 140px) / line-height .94 /
+   letter-spacing -.045em（computed style 140px、131.6px、-6.3px @ 1444 视口）。
+   下界取 64px 而不是它的 72px：我们最长的一行 "small tools." 实测 4.86em，
+   72px 时 350px 宽，在 390px 视口上只剩 0px 余量（我们的 .col 内边距 20px），
+   64px 留 39px。360px 以下再降一档，避免 320px 视口横向溢出。
+   这一档不是审美微调而是几何前提：hero 吉祥物按 em 锚在标题上（见 hero.css），
+   字是 58px 而人是 496px 高时，两者不可能读成「一个人扶着字」。 */
+h1 { font-size: clamp(64px, 12vw, 140px); font-weight: 700; line-height: .94; letter-spacing: -.045em; margin: 0; }
 h2 { font-size: 16px; font-weight: 400; margin: 0; }
 h3 { font-size: 30px; font-weight: 800; margin: 0; letter-spacing: -.01em; }
 
@@ -70,9 +84,14 @@ html:lang(en) .i18n-zh { display: none; }
 /* 区块节奏 */
 section { padding-block: 72px; }
 @media (max-width: 640px) {
-  h1 { font-size: 40px; }
   h3 { font-size: 24px; }
   section { padding-block: 48px; }
+}
+/* h1 不在这里降档：clamp 的下界已经接管（见上面的排版阶梯），
+   再写一条 h1 { font-size: … } 只会因为同特异性、排在后面而赢掉 clamp，
+   把桌面值也一起压下去。极窄视口单独降一档，保住 "small tools." 不溢出。 */
+@media (max-width: 360px) {
+  h1 { font-size: 52px; }
 }
 
 /* 导航条：等宽小字，左右两端对齐。语言切换与 GitHub 链接都在右侧一组 */
