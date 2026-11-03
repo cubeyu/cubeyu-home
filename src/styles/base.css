@@ -14,8 +14,10 @@ body {
 button, input, textarea { font: inherit; }
 
 /* 窄栏：spec 4.1 --col = 820px。内边距按参照站实测取 32px，≤760px 回落到 20px ——
-   20px 是参照站【窄屏】的值，早期我们把它当成了桌面值（与 h1 的 58px 同一类错）。 */
-.col { max-width: var(--col); margin-inline: auto; padding-inline: 32px; }
+   20px 是参照站【窄屏】的值，早期我们把它当成了桌面值（与 h1 的 58px 同一类错）。
+   position + z-index 是给指针场让位用的：canvas 是 fixed z-index:0 铺在视口上，
+   内容必须显式抬到它上面，否则文字会被点阵压住（pointer.css）。 */
+.col { max-width: var(--col); margin-inline: auto; padding-inline: 32px; position: relative; z-index: 1; }
 
 /* 参照站同一条（body, html { max-width: 100%; overflow-x: clip }）。
    hero 的吉祥物按 em 锚在标题上，盒子的右边缘会越过 .col 的内容盒几个像素，

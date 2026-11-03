@@ -1,0 +1,56 @@
+/* pointer.css —— 指针场（canvas 点阵）与自定义光标的样式。
+   纪律同 hero.css：零字面色值，颜色一律 var(…)，只有 tokens.css 允许写死。 */
+
+/* canvas 铺满视口、全程不吃指针。z-index:0 而内容侧 .col 是 z-index:1 ——
+   反过来（canvas 用 -1）会跟着 body 背景一起被合成到根元素之下，明暗切换时
+   那一层的归属不好推理，正数分层是参照站验证过的做法。 */
+[data-pointer-field] {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+}
+
+/* 光标本体：JS 每帧写 translate3d 到 .cursor 上，所以这里绝不能给 .cursor 加 transition
+   —— 加了就变成"每帧重新追一个 0.3s 的动画"，指针会拖出一段明显的滞后。
+   平滑已经在 JS 里用一阶低通做掉了。 */
+.cursor {
+  position: fixed;
+  top: 0;
+  left: 0;
+  /* 幕布是 9999：幕布期间不该出现第二个光标，所以压在它下面。 */
+  z-index: 9998;
+  pointer-events: none;
+  will-change: transform;
+  display: none;
+}
+/* 类由 JS 在 canvas 与光标都建好之后才加 —— cursor:none 只有在"确实有个东西在跟手"时
+   才允许存在，否则 JS 挂掉的用户会连原生光标一起丢。destroy() 摘掉它。 */
+html.has-pointer .cursor { display: block; }
+html.has-pointer, html.has-pointer * { cursor: none; }
+
+.cursor-dot, .cursor-ring {
+  position: absolute;
+  top: 0;
+  left: 0;
+  border-radius: 50%;
+  transform: translate(-50%, -50%);
+}
+.cursor-dot { width: 6px; height: 6px; background: var(--field-hot); }
+/* 环默认收着且不透明为 0，悬停到可交互元素才撑开 ——
+   只有点的时候看不出"这个能按"，而全站不能因为换了光标就丢掉可点性提示。 */
+.cursor-ring {
+  width: 32px;
+  height: 32px;
+  border: var(--rule-w) solid var(--ink);
+  opacity: 0;
+  transform: translate(-50%, -50%) scale(.4);
+  transition: opacity .3s var(--ease-expo), transform .3s var(--ease-expo);
+}
+.cursor.is-hover .cursor-ring { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+
+/* 原生光标被藏起来之后，键盘焦点环是唯一的定位手段，绝不让它跟着消失。 */
+@media (prefers-reduced-motion: reduce) {
+  .cursor { display: none; }
+  html.has-pointer, html.has-pointer * { cursor: auto; }
+}

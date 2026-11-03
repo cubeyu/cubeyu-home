@@ -26,6 +26,7 @@ export const cssOrder = [
   'tokens.css',
   'base.css',
   'loader.css',
+  'pointer.css',
   'hero.css',
   'cards.css',
   'demos/inkmark.css',

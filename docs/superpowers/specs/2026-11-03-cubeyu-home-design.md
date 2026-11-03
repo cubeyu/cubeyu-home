@@ -79,7 +79,7 @@ cubeyu-home/
         keyboard-word.css
         cloud-hidden.css
     js/
-      cursor.js        # 移植 MoeHome CustomCursor 核心 + 补守卫
+      pointer.js       # 指针场（canvas 光斑）+ 自定义光标，共用一条 rAF（见 6.3）
       reveal.js        # IntersectionObserver 入场
       theme.js         # 明暗三态 + localStorage
       i18n.js          # 仅负责切换 html[lang] 与记忆偏好，不渲染文本
@@ -252,18 +252,35 @@ CSS：`html[lang="zh"] .i18n-en { display: none }`，反之同理。默认 `lang
 
 `motion` 偏好与主题一样是三态，存 localStorage：`auto`（默认，跟随 `prefers-reduced-motion`）/ `on`（强制开）/ `off`（强制关）。生效公式：`motion === 'on' || (motion === 'auto' && !prefersReducedMotion)`。`i18n`、`theme`、`motion` 三个偏好共用同一个 `data-*` + localStorage 读写工具，不各写一份。
 
-### 6.3 自定义光标
+### 6.3 指针场（光斑 + 光标，共用一条 rAF）
 
-移植 `MoeHome/src/app.js:1220` 的 `CustomCursor` **核心算法**（rAF + `lerp 0.15` 拖尾 + 悬停可交互元素加 `.hover`），视觉改为 8px 实心点跟随、悬停撑成 32px 空心环。
+参照对象是 lom.entermodetwo.com 的 `heang-motion.js`（读源码得到机制，不是看图猜的）。
+一块 `position:fixed; inset:0; z-index:0; pointer-events:none` 的 canvas 铺在内容底下
+（`.col` 因此必须 `position:relative; z-index:1`），上面是一张 **22px 间距的点阵**：
 
-已核实该实现缺 4 项守卫，移植时必须补上：
+- 静止态每个点是 2×2 的 `--field-dot`，整屏读起来就是一张网格纸（与开屏幕布同一种纹理）。
+- 指针 180px 半径内的点被**吸向指针**（最多 7px）并按 smoothstep `v²(3−2v)` 变亮；
+  越过 0.62 亮度换成 `--field-hot` 实心光点。指针位置与"在场强度"各有一阶低通
+  （0.18 / 0.08），所以光晕是跟上来、离开时缓灭，不是硬贴。
+- 涟漪是行进的波包：`sin(d/22·2π)·(1−d/55)²·(1−age/life)^1.5`，环速 420px/s。
+  移动发一条的条件是**位移 ≥72px 且距上一条 ≥120ms**（两条都要，少一条快速划动就刷屏掉帧），
+  按下发一条大的；同时最多 10 条。
+- **静止即停**：没有涟漪且指针安定后不再排帧；页面 hidden / 失焦也停。装饰层不许永久空转一条 rAF。
+- 触屏 `(hover:none)` 与 `prefers-reduced-motion` 下整场不启动（提前 return，不绑监听）；
+  `cursor:none` 只在 JS 确实建好光标点之后才通过 `html.has-pointer` 生效，`destroy()` 一并收回。
+- 配色从 `--field-dot` / `--ink` / `--field-hot` 读，JS 一侧**不写兜底色值**
+  （兜底就是第二份真源，会跟 token 漂移）；取不到合法颜色时整场安静降级为"没有装饰"。
+  `--field-hot` 不复用 `--mark-bg`：后者在暗色是半透明底纹，做"发光"的光点几乎看不见。
 
-1. 只在 `(hover: hover) and (pointer: fine)` 下启用 —— 原实现无此判断，触屏设备也会白白跑 rAF 循环并注入 DOM。
-2. `prefers-reduced-motion: reduce` 时退回原生光标。
-3. 元素 `pointer-events: none` + 高 `z-index`，绝不挡点击。
-4. 补真正的 `destroy()` —— 原实现只有 `visibilitychange` 暂停，没有卸载路径；页脚手动关动效时必须能移除元素并停掉 rAF。
+**踩过的两个坑**（都有断言）：
+1. lightningcss 把 `rgba(26,26,26,.13)` 压成 8 位 hex `#1a1a1a21`，只认 6 位的解析器会让整场静默不启动
+   —— 页面看着正常（网格还在），只是永远不跟手。现在 `parseColor` 支持 3/4/6/8 位 hex，
+   且测试直接读 **产物** `dist/assets/app.css` 里的值来解析，而不是读源 token。
+2. 源码形状断言必须先剥注释：解释 8 位 hex 的那条注释里就写着 `#1a1a1a21`，不剥就是判据咬自己。
+   同一条也适用于 `innerHTML`（注释里提到这个词）。
 
-`cursor: none` 会让用户找不到鼠标，因此以上任一条不满足时保留原生光标。
+自定义光标并入本节：同一个循环、同一份平滑位置，6px 点 + 悬停可交互元素时撑开 32px 环。
+M4 的动效三态开关落地时要接上这里的 `destroy()`，这是它存在的原因之一。
 
 ### 6.4 hero 吉祥物（人物 + 狗）
 

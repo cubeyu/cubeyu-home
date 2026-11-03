@@ -7,6 +7,7 @@ import { initTheme } from './theme.js';
 import { initLang } from './i18n.js';
 import { prefersEnglish } from './pref-ui.js';
 import { initMascot } from './mascot.js';
+import { initPointer } from './pointer.js';
 import demos from './demos/index.js';
 
 // 两个开关互不依赖，谁先谁后都不影响对方的首帧（Task 9-10 审查 M5 把这条依赖拆掉了：
@@ -45,3 +46,8 @@ for (const root of document.querySelectorAll('[data-demo-root]')) {
 // 是常驻装饰），所以不走 demos/index.js，也不受卡片数量与注册态影响。
 // 触屏与 reduced-motion 下它自己会直接 return，不绑任何监听 —— 见 mascot.js。
 initMascot();
+
+// 指针场 + 自定义光标：同一条 rAF、同一份平滑指针。
+// 触屏与 reduced-motion 下它自己 return（并返回一个空 destroy），理由与 mascot.js 同一条：
+// 没有可跟的指针时，绑监听等于让页面永久空转一条循环。
+initPointer();
