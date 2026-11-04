@@ -12,13 +12,12 @@ export const ui = {
   copyright: { zh: '© 2026 麦希屿', en: '© 2026 Cubeyu' },
 };
 
-// 站点区 7 条，spec 7.2。portfolio 子站已退役，故不列入。
+// 站点区链接，清单与取舍见 spec 7.2（条数不写死在这里，与卡数同一条不变量）。
+// 已下线的不列：portfolio 子站、今日热榜（hot.techisle.top 实测 404）。
 export const links = [
   { name: 'ClawBase',   url: 'https://clawbase.cc',                    note: { zh: 'AI 代理部署聚合', en: 'Agent deploy guides' } },
-  { name: '今日热榜',    url: 'https://hot.techisle.top',               note: { zh: '热榜聚合接口', en: 'Trending API' } },
   { name: '支持一下',    url: 'https://donate.techisle.top',            note: { zh: '赞赏', en: 'Buy me a coffee' } },
   { name: '站点监控',    url: 'https://check.techisle.top',             note: { zh: '可用性巡检', en: 'Uptime checks' } },
-  { name: 'github.com/cubeyu', url: 'https://github.com/cubeyu',       note: { zh: '代码', en: 'Source' } },
   { name: '哔哩哔哩',     url: 'https://space.bilibili.com/88154706',   note: { zh: '视频', en: 'Video' } },
   { name: 'cubeyu@aliyun.com', url: 'mailto:cubeyu@aliyun.com',        note: { zh: '邮箱', en: 'Email' } },
 ];

@@ -470,19 +470,27 @@ M4 的动效三态开关落地时要接上这里的 `destroy()`，这是它存�
 - 微原型：目录树点开三篇标题，展开显示日期与阅读时长，hover 标题出下划线。
 - hint: 点目录把文章展开。/ Click the tree to open an article.
 
-### 7.2 站点区链接（7 条）
+### 7.2 站点区链接
 
 | 显示名 | URL |
 |---|---|
 | ClawBase | `https://clawbase.cc` |
-| 今日热榜 | `https://hot.techisle.top` |
 | 支持一下 | `https://donate.techisle.top` |
 | 站点监控 | `https://check.techisle.top` |
-| GitHub | `https://github.com/cubeyu` |
 | 哔哩哔哩 | `https://space.bilibili.com/88154706` |
 | 邮箱 | `mailto:cubeyu@aliyun.com` |
 
 `portfolio.techisle.top` **不列入**（用户决定退役，见 8.2）。其 7 帧作品已全部吸收进本文件 7.1，首页即唯一入口，不再有重复内容。
+
+> **2026-11-05 删两条**（用户提出，`src/data/copy.js` 的 `links` 已同步）：
+>
+> | 删除项 | 理由 | 证据 |
+> |---|---|---|
+> | 今日热榜 `hot.techisle.top` | 服务已下线，链过去是死路 | `curl -A 'Mozilla/5.0'` → **HTTP 404** |
+> | GitHub `github.com/cubeyu` | 与导航右上角同一个链接重复出现；个人主页区列的是"我维护的产品"，代码仓库入口放在那里语义不对 | `src/data/site.js` 的 `nav.githubUrl` 就是同一个 URL |
+>
+> 同一次改动里把 `copy.js` 那句 "站点区 7 条" 的注释也去了数字 —— 条数不写死是本项目不变量，
+> 原先连注释都违反了它。`test/data.test.js` 只断言每条 `note` 中英齐备，不锁条数，所以删项无需改测试。
 
 ### 7.3 SEO（决策 11）
 
