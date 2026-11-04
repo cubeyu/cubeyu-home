@@ -131,9 +131,11 @@ const cardHtml = projects.map((p) => `
 const skillsHtml = `<div class="skills-grid rule-t">${skills.map((s) => `<span class="skill rule-b">${i18n(s.zh, s.en)}</span>`).join('')}</div>`;
 const sitesHtml = `<ul class="sites rule-t">${links.map((l) => `<li class="site rule-b"><a href="${esc(l.url)}">${esc(l.name)}</a><span class="site-note">${i18n(l.note.zh, l.note.en)}</span></li>`).join('')}</ul>`;
 
-// 页脚邮箱按 brief 写字面量。注意 links 里也有同一条 mailto:cubeyu@aliyun.com，
-// 属 ledger 已记的「同一 URL 两处真源」一类问题（github / hot 同样各写两份），
-// 换邮箱要改两处 —— 留给控制器决定是否从 links 取。
+// 页脚邮箱按 brief 写字面量，而它现在是这个地址的【唯一出处】：links 里那条 mailto 已删。
+// 原先同一 URL 在两处各写一遍，换邮箱要记得改两处 —— 这是 ledger 记过的「两处真源」那一类，
+// github（导航右上角已有）与 hot（服务已下线）同批删掉，这一类在站点区清零。
+// 站点区的判据：只放「只有在这里才能找到的入口」（产品、打赏页、巡检、视频账号）；
+// 导航右上角和页脚已经承载的，不在这里重复一遍。
 //
 // Task 9 的明暗开关落在页脚，不照 task-9-brief Step 6 说的塞进 nav（控制器裁定，偏离已在报告里记）：
 // spec 7 的 IA 表把「明暗开关」写在 FOOTER 行（`© 2026 麦希屿` + 明暗开关 + 动效开关 + 联系邮箱），

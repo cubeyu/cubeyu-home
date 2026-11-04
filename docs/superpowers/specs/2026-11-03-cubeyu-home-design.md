@@ -478,16 +478,18 @@ M4 的动效三态开关落地时要接上这里的 `destroy()`，这是它存�
 | 支持一下 | `https://donate.techisle.top` |
 | 站点监控 | `https://check.techisle.top` |
 | 哔哩哔哩 | `https://space.bilibili.com/88154706` |
-| 邮箱 | `mailto:cubeyu@aliyun.com` |
 
 `portfolio.techisle.top` **不列入**（用户决定退役，见 8.2）。其 7 帧作品已全部吸收进本文件 7.1，首页即唯一入口，不再有重复内容。
 
-> **2026-11-05 删两条**（用户提出，`src/data/copy.js` 的 `links` 已同步）：
+> **2026-11-05 删三条**（用户提出，`src/data/copy.js` 的 `links` 已同步）：
 >
 > | 删除项 | 理由 | 证据 |
 > |---|---|---|
 > | 今日热榜 `hot.techisle.top` | 服务已下线，链过去是死路 | `curl -A 'Mozilla/5.0'` → **HTTP 404** |
-> | GitHub `github.com/cubeyu` | 与导航右上角同一个链接重复出现；个人主页区列的是"我维护的产品"，代码仓库入口放在那里语义不对 | `src/data/site.js` 的 `nav.githubUrl` 就是同一个 URL |
+> | GitHub `github.com/cubeyu` | 与导航右上角同一个链接重复出现；这一栏的语义是"我维护的产品"，代码仓库入口放那里不对 | `src/data/site.js` 的 `nav.githubUrl` 就是同一个 URL |
+> | 邮箱 `mailto:cubeyu@aliyun.com` | 页脚右侧已经写了同一个地址，属"同一 URL 两处真源"——`build.js` 早就把这条记为待决问题，现在按"页脚是唯一出处"收口 | 产物 `<footer>` 内确有 `cubeyu@aliyun.com` |
+>
+> 剩下的判据：**只放"只有在这里才能找到的入口"**；导航与页脚已经承载的，不在这里重复。
 >
 > 同一次改动里把 `copy.js` 那句 "站点区 7 条" 的注释也去了数字 —— 条数不写死是本项目不变量，
 > 原先连注释都违反了它。`test/data.test.js` 只断言每条 `note` 中英齐备，不锁条数，所以删项无需改测试。

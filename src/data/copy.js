@@ -13,11 +13,12 @@ export const ui = {
 };
 
 // 站点区链接，清单与取舍见 spec 7.2（条数不写死在这里，与卡数同一条不变量）。
-// 已下线的不列：portfolio 子站、今日热榜（hot.techisle.top 实测 404）。
+// 判据：只放「只有在这里才能找到的入口」。因此——
+//   已下线的不列：portfolio 子站、今日热榜（hot.techisle.top 实测 404）；
+//   入口已在别处的不重复列：github.com/cubeyu 在导航右上角，邮箱在页脚。
 export const links = [
   { name: 'ClawBase',   url: 'https://clawbase.cc',                    note: { zh: 'AI 代理部署聚合', en: 'Agent deploy guides' } },
   { name: '支持一下',    url: 'https://donate.techisle.top',            note: { zh: '赞赏', en: 'Buy me a coffee' } },
   { name: '站点监控',    url: 'https://check.techisle.top',             note: { zh: '可用性巡检', en: 'Uptime checks' } },
   { name: '哔哩哔哩',     url: 'https://space.bilibili.com/88154706',   note: { zh: '视频', en: 'Video' } },
-  { name: 'cubeyu@aliyun.com', url: 'mailto:cubeyu@aliyun.com',        note: { zh: '邮箱', en: 'Email' } },
 ];
