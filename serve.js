@@ -15,7 +15,7 @@ createServer((req, res) => {
   try {
     url = decodeURIComponent(req.url.split('?')[0]);
   } catch {
-    res.writeHead(400, { 'content-type': 'text/html; charset=utf-8' });
+    res.writeHead(400, { 'content-type': 'text/html; charset=utf-8', 'cache-control': 'no-store' });
     return res.end('<h1>400</h1>');
   }
   // 目录穿越守卫：把候选解析成绝对路径，再要求它等于 dist 或落在 dist + path.sep 之下。
@@ -24,9 +24,13 @@ createServer((req, res) => {
   // 用 '.' + url 而不是直接 resolve(DIST, url)，因为 url 以 / 开头时
   // resolve 会把它当根路径丢弃 dist 基准。
   let file = resolve(DIST, '.' + (url === '/' ? '/index.html' : url));
-  if (file !== DIST && !file.startsWith(DIST + sep)) { res.writeHead(403); return res.end('forbidden'); }
+  if (file !== DIST && !file.startsWith(DIST + sep)) { res.writeHead(403, { 'cache-control': 'no-store' }); return res.end('forbidden'); }
   if (extname(file) === '') file = join(file, 'index.html');
-  if (!existsSync(file)) { res.writeHead(404, { 'content-type': 'text/html; charset=utf-8' }); return res.end('<h1>404</h1>'); }
-  res.writeHead(200, { 'content-type': (TYPES[extname(file)] || 'application/octet-stream') + '; charset=utf-8' });
+  if (!existsSync(file)) { res.writeHead(404, { 'content-type': 'text/html; charset=utf-8', 'cache-control': 'no-store' }); return res.end('<h1>404</h1>'); }
+  // 本地预览【绝不许缓存】：这里不发 no-store，Chrome 就对同一 URL 走启发式缓存，
+  // 重建之后刷新端出来的是上一份 HTML —— 明明改了、看着没改，实测骗过一次（加 ?v= 才对）。
+  // 也不用 no-cache：serve.js 不发 ETag/Last-Modified，"必须再验证"退化成"整个重下"，
+  // 白担一个风险还可能留旧页；no-store 是唯一不会说谎的那个。
+  res.writeHead(200, { 'content-type': (TYPES[extname(file)] || 'application/octet-stream') + '; charset=utf-8', 'cache-control': 'no-store' });
   res.end(readFileSync(file));
 }).listen(4173, () => console.log('http://localhost:4173'));
