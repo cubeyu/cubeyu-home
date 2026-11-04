@@ -1,4 +1,7 @@
 dist/
 node_modules/
 .vercel
+# Qoder Sites 的描述符：内容是绑定机器与账号的恢复记录，还内嵌一份 index.html 的 base64。
+# 与上面 .vercel 同一类——托管工具的本地状态，不是源码。
+*.qoder.site
 .superpowers/

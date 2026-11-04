@@ -2,7 +2,8 @@
 //
 // 分工（Task 9-10 的断言归属裁定，控制器定死）：本文件只管【契约】——
 // token 残留、卡数与注册表对齐、字面色值泄漏、双语成对、产物值位无字面 undefined/null、零运行时依赖、
-// demo 文件与注册表互等、样式全合并、必需片段落地、canonical 与 site.url 同源。
+// demo 文件与注册表互等、样式全合并、必需片段落地、canonical 与 site.url 同源、
+// 分享图与标签图标【声明齐 + 绝对地址 + 文件真在】。
 //
 // NO_UNDEFINED_VALUES 是产物侧兜底：这件事的最终 owner 是 src/lib/build-utils.js 的 esc()
 // —— 对 null/undefined 直接 throw（与本项目「静默空 <section> 当场红」同一纪律）。
@@ -252,6 +253,41 @@ export const CANONICAL_MATCHES_SITE = {
   },
 };
 
+// 这三类坏法都没有可见后果、也没人会主动去查：og:image 少一行，链接分享到任何平台都是
+// 一张白图；favicon 少一个文件，只表现为控制台每天一次 404；og:image 写成相对路径，
+// 本地预览一切正常而爬虫抓不到。所以【字段齐 + 绝对地址 + 产物文件真在】三样一起钉。
+export const SOCIAL_META = {
+  name: 'share card and icons are declared and actually shipped',
+  run({ html, url }) {
+    const bad = [];
+    for (const frag of [
+      '<link rel="icon" href="/favicon.ico">',
+      '<link rel="apple-touch-icon" href="/apple-touch-icon.png">',
+      '<meta property="og:type" content="website">',
+      '<meta name="twitter:card" content="summary_large_image">',
+    ]) if (!html.includes(frag)) bad.push(`head 缺 ${frag}`);
+
+    // og:image 与 build.js 的 OG_IMAGE 用同一个式子算：site.url 一改两边一起动，
+    // 不会出现"数据换了域、分享图还指着旧域"这种两份真源的漂法。
+    const img = /<meta property="og:image" content="([^"]*)">/.exec(html)?.[1];
+    const want = esc(new URL('/og-image.png', url).href);
+    if (!img) bad.push('head 缺 og:image');
+    else if (img !== want) bad.push(`og:image 必须是与 site.url 同域的绝对地址：产物 ${img}，应为 ${want}`);
+
+    const ogUrl = /<meta property="og:url" content="([^"]*)">/.exec(html)?.[1];
+    if (!ogUrl) bad.push('head 缺 og:url');
+    else if (ogUrl !== esc(url)) bad.push(`og:url 与 site.url 不一致：产物 ${ogUrl}，数据 ${esc(url)}`);
+
+    // 非空也要查：文件在但被截成 0 字节，head 照样全绿。
+    for (const f of ['favicon.ico', 'apple-touch-icon.png', 'og-image.png']) {
+      let bytes = 0;
+      try { bytes = readFileSync(`dist/${f}`).length; } catch { bytes = 0; }
+      if (bytes === 0) bad.push(`产物缺 dist/${f}（或它是空的）`);
+    }
+    return bad;
+  },
+};
+
 // preload 清单由 build.js 从文件系统算出来（不是手写进模板的），所以它可能出两种偏差：
 // ① 某个模块被 import 但没被 preload —— 那一轮 RTT 又回来了，而页面看起来一样快；
 // ② 某个模块被 preload 但没人 import —— 白下载，通常是 src/js 里留了个死文件。
@@ -299,6 +335,7 @@ export const ASSERTIONS = [
   STYLESHEETS_MERGED,
   FRAGMENTS_PRESENT,
   CANONICAL_MATCHES_SITE,
+  SOCIAL_META,
   MODULE_PRELOAD_COVERS_GRAPH,
 ];
 

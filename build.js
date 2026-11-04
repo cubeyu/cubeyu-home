@@ -223,6 +223,10 @@ const tokens = {
   // CANONICAL 取 site.url：canonical 此前在模板里硬编码，与 site.url 是同一值的两个真源，现在只剩数据这一处。
   // 选 esc() 与 TITLE / DESCRIPTION 一致：它是属性值，含引号时不能截断 href="…"。
   CANONICAL: esc(site.url),
+  // og:image 必须是【绝对 URL】：社交爬虫抓的是别的域，相对路径对它没有意义。
+  // 基准取 site.url（与 canonical 同一个真源），不写死域名 —— 换域时只改数据层一处。
+  // og:title / og:description / og:url 复用上面三个 token，不另开第二份真源。
+  OG_IMAGE: esc(new URL('/og-image.png', site.url).href),
   NAV: nav,
   HERO: hero,
   SECTIONS: (() => {
@@ -321,7 +325,8 @@ mkdirSync(join(out, 'assets'), { recursive: true });
 // 给它们开长缓存 = 改版后用户拿到旧样式配新 HTML（旧图集文件名已经不在新部署里了）。
 // 所以：图片名带哈希 → vercel.json 只对 /assets/images/* 开一年 immutable；
 // css/js 保持默认再验证，一行配置都不用为它们冒险。
-// 引用只存在于 CSS 的 url() 里（HTML 不直接引图，见 grep 结果），所以重写点只有一处。
+// 引用了这批哈希图的【只有 CSS】，所以重写点只有一处；HTML 引的那两个
+// （favicon.ico / og-image.png）走下面的 src/static 通道，故意不进哈希。
 const srcImages = join(root, 'src/images');
 let cssOut = css;
 if (existsSync(srcImages)) {
@@ -335,6 +340,18 @@ if (existsSync(srcImages)) {
     writeFileSync(join(out, 'assets/images', hashed), bytes);
     // split/join 而不是 replaceAll：文件名里可能带正则元字符，而这里要的是字面替换
     cssOut = cssOut.split(`/assets/images/${name}`).join(`/assets/images/${hashed}`);
+  }
+}
+
+// src/static → dist 根，原样拷贝、【不哈希】。这两个名字是被外部约定锁死的：
+// /favicon.ico 是浏览器不读 HTML 也会去请求的默认路径，而 og:image 的地址会被社交平台
+// 按 URL 缓存 —— 名字一带哈希，抓过的预览就悬空到下次重新抓取为止，且没人通知你。
+// 代价是它们拿不到 immutable，只能靠 ETag 再验证；换来的是浏览器和爬虫一定命中。
+const srcStatic = join(root, 'src/static');
+if (existsSync(srcStatic)) {
+  for (const name of readdirSync(srcStatic)) {
+    if (name.startsWith('.')) continue;
+    cpSync(join(srcStatic, name), join(out, name));
   }
 }
 

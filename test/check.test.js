@@ -3,7 +3,8 @@
 // 断言可能压根没在跑（正则永不匹配、文件名拼错、传参漏字段），等于没测。
 // 分工（Task 9-10 的断言归属裁定）：本文件与 check.js 只管产物/源文件契约
 // （token 残留、数量与注册表对齐、字面色值、双语成对、产物值位无字面 undefined/null、零运行时依赖、
-// demo 文件与注册表互等、样式全合并、必需片段落地、canonical 与 site.url 同源）。
+// demo 文件与注册表互等、样式全合并、必需片段落地、canonical 与 site.url 同源、
+// 分享图与标签图标声明齐且绝对地址对上）。
 // color-scheme、全站唯一焦点环、!important 预算、href="#" 预算这四类「全局预算」在 test/ 里
 // （前两条在 data.test.js，后两条在 budgets.test.js），这里不重复 —— 同一道门禁写两处必然漂移。
 import { test } from 'node:test';
@@ -23,6 +24,7 @@ import {
   STYLESHEETS_MERGED,
   FRAGMENTS_PRESENT,
   CANONICAL_MATCHES_SITE,
+  SOCIAL_META,
   MODULE_PRELOAD_COVERS_GRAPH,
 } from '../check.js';
 
@@ -358,10 +360,42 @@ test('MODULE_PRELOAD_COVERS_GRAPH fails loudly when the entry or an import targe
   assert.match(MODULE_PRELOAD_COVERS_GRAPH.run({ html: preHtml(LEAVES), jsModules: broken })[0], /theme\.js/);
 });
 
+// metaHtml 造一份【字段齐全】的 head；文件存在那三条分支不在这里测（它读死 dist/，
+// 在测试里改名再改回来会把并发跑的其他用例带下水），那三条由「当前树全绿」用例覆盖。
+const metaHtml = (img = 'https://techisle.top/og-image.png', ogUrl = 'https://techisle.top/') =>
+  '<link rel="canonical" href="https://techisle.top/">'
+  + '<link rel="icon" href="/favicon.ico">'
+  + '<link rel="apple-touch-icon" href="/apple-touch-icon.png">'
+  + '<meta property="og:type" content="website">'
+  + '<meta property="og:title" content="T">'
+  + '<meta property="og:description" content="D">'
+  + `<meta property="og:url" content="${ogUrl}">`
+  + `<meta property="og:image" content="${img}">`
+  + '<meta name="twitter:card" content="summary_large_image">';
+
+test('SOCIAL_META catches a missing or relative og:image and a drifted og:url', () => {
+  const url = 'https://techisle.top/';
+  const head = (r) => r.filter((m) => !m.startsWith('产物缺 dist/'));
+  assert.deepEqual(head(SOCIAL_META.run({ html: metaHtml(), url })), [], '字段齐全的 head 不该报');
+
+  const noImg = metaHtml().replace(/<meta property="og:image"[^>]*>/, '');
+  assert.match(head(SOCIAL_META.run({ html: noImg, url })).join('\n'), /og:image/,
+    '少了 og:image —— 分享到处是白图，必须抓到');
+
+  assert.match(head(SOCIAL_META.run({ html: metaHtml('/og-image.png'), url })).join('\n'), /绝对地址/,
+    'og:image 写成相对路径：本地预览正常、爬虫抓不到，必须抓到');
+
+  assert.match(head(SOCIAL_META.run({ html: metaHtml(undefined, 'https://old.example/'), url })).join('\n'),
+    /og:url 与 site\.url 不一致/, 'og:url 漂到别的域，必须抓到');
+
+  assert.match(head(SOCIAL_META.run({ html: metaHtml().replace('<meta name="twitter:card" content="summary_large_image">', ''), url })).join('\n'),
+    /twitter:card/, '少了 twitter:card 会退化成小缩略图卡');
+});
+
 test('ASSERTIONS lists every exported assertion exactly once', () => {  const all = [
     TOKEN_RESIDUE, CARD_COUNT, DEMO_REGISTRY_MATCH, COLOR_LEAK, LANG_PAIR,
     NO_UNDEFINED_VALUES, DEPENDENCIES_EMPTY, CSS_JS_SHIPPED, STYLESHEETS_MERGED,
-    FRAGMENTS_PRESENT, CANONICAL_MATCHES_SITE, MODULE_PRELOAD_COVERS_GRAPH,
+    FRAGMENTS_PRESENT, CANONICAL_MATCHES_SITE, SOCIAL_META, MODULE_PRELOAD_COVERS_GRAPH,
   ];
   assert.equal(ASSERTIONS.length, all.length, '清单条数 == CLI 打印条数的基数；新增断言必须同时进这里');
   for (const a of all) {
