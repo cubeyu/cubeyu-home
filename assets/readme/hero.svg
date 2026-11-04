@@ -1,0 +1,82 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="400" viewBox="0 0 1200 400"
+     role="img" aria-labelledby="t d">
+  <title id="t">cubeyu-home —— 零运行时依赖的单页个人主页</title>
+  <desc id="d">左侧沿用站点 h1 的三行大标题 Cubeyu builds small tools，下方一句话点出差异：
+  作品卡里嵌的是真能操作的微原型，不是截图。右侧是一张作品卡的剖面，按真实卡结构排列：
+  顶部标签「实时渲染 / LIVE RENDER」与分类「编辑器 / Editor」，标题「VitePress 在线编辑器」，
+  中间是左 Markdown 右实时渲染的可操作面板，底部是 Vue / VitePress / Markdown 三个标签。
+  配色取自 src/styles/tokens.css：纸白 #FFFFFF、墨黑 #1A1A1A、次级 #555555、
+  弱化 #999999、签名黄 #FFE28A，背景是 32px 网格纸。</desc>
+
+  <defs>
+    <pattern id="grid" width="32" height="32" patternUnits="userSpaceOnUse">
+      <path d="M32 0H0V32" fill="none" stroke="rgba(26,26,26,.07)" stroke-width="1"/>
+    </pattern>
+    <clipPath id="board"><rect width="1200" height="400" rx="26"/></clipPath>
+  </defs>
+
+  <g clip-path="url(#board)">
+    <rect width="1200" height="400" fill="#FFFFFF"/>
+    <rect width="1200" height="400" fill="url(#grid)"/>
+  </g>
+  <rect x=".5" y=".5" width="1199" height="399" rx="26" fill="none" stroke="rgba(26,26,26,.18)"/>
+
+  <g font-family="'Helvetica Neue', -apple-system, 'Segoe UI', 'PingFang SC', sans-serif">
+    <text x="56" y="82" font-family="ui-monospace, 'SF Mono', Menlo, Consolas, monospace"
+          font-size="20" fill="#555555" letter-spacing=".5">cubeyu-home</text>
+
+    <text x="56" y="172" font-size="62" font-weight="700" fill="#1A1A1A" letter-spacing="-1.5">Cubeyu®</text>
+    <text x="56" y="238" font-size="62" font-weight="700" fill="#1A1A1A" letter-spacing="-1.5">builds</text>
+    <text x="56" y="304" font-size="62" font-weight="700" fill="#1A1A1A" letter-spacing="-1.5">small tools.</text>
+
+    <!-- 实测宽度：前段 126 / 高亮 105 / 后段 189，所以高亮条 182..295，后段从 301 起 -->
+    <text x="56" y="356" font-size="21" fill="#555555">作品卡里嵌的</text>
+    <rect x="182" y="339" width="113" height="24" fill="#FFE28A"/>
+    <text x="190" y="357" font-size="21" font-weight="700" fill="#1A1A1A">真能操作的</text>
+    <text x="301" y="356" font-size="21" fill="#555555">微原型，不是截图。</text>
+  </g>
+
+  <!-- 卡的剖面：字段与层级取自 src/data/projects.js 的 vitepress-online-editor 那张 -->
+  <g transform="translate(716 54)">
+    <rect width="428" height="292" rx="18" fill="#FFFFFF" stroke="rgba(26,26,26,.18)"/>
+
+    <g font-family="ui-monospace, 'SF Mono', Menlo, Consolas, monospace" font-size="17">
+      <text x="24" y="40" fill="#555555">实时渲染 / LIVE RENDER</text>
+      <text x="404" y="40" fill="#555555" text-anchor="end">编辑器 / Editor</text>
+    </g>
+
+    <text x="24" y="78" font-family="'Helvetica Neue', -apple-system, 'Segoe UI', 'PingFang SC', sans-serif"
+          font-size="25" font-weight="700" fill="#1A1A1A">VitePress 在线编辑器</text>
+
+    <g transform="translate(24 96)">
+      <rect width="380" height="112" rx="12" fill="#FAFAFA" stroke="rgba(26,26,26,.18)"/>
+      <line x1="190" y1="1" x2="190" y2="111" stroke="rgba(26,26,26,.18)"/>
+
+      <g font-family="ui-monospace, 'SF Mono', Menlo, Consolas, monospace">
+        <text x="14" y="24" font-size="16" fill="#555555">MARKDOWN</text>
+        <text x="14" y="54" font-size="15" fill="#1A1A1A"># 标题</text>
+        <text x="14" y="80" font-size="15" fill="#1A1A1A">- [x] 可勾选</text>
+        <!-- 光标落在实测文本右端（14 + 97.5 ≈ 112），不是估的 -->
+        <rect x="112" y="67" width="2" height="16" fill="#1A1A1A"/>
+
+        <text x="204" y="24" font-size="16" fill="#555555">实时渲染</text>
+      </g>
+      <text x="204" y="56" font-size="19" font-weight="700" fill="#1A1A1A"
+            font-family="'Helvetica Neue', -apple-system, 'Segoe UI', 'PingFang SC', sans-serif">标题</text>
+      <text x="204" y="82" font-size="15" fill="#1A1A1A"
+            font-family="ui-monospace, 'SF Mono', Menlo, Consolas, monospace">☑ 可勾选</text>
+    </g>
+
+    <text x="24" y="232" font-size="15" fill="#555555"
+          font-family="ui-monospace, 'SF Mono', Menlo, Consolas, monospace">在左边改几个字，看右边怎么跟着变。</text>
+
+    <g font-family="ui-monospace, 'SF Mono', Menlo, Consolas, monospace" font-size="15">
+      <rect x="24" y="248" width="43" height="24" rx="6" fill="#FFE28A"/>
+      <text x="33" y="265" fill="#1A1A1A">Vue</text>
+      <rect x="75" y="248" width="92" height="24" rx="6" fill="none" stroke="rgba(26,26,26,.18)"/>
+      <text x="84" y="265" fill="#555555">VitePress</text>
+      <rect x="175" y="248" width="84" height="24" rx="6" fill="none" stroke="rgba(26,26,26,.18)"/>
+      <text x="184" y="265" fill="#555555">Markdown</text>
+    </g>
+  </g>
+</svg>

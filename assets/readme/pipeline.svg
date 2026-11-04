@@ -1,0 +1,89 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="360" viewBox="0 0 1200 360"
+     role="img" aria-labelledby="t2 d2">
+  <title id="t2">构建与部署链路</title>
+  <desc id="d2">src/ 经 build.js 产出 dist/，再由 check.js 的产物契约门禁把关，
+  最后落到两个地方：Vercel 上的正式站 techisle.top，和 Qoder Sites 上的测试与境内分流镜像。
+  两条路的缓存策略不同：Vercel 按 vercel.json 给哈希图片一年 immutable，
+  Qoder Sites 平台一律 no-cache。</desc>
+
+  <defs>
+    <pattern id="grid2" width="32" height="32" patternUnits="userSpaceOnUse">
+      <path d="M32 0H0V32" fill="none" stroke="rgba(26,26,26,.07)" stroke-width="1"/>
+    </pattern>
+    <clipPath id="board2"><rect width="1200" height="360" rx="26"/></clipPath>
+  </defs>
+
+  <g clip-path="url(#board2)">
+    <rect width="1200" height="360" fill="#FFFFFF"/>
+    <rect width="1200" height="360" fill="url(#grid2)"/>
+  </g>
+  <rect x=".5" y=".5" width="1199" height="359" rx="26" fill="none" stroke="rgba(26,26,26,.18)"/>
+
+  <text x="56" y="52" font-size="22" font-weight="700" fill="#1A1A1A"
+        font-family="'Helvetica Neue', -apple-system, 'Segoe UI', 'PingFang SC', sans-serif">构建与部署链路</text>
+  <text x="228" y="52" font-size="17" fill="#999999"
+        font-family="ui-monospace, 'SF Mono', Menlo, Consolas, monospace">build → gate → ship</text>
+
+  <g font-family="ui-monospace, 'SF Mono', Menlo, Consolas, monospace">
+    <!-- 一行：源码 → 构建 → 产物 → 门禁 -->
+    <g id="n-src">
+      <rect x="56" y="92" width="150" height="72" rx="14" fill="#FFFFFF" stroke="rgba(26,26,26,.18)"/>
+      <text x="131" y="122" font-size="20" fill="#1A1A1A" text-anchor="middle">src/</text>
+      <text x="131" y="146" font-size="15" fill="#555555" text-anchor="middle">模板·数据·样式</text>
+    </g>
+    <path d="M206 128h44" stroke="rgba(26,26,26,.4)" stroke-width="1.5"/>
+    <path d="M250 128l-8-4v8z" fill="rgba(26,26,26,.6)"/>
+
+    <g id="n-build">
+      <rect x="250" y="92" width="196" height="72" rx="14" fill="#FFFFFF" stroke="rgba(26,26,26,.18)"/>
+      <text x="348" y="122" font-size="20" fill="#1A1A1A" text-anchor="middle">build.js</text>
+      <text x="348" y="146" font-size="15" fill="#555555" text-anchor="middle">合并·压缩·内容哈希</text>
+    </g>
+    <path d="M446 128h44" stroke="rgba(26,26,26,.4)" stroke-width="1.5"/>
+    <path d="M490 128l-8-4v8z" fill="rgba(26,26,26,.6)"/>
+
+    <g id="n-dist">
+      <rect x="490" y="92" width="130" height="72" rx="14" fill="#FFFFFF" stroke="rgba(26,26,26,.18)"/>
+      <text x="555" y="122" font-size="20" fill="#1A1A1A" text-anchor="middle">dist/</text>
+      <text x="555" y="146" font-size="15" fill="#555555" text-anchor="middle">静态产物</text>
+    </g>
+    <path d="M620 128h44" stroke="rgba(26,26,26,.4)" stroke-width="1.5"/>
+    <path d="M664 128l-8-4v8z" fill="rgba(26,26,26,.6)"/>
+
+    <!-- 门禁：反色块，视觉上是「一道闸」 -->
+    <g id="n-gate">
+      <rect x="664" y="92" width="216" height="72" rx="14" fill="#1A1A1A"/>
+      <text x="772" y="122" font-size="20" fill="#FFFFFF" text-anchor="middle">check.js</text>
+      <text x="772" y="146" font-size="15" fill="#FFE28A" text-anchor="middle">红了就 exit 1</text>
+    </g>
+
+    <!-- 分叉到两个落点 -->
+    <path d="M880 128h30v-52h12" stroke="rgba(26,26,26,.4)" stroke-width="1.5" fill="none"/>
+    <path d="M922 76l-8-4v8z" fill="rgba(26,26,26,.6)"/>
+    <path d="M880 128h30v52h12" stroke="rgba(26,26,26,.4)" stroke-width="1.5" fill="none"/>
+    <path d="M922 180l-8-4v8z" fill="rgba(26,26,26,.6)"/>
+
+    <g id="n-vercel">
+      <rect x="922" y="56" width="222" height="72" rx="14" fill="#FFFFFF" stroke="#1A1A1A" stroke-width="1.5"/>
+      <text x="1033" y="84" font-size="19" fill="#1A1A1A" text-anchor="middle">Vercel · 正式站</text>
+      <text x="1033" y="108" font-size="15" fill="#555555" text-anchor="middle">techisle.top</text>
+    </g>
+    <g id="n-sites">
+      <rect x="922" y="160" width="222" height="72" rx="14" fill="#FFFFFF" stroke="rgba(26,26,26,.18)"/>
+      <text x="1033" y="188" font-size="19" fill="#1A1A1A" text-anchor="middle">Qoder Sites · 镜像</text>
+      <text x="1033" y="212" font-size="15" fill="#555555" text-anchor="middle">测试 / 境内分流</text>
+    </g>
+  </g>
+
+  <!-- 两条路各自的缓存策略（实测值，完整说明留在 Markdown） -->
+  <g font-family="ui-monospace, 'SF Mono', Menlo, Consolas, monospace" font-size="16">
+    <line x1="56" y1="258" x2="1144" y2="258" stroke="rgba(26,26,26,.18)"/>
+    <rect x="56" y="282" width="10" height="10" fill="#1A1A1A"/>
+    <text x="76" y="292" fill="#1A1A1A">Vercel：/assets/images/* → max-age=31536000, immutable</text>
+    <text x="640" y="292" fill="#555555">其余 → max-age=0, must-revalidate</text>
+
+    <rect x="56" y="316" width="10" height="10" fill="rgba(26,26,26,.18)"/>
+    <text x="76" y="326" fill="#1A1A1A">Qoder Sites：平台一律 no-cache（条件请求给 304）</text>
+    <text x="640" y="326" fill="#999999">vercel.json 在这条路上不起作用</text>
+  </g>
+</svg>
