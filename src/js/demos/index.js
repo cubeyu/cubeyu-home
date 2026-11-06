@@ -8,7 +8,17 @@
 // · app.js 在浏览器里按 [data-demo-root] 查它挂载，查不到即静默降级为纸面卡。
 // 因此本文件与它 import 的每个 demo 都不得在模块求值期碰 DOM —— 那会把构建打断。
 import { mountVitepressOnlineEditor } from './vitepress-online-editor.js';
+import { mountShuimoHome } from './shuimo-home.js';
+import { mountCubeyuHome } from './cubeyu-home.js';
+import { mountDonatePage } from './donate-page.js';
+import { mountCTools } from './ctools.js';
+import { mountOreMarket } from './ore-market.js';
 
 export default {
   'vitepress-online-editor': mountVitepressOnlineEditor,
+  'shuimo-home': mountShuimoHome,
+  'cubeyu-home': mountCubeyuHome,
+  'donate-page': mountDonatePage,
+  ctools: mountCTools,
+  'ore-market': mountOreMarket,
 };

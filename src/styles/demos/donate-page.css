@@ -1,0 +1,25 @@
+.d-donate {
+  box-sizing: border-box; display: flex; flex-direction: column; gap: 12px;
+  min-height: 272px; padding: 14px; overflow-wrap: anywhere;
+  color: var(--blueprint-ink); background-color: var(--preview-paper);
+  background-image:
+    linear-gradient(var(--blueprint-rule) 1px, var(--preview-paper) 1px),
+    linear-gradient(90deg, var(--blueprint-rule) 1px, var(--preview-paper) 1px);
+  background-size: 20px 20px; background-blend-mode: multiply;
+  border: 1px solid var(--blueprint-rule); border-radius: var(--radius-sm);
+}
+.d-donate-bar { justify-content: space-between; gap: 8px; font-size: 12px; line-height: 1.5; color: inherit; }
+.d-donate-sheet { padding: 12px; background: var(--preview-paper); border: 1px dashed var(--blueprint-ink); border-radius: var(--radius-sm); }
+.d-donate-caption { margin: 0; font-size: 12px; line-height: 1.5; }
+.d-donate-amount { margin: 4px 0 12px; font-size: 30px; font-weight: 600; line-height: 1.2; letter-spacing: -.04em; }
+.d-donate-wechat, .d-donate-alipay {
+  color: var(--blueprint-ink); background: var(--preview-paper); border: 1px solid var(--blueprint-ink);
+}
+.d-donate-wechat[aria-pressed="true"], .d-donate-alipay[aria-pressed="true"] {
+  background: var(--blueprint-ink); color: var(--preview-paper);
+}
+.d-donate-status { margin: 10px 0 0; font-size: 12px; line-height: 1.5; }
+.d-donate-note { margin: auto 0 0; font-size: 12px; line-height: 1.5; color: inherit; }
+@media (hover: hover) {
+  .d-donate-wechat:hover, .d-donate-alipay:hover { text-decoration: underline; text-underline-offset: 3px; }
+}

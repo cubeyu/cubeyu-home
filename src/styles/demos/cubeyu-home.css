@@ -1,0 +1,23 @@
+.d-home {
+  box-sizing: border-box; display: flex; flex-direction: column;
+  min-height: 272px; padding: 16px; overflow-wrap: anywhere;
+  background: var(--paper); color: var(--ink);
+  border: 1px solid var(--rule); border-radius: var(--radius-sm);
+}
+.d-home-bar { justify-content: space-between; gap: 8px; font-size: 12px; line-height: 1.5; color: var(--ink-2); }
+.d-home-title { margin: 16px 0 12px; font-size: 30px; line-height: 1; letter-spacing: -.045em; font-weight: 800; }
+.d-home-builds { padding: 0 4px; margin-left: -4px; background: var(--mark-bg); color: var(--mark-fg); }
+.d-home-work, .d-home-skills, .d-home-sites {
+  background: var(--surface); color: var(--ink-2); border: 1px solid var(--rule);
+}
+.d-home-work[aria-pressed="true"], .d-home-skills[aria-pressed="true"], .d-home-sites[aria-pressed="true"] {
+  background: var(--ink); color: var(--paper); border-color: var(--ink);
+}
+.d-home-result {
+  min-height: 44px; margin: 14px 0 0; padding-top: 12px;
+  border-top: 1px dashed var(--rule); font-size: 12px; line-height: 1.5;
+}
+.d-home-note { margin: auto 0 0; padding-top: 8px; font-size: 12px; line-height: 1.5; color: var(--ink-2); }
+@media (hover: hover) {
+  .d-home-work:hover, .d-home-skills:hover, .d-home-sites:hover { text-decoration: underline; text-underline-offset: 3px; }
+}

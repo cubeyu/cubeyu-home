@@ -15,6 +15,19 @@ test('registry keys match the files on disk', () => {
   assert.deepEqual(Object.keys(demos).sort(), files.sort());
 });
 
+test('the Markdown preview exposes a named keyboard-scroll region', () => {
+  for (const [lang, label] of [['zh', '实时预览'], ['en', 'PREVIEW']]) {
+    const root = fakeRoot();
+    const unmount = demos['vitepress-online-editor'](root, { lang });
+    const preview = /<div class="d-ink-out"([^>]*)>/.exec(root.innerHTML)?.[1];
+    assert.match(preview, /tabindex="0"/);
+    assert.match(preview, /role="region"/);
+    assert.ok(preview.includes(`aria-label="${label}"`));
+    assert.doesNotMatch(preview, /aria-live/);
+    unmount();
+  }
+});
+
 test('every registered demo is a function', () => {
   for (const [name, fn] of Object.entries(demos)) {
     assert.equal(typeof fn, 'function', `${name} is not a function`);
@@ -30,6 +43,9 @@ function fakeNode() {
     listeners: [],
     innerHTML: '',
     value: '',
+    attributes: new Map(),
+    setAttribute(name, value) { this.attributes.set(name, String(value)); },
+    getAttribute(name) { return this.attributes.get(name) ?? null; },
     selectionStart: 0,
     classList: { add() {}, remove() {} },
     addEventListener(type, cb) { this.listeners.push([type, cb]); },
@@ -130,7 +146,7 @@ test('mdToHtml renders the deliberate markdown subset', () => {
   assert.ok(!mdToHtml('- 咖啡', LABELS).includes('d-md-sr'), '普通 bullet 不该挂勾选态标签');
 });
 
-// 「问 AI」是按【块下标】定位的，它成立的前提是「每个非空行恰好产出一个块、空行一个也不产」。
+// 「标记」是按【块下标】定位的，它成立的前提是「每个非空行恰好产出一个块、空行一个也不产」。
 // 计划里那段把源码行号直接当块下标用，在示例这种中间带空行的文本上会标错行（askTargetIndex 是改过的映射），
 // 所以这条不变量必须钉住 —— 它同时是那个 bug 的回归网。
 test('one block per non-blank line, in order', () => {
@@ -179,7 +195,7 @@ test('markedLineText reads back the marked block without markdown noise', () => 
 
 // 马克笔黄的两条约束：底与字必须成对取 --mark-bg / --mark-fg（Task 7-8 裁定，暗色下底是半透明的，
 // 配 --ink-3 实测只有 2.24:1），以及 :hover 必须关在 @media (hover: hover) 里（触屏不留粘住的态）。
-test('the 问 AI mark uses both mark tokens and its hover is gated', () => {
+test('the 标记 mark uses both mark tokens and its hover is gated', () => {
   const css = readFileSync('src/styles/demos/vitepress-online-editor.css', 'utf8').replace(/\/\*[\s\S]*?\*\//g, '');
   const rule = /\.is-asked\s*\{([^}]*)\}/.exec(css);
   assert.ok(rule, 'vitepress-online-editor.css 里找不到 .is-asked');
@@ -220,7 +236,9 @@ test('the live region is the status node, not the re-rendered preview', () => {
   const js = readFileSync('src/js/demos/vitepress-online-editor.js', 'utf8');
   // 渲染容器「开到即关」：既证明它身上没有 aria-live，也证明播报节点没被塞进它内部
   // （塞进去就会被 render() 的 innerHTML 一起冲掉，live region 又变回整块重播）。
-  assert.match(js, /<div class="d-ink-out"><\/div>/, '.d-ink-out 不许带 aria-live，也不许有内部节点');
+  const preview = /<div class="d-ink-out"([^>]*)><\/div>/.exec(js);
+  assert.ok(preview, '.d-ink-out 的初始渲染面应为空');
+  assert.doesNotMatch(preview[1], /aria-live/, '输入时不应播报整个预览区域');
   assert.match(js, /<p class="d-ink-status" aria-live="polite"><\/p>/, '播报节点自带 aria-live="polite"');
   assert.match(js, /status\.textContent = T\.asked \+ markedLineText/, '播报内容只有「哪一行被标中」');
   // 改无障碍的同时别把演示的核心行为改掉：输入仍然即时重渲染。

@@ -91,11 +91,12 @@ test('palette strings from tokens.css parse into canvas-ready channels', () => {
 // 上面那条是手抄的期望，这一条直接读【产物】：源文件里的 rgba() 与压缩后的 #rrggbbaa
 // 是同一条 token 的两种写法，只有拿出厂的那份来解析，才真的锁住这条链路。
 test('every colour the field reads actually ships parseable', () => {
-  const css = readFileSync('dist/assets/app.css', 'utf8');
+  const css = readFileSync('dist/assets/app.css', 'utf8').replace(/\/\*[\s\S]*?\*\//g, '');
+  // 指针只读取文档根的配色，卡内独立主题不会传回根元素。
+  const palettes = [...css.matchAll(/(?:^|[{}])\s*(?::root|\[data-theme=["']?dark["']?\])\{([^{}]*)\}/g)].map((m) => m[1]).join(';');
   const names = ['--field-dot', '--field-hot', '--ink'];
   for (const name of names) {
-    // 取该名字【最后一次】声明的值：暗色块排在后面，两档都要能解析
-    const all = [...css.matchAll(new RegExp(`\\${name}:\\s*([^;}]+)`, 'g'))].map((m) => m[1].trim());
+    const all = [...palettes.matchAll(new RegExp(`\\${name}:\\s*([^;}]+)`, 'g'))].map((m) => m[1].trim());
     assert.ok(all.length >= 2, `${name} 在产物里只声明了 ${all.length} 次，明暗两档应当各一条`);
     for (const v of all) {
       assert.ok(Array.isArray(parseColor(v)), `${name} 的产物值 "${v}" 解析不出通道 —— pointer.js 会静默不启动`);

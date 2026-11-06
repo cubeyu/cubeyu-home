@@ -104,18 +104,11 @@ const cardTitle = (p) => {
   return p.url === '#' ? text : `<a class="card-link" href="${esc(p.url)}">${text}</a>`;
 };
 
-// demo 区（data-demo + .card-demo 容器）与 data-demo 属性都只在【该 demo 名已在注册表里实现】时输出，
-// 判据不是 projects.js 里声明了 p.demo。理由（Task 7-8 审查项 5）：声明是意图、注册才是实现，
-// 按声明输出会让空心边框盒进截图，看着像半成品 —— 那个洞在计划 Task 11 Step 7 里记过。
-// 按注册态输出：注册几个就渲染几个，M3 加 demo 时 build.js 一行都不用改；
-// 注册名拼错渲染成一张干净的纸面卡，而拼错本身由 check.js 的 DEMO_REGISTRY_MATCH 抓到。
-// card-hint 跟着一起走：那句话描述的是 demo 里的操作（「在左边改几个字」），
-// demo 不在的时候留着它就是在指一个不存在的交互。
 const hasDemo = (name) => typeof name === 'string' && Object.hasOwn(demoRegistry, name);
 
-const cardHtml = projects.map((p) => `
+const cardHtml = `<div class="project-list">` + projects.map((p) => `
     <article class="card" data-slug="${esc(p.slug)}"${hasDemo(p.demo) ? ` data-demo="${esc(p.demo)}"` : ''}>
-      <div>
+      <div class="card-info">
         <div class="card-meta">
           <span class="card-label">${i18n(p.label.zh, p.label.en)}</span>
           <span class="card-cat">${i18n(p.cat.zh, p.cat.en)}</span>
@@ -123,13 +116,21 @@ const cardHtml = projects.map((p) => `
         <h3 class="card-title">${cardTitle(p)}</h3>
         <p class="card-quote">${i18n(p.quote.zh, p.quote.en)}</p>
         <div class="card-tags">${p.tags.map((t) => `<span class="tag">${esc(t)}</span>`).join('')}</div>
-        ${hasDemo(p.demo) ? `<div class="card-demo" data-demo-root="${esc(p.demo)}"></div>
-        <p class="card-hint">${i18n(p.demoHint.zh, p.demoHint.en)}</p>` : ''}
+        ${p.credit ? `<p class="card-credit"><a href="${esc(p.credit.url)}">${i18n(p.credit.text.zh, p.credit.text.en)}</a></p>` : ''}
+        ${p.url !== '#' ? `<a class="card-visit" href="${esc(p.url)}">${i18n('查看项目', 'Explore project')}<span aria-hidden="true">↗</span></a>` : ''}
       </div>
-    </article>`).join('');
+      ${hasDemo(p.demo) ? `<div class="card-preview">
+        <div class="card-demo" data-demo-root="${esc(p.demo)}"></div>
+        <p class="card-hint">${i18n(p.demoHint.zh, p.demoHint.en)}</p>
+      </div>` : ''}
+    </article>`).join('') + `</div>`;
 
 const skillsHtml = `<div class="skills-grid rule-t">${skills.map((s) => `<span class="skill rule-b">${i18n(s.zh, s.en)}</span>`).join('')}</div>`;
-const sitesHtml = `<ul class="sites rule-t">${links.map((l) => `<li class="site rule-b"><a href="${esc(l.url)}">${esc(l.name)}</a><span class="site-note">${i18n(l.note.zh, l.note.en)}</span></li>`).join('')}</ul>`;
+const sitesHtml = `<ul class="sites">${links.map((l) => `<li class="site">`
+  + `<a class="site-link" href="${esc(l.url)}">`
+  + `<span class="site-heading"><span class="site-title">${esc(l.name)}</span><span class="site-arrow" aria-hidden="true">↗</span></span>`
+  + `<span class="site-note">${i18n(l.note.zh, l.note.en)}</span>`
+  + `</a></li>`).join('')}</ul>`;
 
 // 页脚邮箱按 brief 写字面量，而它现在是这个地址的【唯一出处】：links 里那条 mailto 已删。
 // 原先同一 URL 在两处各写一遍，换邮箱要记得改两处 —— 这是 ledger 记过的「两处真源」那一类，

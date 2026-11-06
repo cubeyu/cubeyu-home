@@ -1,54 +1,62 @@
-/* cards.css —— 作品卡 + 技能网格 + 站点区 + 页脚（Task 8）。
-   纪律同 hero.css：零字面色值，颜色一律 var(--…)；边框只有 1px 发丝线；
-   圆角只取 --radius-sm（4px），不用大圆角与玻璃拟态（Global Constraints / spec 4.3）。 */
-
-/* 卡片：发丝线 + 小圆角。禁止玻璃拟态与大圆角（Global Constraints） */
+.project-list { display: grid; gap: 16px; margin-top: 24px; }
 .card {
-  /* 这两条边框留在这里不改成 .rule-t / .rule-b 工具类，是有意的：
-     那两个类只能加在 <article> 自己身上，而 `<article class="card"` 是机器契约的锚点 ——
-     Task 12 的 CARD_COUNT 用 /<article class="card"/g 数卡（计划 Task 12 正文），
-     Task 8 brief 的 Step 4 结构检查也用同一个正则。往 class 里追加一个工具类
-     就会让这两处检查数出 0 张卡，换来的只是同一条声明换个地方写，视觉零差别。
-     卡片以外的那些单边发丝线（技能网格、站点区、页脚）都已改用 .rule-t / .rule-b。 */
-  border-top: var(--rule-w) solid var(--rule);
-  padding-block: 32px;
-  /* 屏外的卡片不渲染内部（参照站 .pcard 同一条）。contain-intrinsic-size 的 auto
-     让浏览器记住每张卡真实渲染过的高度，滚动条长度因此不会跳。
-     支持线 Chrome 85 / Safari 18 / Firefox 125 —— 我们下限（Safari 15.4、FF 90）上
-     这两条被整条忽略，退回"全部渲染"，不是坏状态。
-     现在 7 张卡的收益很小，值得留着的原因是用户会换卡、也可能加卡。 */
+  min-width: 0;
+  border: var(--rule-w) solid var(--card-rule);
+  border-radius: var(--radius-card);
+  background: var(--paper);
+  padding: 22px 26px;
   content-visibility: auto;
-  contain-intrinsic-size: auto 320px;
+  contain-intrinsic-size: auto 340px;
+  transition: border-color .6s var(--ease-expo), box-shadow .6s var(--ease-expo);
 }
-/* 最后一张卡补下边线，整组卡片自成一段发丝线区间（同上：保留在组件里，理由见 .card） */
-.card:last-of-type { border-bottom: var(--rule-w) solid var(--rule); }
-
-/* 卡片原先是 `grid-template-columns: 64px 1fr` 两列，左列放 N°01 这类序号。
-   序号已按用户要求整批去掉（数据里的 no 字段、build.js 的 .card-no、base.css 的 .num 一起删），
-   所以这里不再需要 grid —— 留着空网格就是给一张卡加一层没有内容的列。
-   顺带窄屏那条"塌成一列"的媒体查询也失去对象，一并删掉。 */
-.card-meta { display: flex; gap: 12px; align-items: baseline; flex-wrap: wrap; }
-.card-label { font-family: var(--font-mono); font-size: 12px; font-weight: 650; color: var(--ink-2); }
-.card-cat { font-family: var(--font-mono); font-size: 12px; color: var(--ink-3); }
-
-/* 标题链接：下划线换成 hover 才落下的 1px 实线，静态时保持透明占位以免跳动 */
-.card-title a { text-decoration: none; color: var(--ink); border-bottom: var(--rule-w) solid transparent; }
-.card-title a:hover { border-bottom-color: var(--ink); }
-
-/* 15px / 1.95 是参照站 .pinfo p 的实测值（h3 用 clamp 到 40px 之后，
-   16px/24px 的说明文字相对太粗太重，卡片会读起来像正文段落而不是注脚）。 */
-.card-quote { margin: 10px 0 0; max-width: 62ch; font-size: 15px; line-height: 1.95; color: var(--ink-2); }
-.card-tags { margin-top: 14px; display: flex; gap: 6px; flex-wrap: wrap; }
-.card-demo { margin-top: 20px; border: var(--rule-w) solid var(--rule); border-radius: var(--radius-sm); background: var(--surface); padding: 16px; }
-/* 12px：spec 4.3 的阶梯是 58 / 30 / 16 / 12 加正文 16/24，本批其余等宽小项也全是 12px。
-   原来的 11px 是计划发明的阶梯外字号（同批还有 .site a 的 13px），违反「实测而非发明」约束。 */
-.card-hint { margin-top: 10px; font-family: var(--font-mono); font-size: 12px; color: var(--ink-3); }
-
-/* 强调要克制：卡片的 hover 只动既有文字的颜色（上面 .card-title a），不引新色、不加位移。
-   原先这里还有一条 `.card:hover .card-no` 把序号从三级墨提到正文墨 —— 序号整批去掉后
-   它没有作用对象了，所以连规则带选择器一起删，不留一个永远不会命中的钩子。
-   马克笔黄（--mark-bg）整站唯一的常驻强调点在 hero 的身份行（hero.css 有裁定说明），
-   M3 起各 demo 内部另按 spec 7.1 各用一处（在线编辑器那张卡的「问 AI」按钮）；本文件不引 --mark-bg。 */
+.card-info { min-width: 0; }
+.card-preview { display: none; min-width: 0; }
+/* 只有挂载成功才分栏；无脚本时不留空舞台。 */
+.card[data-preview-ready] { display: grid; grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr); align-items: center; gap: 36px; min-height: 300px; }
+.card[data-preview-ready] .card-info { grid-area: 1 / 2; }
+.card[data-preview-ready] .card-preview { display: block; grid-area: 1 / 1; }
+.card[data-preview-ready]:nth-child(even) { grid-template-columns: minmax(0, 1fr) minmax(0, 1.15fr); }
+.card[data-preview-ready]:nth-child(even) .card-info { grid-column: 1; }
+.card[data-preview-ready]:nth-child(even) .card-preview { grid-column: 2; }
+.card-meta { display: flex; gap: 12px; align-items: baseline; flex-wrap: wrap; margin-bottom: 10px; }
+.card-label, .card-cat { font-family: var(--font-mono); font-size: 12px; line-height: 1.5; color: var(--ink-2); }
+.card-label { font-weight: 650; }
+.card-cat::before { content: '/'; margin-right: 12px; color: var(--ink-3); }
+.card-title { line-height: 1.16; overflow-wrap: anywhere; }
+.card-link { text-decoration: none; color: var(--ink); background: linear-gradient(var(--mark-bg), var(--mark-bg)) no-repeat 0 72% / 0% 36%; transition: background-size .6s var(--ease-expo); }
+.card-link:focus-visible { background-size: 100% 36%; }
+.card-quote { margin: 14px 0 0; font-size: 15px; line-height: 1.95; color: var(--ink-2); }
+.card-tags { margin-top: 14px; display: flex; gap: 6px 10px; flex-wrap: wrap; }
+.card-tags .tag { border: none; padding: 0; font-size: 11px; line-height: 1.6; }
+.card-tags .tag + .tag::before { content: '·'; margin-right: 10px; color: var(--ink-3); }
+.card-credit { margin: 12px 0 0; font-size: 12px; line-height: 1.6; color: var(--ink-2); }
+.card-credit a { text-underline-offset: 3px; }
+.card-visit { display: inline-flex; align-items: center; gap: 8px; margin-top: 20px; font-size: 14px; line-height: 1.5; text-decoration: none; color: var(--ink-2); }
+.card-visit > span[aria-hidden] { display: inline-block; transition: transform .6s var(--ease-expo); }
+.card-visit:focus-visible > span[aria-hidden] { transform: translate(3px, -3px); }
+.card-demo { min-width: 0; border-radius: 12px; background: var(--surface); padding: 16px; }
+.card-hint { margin: 12px 0 0; font-size: 12px; line-height: 1.65; color: var(--ink-2); }
+.demo-window { width: 100%; min-width: 0; }
+.demo-bar { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 16px; font-family: var(--font-mono); font-size: 11px; line-height: 1.5; }
+.demo-controls { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; }
+.demo-button { min-height: 32px; border: var(--rule-w) solid var(--rule); border-radius: var(--radius-pill); padding: 5px 12px; font-size: 12px; line-height: 1.5; background: var(--paper); color: var(--ink); cursor: pointer; transition: background .3s var(--ease-expo), color .3s var(--ease-expo); }
+.demo-button[aria-pressed="true"] { background: var(--ink); color: var(--paper); border-color: var(--ink); }
+.demo-note { margin: 12px 0 0; font-size: 12px; line-height: 1.6; color: var(--ink-2); }
+.demo-result { font-family: var(--font-mono); }
+@media (hover: hover) {
+  .card:hover { border-color: var(--rule); box-shadow: 0 12px 30px var(--card-shadow); }
+  .card-link:hover { color: var(--ink); background-size: 100% 36%; }
+  .card-visit:hover > span[aria-hidden] { transform: translate(3px, -3px); }
+  .demo-button:hover { border-color: var(--ink); }
+}
+@media (max-width: 760px) {
+  .card { padding: 18px 16px 24px; }
+  .card[data-preview-ready], .card[data-preview-ready]:nth-child(even) { grid-template-columns: minmax(0, 1fr); gap: 24px; }
+  .card[data-preview-ready] .card-preview, .card[data-preview-ready]:nth-child(even) .card-preview { grid-area: 1 / 1; }
+  .card[data-preview-ready] .card-info, .card[data-preview-ready]:nth-child(even) .card-info { grid-area: 2 / 1; }
+  .card-preview { width: 100%; max-width: 420px; justify-self: center; }
+  .card-title { font-size: 32px; }
+}
 
 /* 技能：发丝线网格，等宽，不放图标（spec 7 节）。
    上边线由 .skills-grid 上的 .rule-t、每个格子的下边线由 .skill 上的 .rule-b 提供（base.css 工具类）；
@@ -56,12 +64,29 @@
 .skills-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 0; margin-top: 20px; border-left: var(--rule-w) solid var(--rule); }
 .skill { font-family: var(--font-mono); font-size: 12px; padding: 12px; border-right: var(--rule-w) solid var(--rule); color: var(--ink-2); }
 
-/* 站点：一行一条，名字 + 说明。上边线走 .sites 的 .rule-t，每行下边线走 .site 的 .rule-b */
-.sites { list-style: none; margin: 20px 0 0; padding: 0; }
-.site { display: flex; justify-content: space-between; gap: 16px; padding-block: 14px; }
-/* 同样是 12px（阶梯内），原来的 13px 是发明的字号 */
-.site a { font-family: var(--font-mono); font-size: 12px; text-decoration: none; }
-.site-note { font-size: 12px; color: var(--ink-3); }
+.sites { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; list-style: none; margin: 24px 0 0; padding: 0; }
+.site { min-width: 0; }
+.site-link {
+  display: flex; flex-direction: column; gap: 18px; height: 100%; min-height: 154px;
+  padding: 24px 26px; border: var(--rule-w) solid var(--card-rule); border-radius: var(--radius-card);
+  background: var(--paper); color: var(--ink); text-decoration: none;
+  transition: border-color .6s var(--ease-expo), box-shadow .6s var(--ease-expo);
+}
+.site-heading { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; }
+.site-title { min-width: 0; font-size: 24px; line-height: 1.3; font-weight: 800; letter-spacing: -.03em; overflow-wrap: anywhere; background: linear-gradient(var(--mark-bg), var(--mark-bg)) no-repeat 0 72% / 0% 36%; transition: background-size .6s var(--ease-expo); }
+.site-arrow { flex: 0 0 auto; font-size: 22px; line-height: 1.4; color: var(--ink-2); transition: transform .6s var(--ease-expo), color .6s var(--ease-expo); }
+.site-note { margin-top: auto; font-size: 15px; line-height: 1.75; color: var(--ink-2); overflow-wrap: anywhere; }
+.site-link:focus-visible .site-title { background-size: 100% 36%; }
+.site-link:focus-visible .site-arrow { color: var(--ink); transform: translate(3px, -3px); }
+@media (hover: hover) {
+  .site-link:hover { color: var(--ink); border-color: var(--rule); box-shadow: 0 12px 30px var(--card-shadow); }
+  .site-link:hover .site-title { background-size: 100% 36%; }
+  .site-link:hover .site-arrow { color: var(--ink); transform: translate(3px, -3px); }
+}
+@media (max-width: 760px) {
+  .sites { grid-template-columns: minmax(0, 1fr); }
+  .site-link { padding: 22px 20px; min-height: 138px; }
+}
 
 /* 页脚：上边线走 .foot 上的 .rule-t。纵向节奏照参照站 .col > footer
    （桌面 12vh / 46px，窄屏 8vh / 32px 在 base.css 的 760 档里，与 .col、section 同一断点）。 */

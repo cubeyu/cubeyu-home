@@ -1,0 +1,16 @@
+.d-ctools {
+  box-sizing: border-box; display: flex; flex-direction: column; gap: 10px;
+  min-height: 280px; padding: 14px; overflow-wrap: anywhere;
+  background: var(--preview-night); color: var(--preview-night-ink);
+  border: 1px solid var(--rule); border-radius: var(--radius-sm);
+}
+.d-ctools-bar {
+  justify-content: space-between; gap: 8px; padding-bottom: 8px;
+  border-bottom: 1px dashed var(--preview-night-ink); font-size: 12px; line-height: 1.5; color: inherit;
+}
+.d-ctools-terminal { flex: 1; min-height: 138px; font-family: ui-monospace, monospace; font-size: 12px; line-height: 1.45; }
+.d-ctools-welcome, .d-ctools-rules { margin: 0 0 6px; }
+.d-ctools-status { margin: 0; white-space: pre-line; font-size: 12px; line-height: 1.45; }
+.d-ctools-join { background: var(--preview-night-ink); color: var(--preview-night); border: 1px solid var(--preview-night-ink); }
+.d-ctools-note { margin: 0; font-size: 12px; line-height: 1.5; color: inherit; }
+@media (hover: hover) { .d-ctools-join:hover { text-decoration: underline; text-underline-offset: 3px; } }

@@ -1,5 +1,5 @@
 // vitepress-online-editor.js —— 同名作品卡的微原型（spec 7.1）：左栏 Markdown 源码、右栏实时渲染，
-// 一个「问 AI」按钮把光标所在那一行标成马克笔黄。零依赖，故意只做 markdown 的一个子集
+// 一个「标记」按钮把光标所在那一行标成马克笔黄。零依赖，故意只做 markdown 的一个子集
 // （标题 / 任务列表 / 加粗 / 行内代码）—— 完整 CommonMark 是另一个项目，不是这个演示。
 //
 // 纪律：本模块在【模块求值期与 mount 期】都不碰 document / window。
@@ -7,24 +7,22 @@
 // test/demos.test.js 用一副最小假 DOM 跑 mount+unmount，而 node --test 里没有 globalThis.document，
 // 所以任何顶层或 mount 期的 document 访问都会当场 ReferenceError，两处一起守住这条边界。
 //
-// ctx.lang 只在挂载时读一次（spec 5.1）。切语言不重挂已挂载的 demo —— 等 M3 有多个 demo 要一起
-// 编排 unmount + 重挂时再统一设计，不在本任务单点解决。
 
 // 示例文本是演示内容，不在 src/data/* 里（那里只有卡片文案），所以按 spec 7.1 的批准文案写在这里。
 // 两个语种各一套，形状一致：中间的空行是故意的 —— 它正是 askTargetIndex 要处理的那种行。
 const SAMPLE = {
-  zh: ['## 今日排期', '', '- [x] 把 demo 挂上主页', '- [ ] 写完微原型', '', '选中一行，**点右边的按钮**。', ''],
-  en: ['## Today', '', '- [x] ship the demo', '- [ ] finish the micro prototypes', '', 'Select a line, then **hit the button**.', ''],
+  zh: ['## 今天的笔记', '', '- [x] 写点东西', '- [ ] 发到博客', '', '**从这里开始。**'],
+  en: ['## Notes', '', '- [x] Write a little', '- [ ] Publish a post', '', '**Start here.**'],
 };
 
 // 界面词。EN 的两个栏标用大写是等宽小标的排版（与 base.css 的 .eyebrow 同气味），不是另一个语种规则。
 // done / todo 是读屏用的：勾选态今天只有「✓/· 加删除线」两个视觉记号，屏幕阅读器拿不到，
 // 所以每个列表项挂一个视觉隐藏的文本标签（.d-md-sr）。
-// asked 是「问 AI」播报的前缀，冒号与尾随空格算在词里：中英文的标点和空格习惯不同（：vs ": "），
+// asked 是「标记」播报的前缀，冒号与尾随空格算在词里：中英文的标点和空格习惯不同（：vs ": "），
 // 拼在模板里就会有一半是错的语种，所以整段交给语种表。
 const LABELS = {
-  zh: { src: '源码', out: '渲染', ask: '问 AI', done: '已完成', todo: '未完成', asked: '已标记：' },
-  en: { src: 'MARKDOWN', out: 'PREVIEW', ask: 'Ask AI', done: 'done', todo: 'to do', asked: 'Marked: ' },
+  zh: { src: 'Markdown', out: '实时预览', ask: '标记当前行', done: '已完成', todo: '未完成', asked: '已标记：' },
+  en: { src: 'MARKDOWN', out: 'PREVIEW', ask: 'Mark this line', done: 'done', todo: 'to do', asked: 'Marked: ' },
 };
 
 // 本模块唯一的转义出口。与 src/lib/build-utils.js 的 esc() 同表同形状，但不能 import 它：
@@ -35,7 +33,7 @@ const HTML_ESCAPES = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'
 const esc = (value) => String(value).replace(/[&<>"']/g, (c) => HTML_ESCAPES[c]);
 
 // 「空行」的唯一判据：mdToHtml 用它决定要不要产出块，askTargetIndex 用它数块。
-// 两处必须同一个口径，否则「问 AI」标错行 —— 所以它是一个函数而不是一处内联比较。
+// 两处必须同一个口径，否则「标记」标错行 —— 所以它是一个函数而不是一处内联比较。
 const isBlank = (line) => line.trim() === '';
 
 // 故意只支持的行内语法。传进来的 s 已经过 esc()，所以 $1 里不可能有裸 < 或裸引号。
@@ -72,7 +70,7 @@ export function mdToHtml(src, labels) {
   }).join('');
 }
 
-// 预览里可被「问 AI」标中的那些块，与 mdToHtml 产出的类名同一份清单。
+// 预览里可被「标记」标中的那些块，与 mdToHtml 产出的类名同一份清单。
 const BLOCK_SELECTOR = '.d-md-h, .d-md-li, .d-md-p';
 
 // 光标位置 → 该标第几个块；没有可标的块给 -1。导出同 mdToHtml 的理由：这是纯计算，
@@ -121,7 +119,7 @@ export function mountVitepressOnlineEditor(el, ctx) {
       </div>
       <div class="d-ink-pane">
         <span class="d-ink-cap">${esc(T.out)}</span>
-        <div class="d-ink-out"></div>
+        <div class="d-ink-out" tabindex="0" role="region" aria-label="${esc(T.out)}"></div>
         <p class="d-ink-status" aria-live="polite"></p>
       </div>
       <button type="button" class="d-ink-ask">${esc(T.ask)}</button>
@@ -135,7 +133,7 @@ export function mountVitepressOnlineEditor(el, ctx) {
   // 播报面与渲染面分开（Task 11 审查 I3）：aria-live 原来压在 .d-ink-out 上，
   // 而这里每次 input 都整块重写它的 innerHTML —— 读屏会把整篇文档按字符重播一遍，
   // 盖掉用户本来就在听的字符反馈。所以 .d-ink-out 不再是 live region，
-  // 播报只归 .d-ink-status 那一个节点（它的 textContent 只在「问 AI」那一刻变）。
+  // 播报只归 .d-ink-status 那一个节点（它的 textContent 只在「标记」那一刻变）。
   // 顺带清一次播报：重渲染已经把 .is-asked 冲掉了，留着上一行的名字就是假信息。
   // 清空 textContent 不会被读屏念出来（没有新内容），所以这一步是安静的。
   const render = () => {
@@ -145,13 +143,13 @@ export function mountVitepressOnlineEditor(el, ctx) {
 
   // 示例文本走 .value 赋值而不是 innerHTML：textarea 的 value 是属性写入、不是 HTML 解析，
   // 所以里面的 `**` 与引号原样进框，不需要也不该再过一次 esc（过了就会显示成 &amp; 字面量）。
-  ta.value = SAMPLE[lang].join('\n');
+  ta.defaultValue = SAMPLE[lang].join('\n');
+  ta.value = ta.defaultValue;
   render();
 
   // 输入即重渲染：这就是卡片 hint 那句「在左边改几个字，看右边怎么跟着变」。
   ta.addEventListener('input', render);
 
-  // 「问 AI」不接真模型：把光标那一行标成马克笔黄，演示的是「选中一段丢给模型」这个语义。
   const onAsk = () => {
     const blocks = out.querySelectorAll(BLOCK_SELECTOR);
     for (const node of blocks) node.classList.remove('is-asked');
@@ -164,8 +162,6 @@ export function mountVitepressOnlineEditor(el, ctx) {
   };
   ask.addEventListener('click', onAsk);
 
-  // 卸载：摘掉自己挂的两个监听，清空容器。M1 没有卸载路径（切语言不重挂），
-  // 所以这个返回值今天只有 test/demos.test.js 消费 —— M3 的 re-mount 编排是它的真实用户。
   return function unmount() {
     ta.removeEventListener('input', render);
     ask.removeEventListener('click', onAsk);

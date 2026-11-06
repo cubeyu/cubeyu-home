@@ -1,0 +1,48 @@
+.d-shuimo {
+  box-sizing: border-box;
+  display: flex; flex-direction: column; align-items: center;
+  min-height: 272px; padding: 14px; overflow-wrap: anywhere;
+  border: 1px solid var(--rule); border-radius: var(--radius-sm);
+  background: var(--preview-paper); color: var(--preview-ink);
+  transition: background-color .3s var(--ease-expo), color .3s var(--ease-expo);
+}
+.d-shuimo-bar {
+  width: 100%; justify-content: space-between; gap: 8px;
+  font-size: 12px; line-height: 1.5; color: inherit;
+}
+.d-shuimo-landscape {
+  position: relative; flex: 0 0 64px; width: 64px; height: 64px;
+  margin: 10px auto 4px; overflow: hidden; border-radius: var(--radius-pill);
+  border: 1px solid var(--preview-ink);
+  background: radial-gradient(circle at 70% 26%, var(--preview-ink) 0 4px, var(--preview-paper) 4.5px);
+}
+.d-shuimo-landscape::before, .d-shuimo-landscape::after {
+  content: ''; position: absolute; inset: 0; background: var(--preview-ink);
+}
+.d-shuimo-landscape::before {
+  opacity: .35;
+  clip-path: polygon(0 78%, 36% 24%, 68% 65%, 83% 47%, 100% 74%, 100% 100%, 0 100%);
+}
+.d-shuimo-landscape::after {
+  clip-path: polygon(0 100%, 0 90%, 24% 66%, 41% 81%, 70% 49%, 100% 78%, 100% 100%);
+}
+.d-shuimo-name { margin: 0; font-family: Georgia, serif; font-size: 30px; line-height: 1.1; font-weight: 400; }
+.d-shuimo-intro { margin: 4px 0 10px; font-size: 12px; line-height: 1.5; text-align: center; }
+.d-shuimo-controls { justify-content: center; align-items: center; }
+.d-shuimo-toggle {
+  background: var(--preview-paper); color: var(--preview-ink);
+  border: 1px solid var(--preview-ink);
+}
+.d-shuimo-status { font-size: 12px; line-height: 1.5; }
+.d-shuimo-note { margin: 10px 0 0; font-size: 12px; line-height: 1.5; text-align: center; color: inherit; }
+.d-shuimo[data-mode="dark"] { background: var(--preview-night); color: var(--preview-night-ink); }
+.d-shuimo[data-mode="dark"] .d-shuimo-landscape {
+  border-color: var(--preview-night-ink);
+  background: radial-gradient(circle at 70% 26%, var(--preview-night-ink) 0 4px, var(--preview-night) 4.5px);
+}
+.d-shuimo[data-mode="dark"] .d-shuimo-landscape::before,
+.d-shuimo[data-mode="dark"] .d-shuimo-landscape::after { background: var(--preview-night-ink); }
+.d-shuimo[data-mode="dark"] .d-shuimo-toggle {
+  background: var(--preview-night); color: var(--preview-night-ink); border-color: var(--preview-night-ink);
+}
+@media (hover: hover) { .d-shuimo-toggle:hover { text-decoration: underline; text-underline-offset: 3px; } }

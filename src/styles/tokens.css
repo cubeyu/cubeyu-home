@@ -20,6 +20,8 @@
   --rule: rgba(26, 26, 26, .18);
   --rule-strong: #1A1A1A;
   --rule-dashed: rgba(26, 26, 26, .25);
+  --card-rule: #E8E8E8;
+  --card-shadow: rgba(26, 26, 26, .045);
   /* tab 右上角空心大编号的描边色（tabs.css 的 -webkit-text-stroke）。
      单独一条而不是复用 --rule：描边只有 1px，需要比发丝线更淡一档才不抢正文。 */
   --rule-ghost: rgba(26, 26, 26, .10);
@@ -57,6 +59,7 @@
   --col: 820px;
   --rule-w: 1px;
   --radius-sm: 4px;
+  --radius-card: 20px;
   --radius-pill: 999px;
 
   /* 动效 —— 全站唯一缓动曲线 */
@@ -68,6 +71,20 @@
   /* 预留给 M4 的区块入场 reveal（hero 遮罩实测 .9s 一档，不是这个值）；今天零消费者是有意保留，别当未用变量删掉 */
   --dur-enter: 1.4s;
 }
+
+/* 小预览保留各项目自己的调色板，与外层站点主题独立。 */
+.card-preview {
+  --preview-paper: #F7F5F0;
+  --preview-ink: #262B28;
+  --preview-night: #222A29;
+  --preview-night-ink: #EEEEE5;
+  --blueprint-ink: #34596E;
+  --blueprint-rule: rgba(52, 89, 110, .16);
+}
+
+.d-shuimo { --ink: var(--preview-ink); --paper: var(--preview-paper); }
+.d-shuimo[data-mode="dark"], .d-ctools { --ink: var(--preview-night-ink); --paper: var(--preview-night); }
+.d-donate { --ink: var(--blueprint-ink); --paper: var(--preview-paper); }
 
 [data-theme="dark"] {
   /* 焦点环 / 滚动条 / 选区 / 表单控件底色一并转暗，见 :root 那条注释（spec 4.1） */
@@ -82,6 +99,8 @@
   --rule: rgba(255, 255, 255, .14);
   --rule-strong: #EDEDED;
   --rule-dashed: rgba(255, 255, 255, .22);
+  --card-rule: #303033;
+  --card-shadow: rgba(0, 0, 0, .18);
   --rule-ghost: rgba(255, 255, 255, .10);
   /* 纯 #FFE28A 在暗底过曝，降级为半透明底纹 —— 与亮色观感不同源，是 spec 记录的有意取舍 */
   --mark-bg: rgba(255, 226, 138, .24);

@@ -1,6 +1,6 @@
 export const sections = [
   // 标题里不写数量词：用户会换卡，「七个」在第一次换卡后就变成假话（Task 7-8 审查项 9）。
-  { id: 'works',   eyebrow: '作品 / WORKS',  title: { zh: '能上手玩的东西', en: 'Things you can actually poke' } },
+  { id: 'works',   eyebrow: '作品 / WORKS',  title: { zh: '做过的，也在维护的', en: 'Things I build and maintain' } },
   { id: 'skills',  eyebrow: '技能 / SKILLS', title: { zh: '日常在用', en: 'In daily use' } },
   { id: 'sites',   eyebrow: '站点 / SITES',  title: { zh: '我维护的其它东西', en: 'Other things I run' } },
 ];
@@ -17,6 +17,7 @@ export const ui = {
 //   已下线的不列：portfolio 子站、今日热榜（hot.techisle.top 实测 404）；
 //   入口已在别处的不重复列：github.com/cubeyu 在导航右上角，邮箱在页脚。
 export const links = [
+  { name: '模力全开 · 小工具合集', url: 'https://cubeyu.rth1.xyz/', note: { zh: '即点即用的浏览器小工具', en: 'Small tools that run in your browser' } },
   { name: 'ClawBase',   url: 'https://clawbase.cc',                    note: { zh: 'AI 代理部署聚合', en: 'Agent deploy guides' } },
   { name: '支持一下',    url: 'https://donate.techisle.top',            note: { zh: '赞赏', en: 'Buy me a coffee' } },
   { name: '站点监控',    url: 'https://check.techisle.top',             note: { zh: '可用性巡检', en: 'Uptime checks' } },

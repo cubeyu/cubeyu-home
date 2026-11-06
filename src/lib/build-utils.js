@@ -31,4 +31,9 @@ export const cssOrder = [
   'cards.css',
   'tabs.css',
   'demos/vitepress-online-editor.css',
+  'demos/shuimo-home.css',
+  'demos/cubeyu-home.css',
+  'demos/donate-page.css',
+  'demos/ctools.css',
+  'demos/ore-market.css',
 ];

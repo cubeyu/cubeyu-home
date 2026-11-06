@@ -1,0 +1,24 @@
+.d-ore {
+  box-sizing: border-box; display: flex; flex-direction: column;
+  min-height: 272px; padding: 14px; overflow-wrap: anywhere;
+  background: var(--paper); color: var(--ink);
+  border: 1px solid var(--rule); border-radius: var(--radius-sm);
+}
+.d-ore-bar { justify-content: space-between; gap: 8px; margin-bottom: 12px; font-size: 12px; line-height: 1.5; color: var(--ink-2); }
+.d-ore-iron, .d-ore-gold, .d-ore-diamond { background: var(--surface); color: var(--ink-2); border: 1px solid var(--rule); }
+.d-ore-iron[aria-pressed="true"], .d-ore-gold[aria-pressed="true"], .d-ore-diamond[aria-pressed="true"] {
+  background: var(--mark-bg); color: var(--mark-fg); border-color: var(--mark-fg);
+}
+.d-ore-quote { margin-top: 12px; font-size: 12px; line-height: 1.5; }
+.d-ore-name { font-weight: 600; }
+.d-ore-value { display: flex; align-items: baseline; flex-wrap: wrap; gap: 8px; margin: 2px 0; }
+.d-ore-price { font-size: 30px; font-weight: 500; line-height: 1.1; letter-spacing: -.04em; }
+.d-ore-unit { color: var(--ink-2); font-size: 12px; }
+.d-ore-trend { margin: 0; color: var(--ink-2); }
+.d-ore-chart { display: block; width: 100%; height: 54px; margin-top: 6px; overflow: hidden; }
+.d-ore-grid { fill: none; stroke: var(--rule); stroke-width: 1; }
+.d-ore-line { fill: none; stroke: var(--ink); stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+.d-ore-note { margin: auto 0 0; padding-top: 10px; font-size: 12px; line-height: 1.5; color: var(--ink-2); }
+@media (hover: hover) {
+  .d-ore-iron:hover, .d-ore-gold:hover, .d-ore-diamond:hover { text-decoration: underline; text-underline-offset: 3px; }
+}

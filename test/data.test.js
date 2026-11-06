@@ -108,6 +108,66 @@ test('hero mask lines are identical in both languages, as build.js assumes', () 
 // Task 10 Step 5：无 JS 完整性。双语两套节点在构建时烘进产物，运行时只翻 <html lang>，
 // 所以关掉 JavaScript 页面仍有全部文案 —— 这条断言扫的是 dist/，不是 src/，
 // 测的正是「内容不靠运行时渲染」这件事本身（先 npm run build 再 npm test）。
+test('featured repository links are current in the built page', async () => {
+  const { readFileSync } = await import('node:fs');
+  const html = readFileSync('dist/index.html', 'utf8');
+  const cardLinks = [...html.matchAll(/<a class="card-link" href="([^"]+)"/g)].map((m) => m[1]);
+  assert.deepEqual(cardLinks, [
+    'https://github.com/cubeyu/ViteEditor',
+    'https://github.com/cubeyu/ShuiMoHome',
+    'https://github.com/cubeyu/cubeyu-home',
+    'https://github.com/cubeyu/DonatePage',
+    'https://github.com/cubeyu/CTools',
+    'https://github.com/cubeyu/Ore-Market',
+  ]);
+  const sites = /<section id="sites"[\s\S]*?<\/section>/.exec(html)?.[0];
+  assert.ok(sites?.includes('href="https://cubeyu.rth1.xyz/"'), 'the toolkit remains reachable in Sites');
+});
+
+test('site cards keep each destination and description inside one native link', async () => {
+  const { readFileSync } = await import('node:fs');
+  const { esc } = await import('../src/lib/build-utils.js');
+  const html = readFileSync('dist/index.html', 'utf8');
+  const section = /<section id="sites"[\s\S]*?<\/section>/.exec(html)?.[0] ?? '';
+  const items = [...section.matchAll(/<li class="site">([\s\S]*?)<\/li>/g)].map((m) => m[1]);
+  assert.equal(items.length, links.length, 'every existing destination renders as a site card');
+  items.forEach((item, index) => {
+    const link = links[index];
+    const anchor = /<a class="site-link" href="([^"]+)">([\s\S]*)<\/a>/.exec(item);
+    assert.ok(anchor, 'the entire site card must be a native link');
+    assert.equal(anchor[1], esc(link.url));
+    assert.ok(anchor[2].includes(esc(link.name)));
+    assert.ok(anchor[2].includes(esc(link.note.zh)));
+    assert.ok(anchor[2].includes(esc(link.note.en)));
+    assert.match(anchor[2], /class="site-arrow" aria-hidden="true"/);
+    assert.equal((item.match(/<(?:a|button|input)\b/g) ?? []).length, 1);
+  });
+});
+
+test('adapted and maintained cards expose their upstream credit', async () => {
+  const { readFileSync } = await import('node:fs');
+  const html = readFileSync('dist/index.html', 'utf8');
+  for (const [slug, upstream] of [
+    ['donate-page', 'https://github.com/qr-merger/merger'],
+    ['ore-market', 'https://github.com/OllieJW/Ore-Market'],
+  ]) {
+    const card = new RegExp(`<article class="card" data-slug="${slug}"[\\s\\S]*?</article>`).exec(html)?.[0];
+    assert.ok(card?.includes(`href="${upstream}"`), `${slug} must credit its upstream within its own card`);
+  }
+});
+
+test('every featured card has separate content and preview regions', async () => {
+  const { readFileSync } = await import('node:fs');
+  const html = readFileSync('dist/index.html', 'utf8');
+  const articles = [...html.matchAll(/<article class="card"[\s\S]*?<\/article>/g)].map((m) => m[0]);
+  for (const article of articles) {
+    assert.match(article, /class="card-info"/);
+    assert.match(article, /class="card-preview"/);
+    assert.match(article, /data-demo-root="[^"]+"/);
+    assert.match(article, /class="card-visit"/);
+  }
+});
+
 test('content does not depend on JS to appear', async () => {
   const { readFileSync } = await import('node:fs');
   const html = readFileSync('dist/index.html', 'utf8');
@@ -277,10 +337,8 @@ test('the language control is a real button whose baked text is what JS will pai
   }
 });
 
-test('no classical-Chinese branding anywhere', () => {
-  // links 与 ui 同样是文案，之前没进扫描 = 网漏了两块。人工核过今天它们是干净的，
-  // 补进来的意义在于以后往站点区加文案时网仍然罩得住。
-  const blob = JSON.stringify({ projects, skills, sections, ui, links, site });
+test('site branding stays distinct from the styles of featured projects', () => {
+  const blob = JSON.stringify({ skills, sections, ui, links, site });
   for (const banned of ['代码诗人', '以墨为笔', '以码为诗', '水墨', '展 卷', '题跋']) {
     assert.ok(!blob.includes(banned), `found banned classical token: ${banned}`);
   }

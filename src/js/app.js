@@ -20,29 +20,31 @@ import demos from './demos/index.js';
 initLang();
 initTheme();
 
-// DemoCtx（spec 5.1）。语种取 pref-ui.js 的 prefersEnglish() 而不是再读一次 <html lang> 字符串：
-// 那里已经是「非 en 一律按 zh 画」的唯一判据，与 base.css 的 :lang() 显隐同口径，
-// 第三份副本会让卡面文字与 demo 内部文字各走一边。
-// prefersReducedMotion 走 matchMedia —— CSS 那半边由 base.css 的全局归零块管，
-// JS 驱动的循环（计时器、rAF、自动播放）只有这里给得到的这个布尔能停。
-// 媒体查询串写在这里是当前的唯一一份：M4 的 reveal/cursor 落地时若出现多处消费，再抽公共文件；
-// 现在抽进 pref-ui.js 或 prefs.js 都是给还没写的消费者预留位置。
-const ctx = {
-  lang: prefersEnglish() ? 'en' : 'zh',
-  prefersReducedMotion: matchMedia('(prefers-reduced-motion: reduce)').matches,
-};
-
-for (const root of document.querySelectorAll('[data-demo-root]')) {
-  const name = root.dataset.demoRoot;
-  const mount = demos[name];
-  // 查不到即静默跳过，卡片降级为纸面卡。用户会换卡、也会砍卡，这里不许 throw（spec 5.1）。
-  // 拼错注册名连空壳都不会留：build.js 的注册态门禁不输出 data-demo 与 .card-demo，
-  // 而拼错本身由 check.js（Task 12）的 DEMO_REGISTRY_MATCH 大声报出来。
-  if (typeof mount !== 'function') continue;
-  // 返回值是卸载函数。M1 没有任何卸载路径（切语言不重挂，编排留到 M3 一次处理全部 demo），
-  // 所以这里今天不消费它 —— 契约由 test/demos.test.js 的假 DOM 钉住，不会被静改掉。
-  mount(root, ctx);
+const mounted = new Map();
+function mountDemos() {
+  const ctx = {
+    lang: prefersEnglish() ? 'en' : 'zh',
+    prefersReducedMotion: matchMedia('(prefers-reduced-motion: reduce)').matches,
+  };
+  for (const root of document.querySelectorAll('[data-demo-root]')) {
+    const name = root.dataset.demoRoot;
+    const mount = demos[name];
+    if (typeof mount !== 'function') continue;
+    const input = root.querySelector('textarea');
+    const draft = input && input.value !== input.defaultValue ? input.value : null;
+    mounted.get(root)?.();
+    mounted.set(root, mount(root, ctx));
+    root.closest('.card').dataset.previewReady = 'true';
+    // 换语言只翻译示例，不覆盖访客已经写下的内容。
+    if (draft !== null) {
+      const translatedInput = root.querySelector('textarea');
+      translatedInput.value = draft;
+      translatedInput.dispatchEvent(new Event('input'));
+    }
+  }
 }
+mountDemos();
+new MutationObserver(mountDemos).observe(document.documentElement, { attributes: true, attributeFilter: ['lang'] });
 
 // hero 吉祥物：狗跟随光标转头。与上面的 demo 注册表无关（它不是作品卡微原型，
 // 是常驻装饰），所以不走 demos/index.js，也不受卡片数量与注册态影响。
